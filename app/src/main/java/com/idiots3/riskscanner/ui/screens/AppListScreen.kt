@@ -709,5 +709,6 @@ fun getCategoryIcon(category: PermissionCategory): ImageVector = when (category)
     PermissionCategory.STORAGE_MEDIA -> Icons.Filled.Folder
     PermissionCategory.BACKGROUND_PERSISTENCE -> Icons.Filled.Sync
     PermissionCategory.NETWORK -> Icons.Filled.Wifi
+    PermissionCategory.OTHER -> Icons.Filled.MoreHoriz
 }
 

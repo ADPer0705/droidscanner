@@ -1,0 +1,8 @@
+com.torch.pro.testkit-pngs-0 /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/build/generated/res/pngs/debug
+com.torch.pro.testkit-resValues-1 /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/build/generated/res/resValues/debug
+com.torch.pro.testkit-updated_navigation_xml-2 /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/build/generated/updated_navigation_xml/debug
+com.torch.pro.testkit-packageDebugResources-3 /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.torch.pro.testkit-packageDebugResources-4 /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.torch.pro.testkit-debug-5 /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/build/intermediates/merged_res/debug/mergeDebugResources
+com.torch.pro.testkit-debug-6 /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/debug/res
+com.torch.pro.testkit-main-7 /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/res

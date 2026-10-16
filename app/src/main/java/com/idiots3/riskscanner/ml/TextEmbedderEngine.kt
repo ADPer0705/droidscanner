@@ -51,7 +51,6 @@ class TextEmbedderEngine(private val context: Context) {
                 .embeddings()
                 .firstOrNull()
                 ?.floatEmbedding()
-                ?.orElse(null)
         } catch (t: Throwable) {
             null
         }

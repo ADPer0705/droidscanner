@@ -4,10 +4,18 @@
 
     <!-- Required to audit user and system applications.
          NOTE: This app intentionally does NOT declare android.permission.INTERNET.
-         Every scan, score and machine-learning inference runs fully on-device. -->
+         Every scan, score and machine-learning inference runs fully on-device.
+         The two removals below strip network permissions that dependency libraries
+         (e.g. MediaPipe) merge in, so "offline" is enforced by the manifest itself. -->
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
 
     <!-- Alerts for newly installed high-risk apps (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

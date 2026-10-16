@@ -118,7 +118,8 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
                     }
                     Divider(Modifier.padding(vertical = 6.dp))
                     Text(
-                        text = "A category reaches its full weight at ${ScoringConfig.CATEGORY_SATURATION_UNITS.toInt()} risk units " +
+                        text = "A category reaches its full weight at " +
+                            "%.1f".format(ScoringConfig.CATEGORY_SATURATION_UNITS) + " risk units " +
                             "(a granted sensitive permission counts as " +
                             "${ScoringConfig.UNIT_SENSITIVE_GRANTED}, declared-only as " +
                             "${ScoringConfig.UNIT_SENSITIVE_DECLARED_ONLY}); normal permissions count far less.",

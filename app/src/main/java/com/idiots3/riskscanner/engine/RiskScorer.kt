@@ -225,11 +225,18 @@ object RiskScorer {
                 RiskLevel.CRITICAL, PermissionCategory.SPECIAL_ACCESS
             )
         }
-        if (camera && mic && location && internet && (hidden || sideloaded)) {
+        if (camera && mic && location && internet && hidden) {
             combo(
                 "hidden_spyware",
-                if (hidden) "records, locates and uploads with no launcher icon" else "sideloaded surveillance capability set",
+                "records, locates and uploads with no launcher icon",
                 RiskLevel.CRITICAL, PermissionCategory.CAMERA_MICROPHONE
+            )
+        }
+        if (hidden && app.grantedSensitive.isNotEmpty()) {
+            combo(
+                "hidden_app",
+                "no launcher icon while holding ${app.grantedSensitive.size} sensitive granted permission(s)",
+                RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS
             )
         }
         if (contactsGranted && callLogGranted && smsGranted && internet) {

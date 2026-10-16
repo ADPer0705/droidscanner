@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
+import androidx.core.app.NotificationManagerCompat
 import com.idiots3.riskscanner.engine.PermissionMapper
 import com.idiots3.riskscanner.engine.RiskScorer
 import com.idiots3.riskscanner.model.AppInfo
@@ -175,7 +176,7 @@ class AppScanner(private val context: Context) {
             ),
             overlayDeclared = requested.contains("android.permission.SYSTEM_ALERT_WINDOW"),
             installPackagesEnabled = registry.appOpsAllowed(
-                AppOpsManager.OPSTR_REQUEST_INSTALL_PACKAGES, app.uid, packageName
+                SpecialAccessRegistry.OP_INSTALL_PACKAGES, app.uid, packageName
             ),
             installPackagesDeclared = requested.contains("android.permission.REQUEST_INSTALL_PACKAGES"),
             usageStatsEnabled = registry.appOpsAllowed(
@@ -220,6 +221,14 @@ class AppScanner(private val context: Context) {
  * Computed once per scan and reused for every app.
  */
 class SpecialAccessRegistry(context: Context) {
+
+    companion object {
+        /**
+         * AppOps name for REQUEST_INSTALL_PACKAGES. The platform SDK does not expose a
+         * constant for it, but the op string itself is stable across Android versions.
+         */
+        const val OP_INSTALL_PACKAGES = "android:request_install_packages"
+    }
 
     private val appOps: AppOpsManager? =
         context.getSystemService(Context.APP_OPS_SERVICE) as? AppOpsManager
@@ -270,8 +279,7 @@ class SpecialAccessRegistry(context: Context) {
         val packages = mutableSetOf<String>()
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-                manager?.getEnabledListenerPackages(context)?.forEach { packages.add(it) }
+                packages.addAll(NotificationManagerCompat.getEnabledListenerPackages(context))
             }
         } catch (_: Throwable) {
         }

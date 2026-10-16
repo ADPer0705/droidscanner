@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "RiskScanner"
 include(":app")
+include(":testkit")
  

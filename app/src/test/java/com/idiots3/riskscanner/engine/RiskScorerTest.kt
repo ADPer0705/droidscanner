@@ -97,7 +97,27 @@ class RiskScorerTest {
         )
         assertTrue(result.reasons.any { it.title.contains("Banking Trojan") })
         assertTrue("score=${result.score}", result.score >= 51)
+    }
+
+    @Test
+    fun `full banking trojan profile reaches critical`() {
+        val result = RiskScorer.score(
+            app(
+                installerSource = "Sideloaded",
+                permissions = listOf(
+                    permission("INTERNET", PermissionCategory.NETWORK, ProtectionLevel.NORMAL),
+                    permission("READ_SMS", PermissionCategory.SMS),
+                    permission("RECEIVE_BOOT_COMPLETED", PermissionCategory.BACKGROUND_PERSISTENCE, ProtectionLevel.NORMAL)
+                ),
+                specialAccess = SpecialAccessInfo(
+                    accessibilityEnabled = true,
+                    overlayEnabled = true,
+                    overlayDeclared = true
+                )
+            )
+        )
         assertEquals(RiskLevel.CRITICAL, result.level)
+        assertTrue("reasons=${result.reasons.size}", result.reasons.size >= 3)
     }
 
     @Test
@@ -142,12 +162,15 @@ class RiskScorerTest {
             ),
             modelUsed = true
         )
-        // Rules-only score just above Medium via contacts access.
+        // Rules-only score at Medium or above via several granted sensitive permissions.
         val result = RiskScorer.score(
             app(
                 permissions = listOf(
+                    permission("READ_SMS", PermissionCategory.SMS),
                     permission("READ_CONTACTS", PermissionCategory.CONTACTS_CALL_LOGS),
-                    permission("WRITE_CONTACTS", PermissionCategory.CONTACTS_CALL_LOGS)
+                    permission("CAMERA", PermissionCategory.CAMERA_MICROPHONE),
+                    permission("ACCESS_FINE_LOCATION", PermissionCategory.LOCATION),
+                    permission("READ_MEDIA_IMAGES", PermissionCategory.STORAGE_MEDIA)
                 )
             ),
             ai = ai

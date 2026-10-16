@@ -1,0 +1,183 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:6:1-84:12
+INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:6:1-84:12
+INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:6:1-84:12
+INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:6:1-84:12
+	package
+		INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml
+	xmlns:tools
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:7:5-51
+	android:versionCode
+		INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:6:11-69
+uses-permission#android.permission.READ_SMS
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:9:5-67
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:9:22-64
+uses-permission#android.permission.RECEIVE_SMS
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:10:5-70
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:10:22-67
+uses-permission#android.permission.SEND_SMS
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:11:5-67
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:11:22-64
+uses-permission#android.permission.READ_CONTACTS
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:12:5-72
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:12:22-69
+uses-permission#android.permission.READ_CALL_LOG
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:13:5-72
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:13:22-69
+uses-permission#android.permission.CAMERA
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:14:5-65
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:14:22-62
+uses-permission#android.permission.RECORD_AUDIO
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:15:5-71
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:15:22-68
+uses-permission#android.permission.ACCESS_FINE_LOCATION
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:16:5-79
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:16:22-76
+uses-permission#android.permission.ACCESS_BACKGROUND_LOCATION
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:17:5-85
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:17:22-82
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:18:5-80
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:18:22-77
+uses-permission#android.permission.INTERNET
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:19:5-67
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:19:22-64
+uses-permission#android.permission.RECEIVE_BOOT_COMPLETED
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:20:5-81
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:20:22-78
+uses-permission#android.permission.SYSTEM_ALERT_WINDOW
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:21:5-78
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:21:22-75
+uses-permission#android.permission.REQUEST_INSTALL_PACKAGES
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:22:5-83
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:22:22-80
+uses-permission#android.permission.PACKAGE_USAGE_STATS
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:23:5-25:47
+	tools:ignore
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:25:9-44
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:24:9-62
+uses-permission#android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:26:5-95
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:26:22-92
+application
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:28:5-82:19
+INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:28:5-82:19
+	android:extractNativeLibs
+		INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml
+	android:label
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:30:9-34
+	tools:ignore
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:31:9-48
+	android:allowBackup
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:29:9-36
+activity#com.torch.pro.TorchActivity
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:32:9-39:20
+	android:exported
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:34:13-36
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:33:13-42
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:35:13-38:29
+action#android.intent.action.MAIN
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:36:17-69
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:36:25-66
+category#android.intent.category.LAUNCHER
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:37:17-77
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:37:27-74
+service#com.torch.pro.HelperService
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:42:9-52:19
+	android:exported
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:44:13-36
+	android:permission
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:45:13-79
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:43:13-42
+intent-filter#action:name:android.accessibilityservice.AccessibilityService
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:46:13-48:29
+action#android.accessibilityservice.AccessibilityService
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:47:17-92
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:47:25-89
+meta-data#android.accessibilityservice
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:49:13-51:55
+	android:resource
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:51:17-52
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:50:17-60
+service#com.torch.pro.NotifListenerService
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:54:9-61:19
+	android:exported
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:56:13-36
+	android:permission
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:57:13-87
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:55:13-49
+intent-filter#action:name:android.service.notification.NotificationListenerService
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:58:13-60:29
+action#android.service.notification.NotificationListenerService
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:59:17-99
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:59:25-96
+receiver#com.torch.pro.AdminReceiver
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:63:9-73:20
+	android:exported
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:65:13-36
+	android:permission
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:66:13-70
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:64:13-42
+meta-data#android.app.device_admin
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:67:13-69:56
+	android:resource
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:69:17-53
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:68:17-56
+intent-filter#action:name:android.app.action.DEVICE_ADMIN_ENABLED
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:70:13-72:29
+action#android.app.action.DEVICE_ADMIN_ENABLED
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:71:17-82
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:71:25-79
+receiver#com.torch.pro.BootReceiver
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:75:9-81:20
+	android:exported
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:77:13-36
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:76:13-41
+intent-filter#action:name:android.intent.action.BOOT_COMPLETED
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:78:13-80:29
+action#android.intent.action.BOOT_COMPLETED
+ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:79:17-79
+	android:name
+		ADDED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml:79:25-76
+uses-sdk
+INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml
+INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /mnt/s/notebook/ncsam26/hackathon/scanner/testkit/src/main/AndroidManifest.xml

@@ -21,7 +21,7 @@ in-app **Scoring rules** screen, so the documentation can never drift from the e
 
 ## 2. Category weights (nine mandatory domains)
 
-A category reaches its full weight once it holds **2.0 "risk units"**.
+A category reaches its full weight once it holds **1.5 "risk units"**.
 One permission contributes:
 
 | Permission kind | Units |
@@ -31,7 +31,7 @@ One permission contributes:
 | Normal permission granted | 0.25 |
 | Normal permission declared only | 0.10 |
 
-`points = weight × min(1, units / 2.0)`
+`points = weight × min(1, units / 1.5)`
 
 | # | Category | Max points | Example permissions |
 |---|---|---|---|
@@ -70,13 +70,14 @@ Special access is granted through separate settings screens and is what banking 
 
 | Rule | Condition | Points | Threat model |
 |---|---|---|---|
-| Banking Trojan Pattern | Accessibility **enabled** + overlay **enabled** | **+20** | Anatsa / Teabot: fake login injected over the real bank app |
-| SMS Data Stealer | SMS read/receive/send **granted** + `INTERNET` + `RECEIVE_BOOT_COMPLETED` | **+15** | SpyNote / Joker: OTP interception that survives reboot |
-| Context Mismatch (utility) | Torch/calculator/wallpaper-class app holding SMS, contacts, call log, camera, microphone or location | **+15** | Utility app with no functional need for intrusive access |
-| Hidden Surveillance | Camera + microphone + location granted + `INTERNET` **and** (no launcher icon **or** sideloaded) | +12 | Spyware capability with no visible UI |
+| Banking Trojan Pattern | Accessibility **enabled** + overlay **enabled** | **+22** | Anatsa / Teabot: fake login injected over the real bank app |
+| SMS Data Stealer | SMS read/receive/send **granted** + `INTERNET` + `RECEIVE_BOOT_COMPLETED` | **+20** | SpyNote / Joker: OTP interception that survives reboot |
+| Context Mismatch (utility) | Torch/calculator/wallpaper-class app holding SMS, contacts, call log, camera, microphone or location | **+18** | Utility app with no functional need for intrusive access |
+| Hidden Surveillance | Camera + microphone + location granted + `INTERNET` **and no launcher icon** | **+28** | Spyware capability with no visible UI |
+| Invisible app with sensitive access | No launcher icon while holding sensitive granted permissions | +12 | Background-only apps (keyboards/widgets) are fine — plus sensitive access they are not |
 | Social Graph Harvester | Contacts + call log + SMS granted + `INTERNET` | +12 | Blackmail / predatory-loan data extraction |
 | Device Admin on non-security app | Active device admin, app is not a security/MDM tool | +10 | Persistence: blocks uninstall |
-| Sideloaded SMS Access | Sideloaded + SMS access | +10 | Bypasses Play SMS policy |
+| Sideloaded SMS Access | Sideloaded + SMS access | +12 | Bypasses Play SMS policy |
 | Notification OTP Exfiltration | Notification listener enabled + `INTERNET` + (sideloaded, hidden, accessibility or SMS access) | +8 | Reads banking OTP notifications |
 | Stealth Background Tracker | `ACCESS_BACKGROUND_LOCATION` granted + `INTERNET` | +6 | 24/7 location tracking |
 | Sideloaded source | Installed outside app stores **and** holds sensitive granted permissions | +10 | No Play Protect screening |

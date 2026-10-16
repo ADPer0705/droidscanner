@@ -1,0 +1,3 @@
+com.torch.pro:xml/device_admin = 0x7f020001
+com.torch.pro:xml/a11y_config = 0x7f020000
+com.torch.pro:string/a11y_description = 0x7f010000

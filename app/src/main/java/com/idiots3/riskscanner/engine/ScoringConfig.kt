@@ -31,9 +31,10 @@ object ScoringConfig {
 
     /**
      * A category reaches its full weight when the "risk units" it holds reach this number.
-     * Two granted dangerous permissions (2.0 units) saturate a category.
+     * A single granted sensitive permission already contributes two thirds of the weight;
+     * two granted dangerous permissions saturate the category.
      */
-    const val CATEGORY_SATURATION_UNITS = 2.0
+    const val CATEGORY_SATURATION_UNITS = 1.5
 
     // Risk units contributed by a single permission.
     const val UNIT_SENSITIVE_GRANTED = 1.0
@@ -84,30 +85,37 @@ object ScoringConfig {
         ComboRule(
             "banking_trojan",
             "Banking Trojan Pattern",
-            20,
+            22,
             "Accessibility service enabled + screen overlay enabled",
             "The #1 technique used by banking trojans to inject fake login screens over real banking apps."
         ),
         ComboRule(
             "sms_stealer",
             "SMS Data Stealer Pattern",
-            15,
+            20,
             "SMS read/receive/send granted + INTERNET + RECEIVE_BOOT_COMPLETED",
             "Intercepts 2FA one-time passwords and exfiltrates them after surviving a reboot."
         ),
         ComboRule(
             "utility_mismatch",
             "Context Mismatch (utility app)",
-            15,
+            18,
             "Torch/calculator/wallpaper-class app holding SMS, contacts, call log, camera, microphone or location",
             "A low-complexity utility has no functional reason to hold intrusive data access."
         ),
         ComboRule(
             "hidden_spyware",
             "Hidden Surveillance Pattern",
-            12,
-            "Camera + microphone + location + INTERNET on an app with no launcher icon (or sideloaded)",
+            28,
+            "Camera + microphone + location + INTERNET on an app with no launcher icon",
             "Capability set of spyware: record, locate, exfiltrate — with no user-facing UI to explain why."
+        ),
+        ComboRule(
+            "hidden_app",
+            "Invisible app with sensitive access",
+            12,
+            "No launcher icon while holding sensitive granted permissions",
+            "Background-only apps are legitimate for keyboards and widgets, but combined with sensitive access they deserve scrutiny."
         ),
         ComboRule(
             "data_harvester",
@@ -126,7 +134,7 @@ object ScoringConfig {
         ComboRule(
             "sideloaded_sms",
             "Sideloaded SMS Access",
-            10,
+            12,
             "Sideloaded app holding SMS access",
             "Bypasses Google Play SMS policy; the classic delivery vehicle for OTP-stealing droppers."
         ),
