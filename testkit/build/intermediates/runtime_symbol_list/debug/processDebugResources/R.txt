@@ -1,3 +1,0 @@
-int string a11y_description 0x7f010000
-int xml a11y_config 0x7f020000
-int xml device_admin 0x7f020001

@@ -8,3 +8,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Build outputs of every module (belt and braces; each module also has its own .gitignore)
+**/build/
