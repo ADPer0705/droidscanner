@@ -1,64 +1,100 @@
 # RiskScanner — On-Device App Risk Auditor (PS-01)
 
-[![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com)
-[![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blue.svg)](https://developer.android.com/jetpack/compose)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple.svg)](https://kotlinlang.org)
-[![Offline First](https://img.shields.io/badge/Privacy-100%25%20On--Device-success.svg)](#)
+**Find suspicious Android apps through their permissions, special access and an explainable risk score.**
 
-> **Hackathon Problem Statement PS-01:** On-Device App Risk Auditor  
-> *Find suspicious Android apps through their permissions, special access, and an explainable risk score.*
+Android 8.0+ (API 26+) · Kotlin + Jetpack Compose · 100% on-device · **no `INTERNET` permission**
 
 ---
 
-## 🎯 The 3 Core Non-Technical User Questions
+## What it answers
 
-| Question | How RiskScanner Answers It |
+| Question | Where |
 |---|---|
-| **Q1: Which of my apps can do the most harm?** | **Security Health Overview & Top Risk Apps:** Normalized 0–100 risk score, sorted risk leaderboards, and immediate threat tier badges (**Critical, High, Medium, Low**). |
-| **Q2: Why is each one flagged?** | **"Why Flagged" Explainability Panel:** Plain-language, bullet-pointed security reasons highlighting specific attack patterns (Banking Trojans, SMS Data Stealers, Context Mismatches). |
-| **Q3: What can I do about it right now?** | **1-Tap Action Triage:** Dedicated direct links to **"Open App Settings"** (to revoke permissions) and **"Uninstall"** (to delete the app immediately). |
+| **Q1 — Which of my apps can do the most harm?** | Dashboard: device health score, risk distribution, top-5 consumers, full ranked list with search + filters |
+| **Q2 — Why is each one flagged?** | App detail: "Why flagged" list (≥3 plain-language reasons for every High/Critical app), full point-by-point score breakdown, special access panel, per-permission "does it fit?" tags |
+| **Q3 — What can I do right now?** | One-tap **App Settings** (revoke permissions) and **Uninstall** buttons, plus a PDF report with a "what to do now" checklist |
 
----
+## Features
 
-## 🛡️ The 9 Mandatory Permission Categories
+**Must-haves**
 
-Special access carries the highest baseline weight because it enables banking trojan overlays and screen scraping:
+- **App inventory:** label, lazy-loaded icon, package, version, install/update date, installer source, target/min SDK, system-app toggle
+- **Permissions:** declared vs. granted, protection level (normal / dangerous / signature / special), plain-language description for 80+ permissions
+- **Nine categories:** Special access, SMS, Contacts & call logs, Camera & microphone, Location, Phone & identity, Storage & media, Background & persistence, Network (+ "Other" for the rest) — per app and as a device-wide summary
+- **Special access detection:** enabled accessibility services, active device admins, enabled notification listeners, plus AppOps-verified overlay / install-packages / usage-stats grants (enabled vs merely declared)
+- **Risk score 0–100** in four bands with a transparent breakdown of every point
 
-1. **Special Access (Highest Weight - 25 pts):** `SYSTEM_ALERT_WINDOW`, `REQUEST_INSTALL_PACKAGES`, `PACKAGE_USAGE_STATS`, Accessibility Services, Device Admin, Notification Listener.
-2. **SMS (15 pts):** `READ_SMS`, `RECEIVE_SMS`, `SEND_SMS` (OTP interception, premium SMS fraud).
-3. **Contacts & Call Logs (12 pts):** `READ_CONTACTS`, `READ_CALL_LOG` (Social graph harvesting & extortion).
-4. **Camera & Microphone (14 pts):** `CAMERA`, `RECORD_AUDIO` (Covert recording & surveillance).
-5. **Location (12 pts):** `ACCESS_FINE_LOCATION`, `ACCESS_BACKGROUND_LOCATION` (Stalking & physical tracking).
-6. **Phone & Identity (10 pts):** `READ_PHONE_STATE`, `CALL_PHONE` (Device fingerprinting & toll fraud).
-7. **Storage & Media (8 pts):** `MANAGE_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES` (Photo & private document theft).
-8. **Background & Persistence (8 pts):** `RECEIVE_BOOT_COMPLETED`, `FOREGROUND_SERVICE` (Survives device reboots).
-9. **Network (3 pts):** `INTERNET`, `ACCESS_NETWORK_STATE` (The exfiltration pipeline; force multiplier in combination rules).
+**Should-haves**
 
----
+- **Combination rules** (9): banking trojan, SMS stealer, utility context mismatch, hidden surveillance, social-graph harvester, device admin on non-security app, sideloaded SMS, OTP exfiltration, background tracker
+- **Context mismatch via on-device ML:** bundled Universal Sentence Encoder (MediaPipe Tasks Text, ~6 MB) compares the app's own metadata against 40 app-function archetypes and permission-use descriptions
+- **Install monitoring:** runtime package-change receiver + snapshot diff on resume → "Changed since last scan" card and High/Critical notifications
+- **Permission diff:** updates that add sensitive permissions are called out explicitly
 
-## ⚡ Correlation & Combination Rules (MobSF-Inspired)
+**Stretch**
 
-- **Banking Trojan Pattern (+20 pts):** Accessibility Service + Screen Overlay (`SYSTEM_ALERT_WINDOW`) $\to$ Injects fake login overlays and simulates touch inputs.
-- **SMS Data Stealer (+15 pts):** SMS read/receive + Internet + Boot Persistence $\to$ Steals 2FA OTP codes on system startup.
-- **Suspicious Device Administrator (+12 pts):** Active Device Admin rights granted to non-MDM/non-security apps $\to$ Prevents uninstallation and enables device lock/wipe.
-- **Mobile Spyware Pattern (+10 pts):** Camera + Audio + Location + Internet $\to$ Background surveillance beacon.
-- **Context Mismatch (+15 pts):** Utility apps (calculators, flashlights, wallpapers, compasses) demanding SMS, Contacts, or Microphone access.
-- **Sideloaded Risk (+10 pts):** APKs installed from unknown / non-Play Store sources holding sensitive runtime permissions.
+- **Static APK checks:** exported components, cleartext traffic, debuggable flag, SDK range, SHA-256 (computed lazily on the detail screen)
+- **Shareable PDF report** generated with `PdfDocument` inside the app
+- Hash lookup against external threat intelligence is deliberately **not** implemented — see Privacy
 
----
+## Architecture
 
-## 🏗️ Architecture & Features
+```
+app/src/main/java/com/idiots3/riskscanner/
+├── scanner/      AppScanner (inventory + permissions + special access), StaticInspector (lazy APK checks)
+├── engine/       ScoringConfig (single source of truth), RiskScorer (deterministic rules),
+│                 PermissionMapper (permission → category), PermissionDiff
+├── ml/           TextEmbedderEngine (MediaPipe USE), PurposeInferenceEngine, EmbeddingStore (vector cache)
+├── data/         SnapshotStore (last scan, for diffs)
+├── model/        AppInfo, AnalysisModels, DeviceSummary
+├── viewmodel/    MainViewModel — rules scan first, AI refinement streams in afterwards
+├── receiver/     InstallMonitorReceiver + notification helper
+├── report/       PdfExporter
+└── ui/           Dashboard, App List, App Detail, Scoring Rules; components/
+app/src/main/assets/
+├── universal_sentence_encoder.tflite   6.1 MB, runs offline
+└── purpose_archetypes.json             40 app-function archetypes + permission-use descriptions
+```
 
-- **100% On-Device:** Zero root or ADB required. No user telemetry ever leaves the device.
-- **MVVM Architecture:** Clean unidirectional data flow with Kotlin Coroutines and StateFlow.
-- **Jetpack Compose + Material 3:** Modern, responsive UI with smooth animations, dark/light theme support, and color-coded threat badges.
-- **Background Install Monitor:** `BroadcastReceiver` listens for package additions and sends high-priority notifications when an installed app scores High or Critical.
-- **Static APK Inspection:** Extracts declared vs. granted permissions, protection levels (`normal`, `dangerous`, `signature`, `special`), installer source, and computes SHA-256 base APK hashes.
+**Scoring:** see [`SCORING_RUBRIC.md`](SCORING_RUBRIC.md) — also rendered in-app (Dashboard → *Scoring rules*).
 
----
+**Two-phase scan:** the deterministic pass renders instantly (rules-only scores, reasons), then the
+on-device AI pass refines visible apps in the background with a progress bar; embeddings are cached
+on disk so re-scans are instant and the native model is released when idle to keep memory flat.
 
-## 📄 Deliverables
+## Build
 
-- **Scoring Rubric:** Complete 1-page risk methodology documented in [`SCORING_RUBRIC.md`](SCORING_RUBRIC.md).
-- **Package Name:** `com.idiots3.riskscanner`
-- **Target SDK:** Android 14 / 15 / 16 (API 26–36)
+**Android Studio:** open the project, let Gradle sync, run the `app` module. `local.properties`
+must point at your SDK (`sdk.dir=...`); Android Studio writes it automatically.
+
+**Command line:**
+
+```bash
+export JAVA_HOME=/path/to/jdk17-or-21     # AGP 8.13 requires JDK 17–21
+export ANDROID_HOME=/path/to/android-sdk  # needs platform 36 + build-tools 36.0.0
+./gradlew :app:assembleDebug              # → app/build/outputs/apk/debug/app-debug.apk
+./gradlew :app:testDebugUnitTest          # deterministic engine tests
+```
+
+The resulting APK is a **single universal APK** containing `arm64-v8a` + `x86_64` native libraries
+(physical devices + emulators). Java 21 is recommended; Gradle 8.13 + AGP 8.13.2 + Kotlin 2.0.21.
+
+## Permissions this app itself asks for
+
+| Permission | Why |
+|---|---|
+| `QUERY_ALL_PACKAGES` | Required to enumerate installed apps for the audit (allowed for this hackathon) |
+| `POST_NOTIFICATIONS` | Alerts when an installed/updated app scores High or Critical (optional) |
+
+It declares **no `INTERNET` permission**, so the audit cannot send anything anywhere even in theory.
+
+## Privacy & limits (stated honestly)
+
+- Inventory, permission analysis, scoring, embeddings, hashing and the PDF report all run on-device.
+- The AI purpose check sees only an app's label, package-name words and Android category — never
+  file contents, messages or accounts. It is a **weak signal**: "the app's description doesn't explain
+  this permission", never "this app is malware". Similarity values are not probabilities.
+- The deterministic rule engine remains authoritative; the AI can add at most 8 points, only to apps
+  already scoring Medium+, and can never create a Critical verdict by itself.
+- No real malware is used anywhere; test apps used during development are benign APKs that merely
+  request risky permission sets.

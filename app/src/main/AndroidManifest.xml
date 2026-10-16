@@ -2,13 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Required to audit user and system applications -->
+    <!-- Required to audit user and system applications.
+         NOTE: This app intentionally does NOT declare android.permission.INTERNET.
+         Every scan, score and machine-learning inference runs fully on-device. -->
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
-    <!-- Internet access for optional threat intelligence -->
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Alerts for newly installed high-risk apps (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -31,17 +33,16 @@
             </intent-filter>
         </activity>
 
-        <!-- BroadcastReceiver for live app install and update monitoring -->
-        <receiver
-            android:name=".receiver.InstallMonitorReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_ADDED" />
-                <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <action android:name="android.intent.action.PACKAGE_REMOVED" />
-                <data android:scheme="package" />
-            </intent-filter>
-        </receiver>
+        <!-- Shares the locally generated PDF report (no data leaves the device unless the user shares it) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

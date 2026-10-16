@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import com.idiots3.riskscanner.model.*
+import com.idiots3.riskscanner.ui.components.AiProgressCard
+import com.idiots3.riskscanner.ui.components.RecentChangesCard
+import com.idiots3.riskscanner.ui.components.ReportActionsCard
 import com.idiots3.riskscanner.ui.theme.RiskColors
 import com.idiots3.riskscanner.viewmodel.MainViewModel
 import com.idiots3.riskscanner.viewmodel.MainUiState
@@ -61,7 +64,8 @@ fun getRiskLevelBgColor(riskLevel: RiskLevel): Color = when (riskLevel) {
 fun DashboardScreen(
     viewModel: MainViewModel,
     onNavigateToAppList: () -> Unit,
-    onNavigateToAppDetail: (String) -> Unit
+    onNavigateToAppDetail: (String) -> Unit,
+    onNavigateToRubric: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -80,7 +84,7 @@ fun DashboardScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "ShinoDroid Risk Auditor",
+                            text = "RiskScanner",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             maxLines = 1,
@@ -218,21 +222,48 @@ fun DashboardScreen(
                             RiskDistributionRow(summary = summary)
                         }
 
-                        // 3. Sideloaded Apps Warning Card
+                        // 3. Recently installed / updated apps (install monitoring + permission diff)
+                        item {
+                            RecentChangesCard(
+                                changes = uiState.recentChanges,
+                                onAppClick = onNavigateToAppDetail
+                            )
+                        }
+
+                        // 4. Sideloaded Apps Warning Card
                         item {
                             SideloadedWarningCard(count = summary.sideloadedApps)
                         }
 
-                        // 4. Category Breakdown Section
+                        // 5. On-device AI progress
+                        item {
+                            AiProgressCard(
+                                active = uiState.aiActive,
+                                processed = uiState.aiProcessed,
+                                total = uiState.aiTotal,
+                                available = uiState.aiAvailable
+                            )
+                        }
+
+                        // 6. Category Breakdown Section
                         item {
                             CategoryBreakdownSection(summary = summary)
                         }
 
-                        // 5. Top Risky Apps Section
+                        // 7. Top Risky Apps Section
                         item {
                             TopRiskyAppsSection(
                                 apps = summary.topRiskApps,
                                 onAppClick = onNavigateToAppDetail
+                            )
+                        }
+
+                        // 8. Report + rubric actions
+                        item {
+                            ReportActionsCard(
+                                summary = summary,
+                                apps = uiState.apps,
+                                onNavigateToRubric = onNavigateToRubric
                             )
                         }
 
@@ -437,6 +468,24 @@ fun SecurityOverviewCard(
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = if (summary.criticalApps + summary.highApps > 0) CriticalColor else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Security,
+                            contentDescription = null,
+                            tint = if (summary.specialAccessApps > 0) HighColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "${summary.specialAccessApps} apps hold special access",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = if (summary.specialAccessApps > 0) HighColor else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -712,7 +761,7 @@ fun TopRiskyAppsSection(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             AppIconImage(
-                                drawable = app.icon,
+                                packageName = app.packageName,
                                 modifier = Modifier
                                     .size(46.dp)
                                     .clip(RoundedCornerShape(10.dp))

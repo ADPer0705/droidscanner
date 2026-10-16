@@ -6,9 +6,7 @@ plugins {
 
 android {
     namespace = "com.idiots3.riskscanner"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.idiots3.riskscanner"
@@ -18,6 +16,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // MediaPipe ships a large native runtime per ABI. Restrict to the ABIs that
+        // matter (modern phones + x86_64 emulators) to keep the single APK small.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
     }
 
     buildTypes {
@@ -39,6 +43,24 @@ android {
     buildFeatures {
         compose = true
     }
+    androidResources {
+        // MediaPipe memory-maps the bundled Universal Sentence Encoder model.
+        noCompress += "tflite"
+    }
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1",
+                "META-INF/INDEX.LIST"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -53,6 +75,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+
+    // On-device purpose inference (Universal Sentence Encoder via MediaPipe Tasks Text).
+    implementation(libs.mediapipe.tasks.text)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

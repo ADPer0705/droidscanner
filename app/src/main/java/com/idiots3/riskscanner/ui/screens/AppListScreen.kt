@@ -1,6 +1,8 @@
 ﻿package com.idiots3.riskscanner.ui.screens
 
+import android.content.Context
 import android.graphics.drawable.Drawable
+import android.util.LruCache
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -24,7 +26,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.drawable.toBitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.idiots3.riskscanner.model.*
 import com.idiots3.riskscanner.ui.theme.RiskColors
 import com.idiots3.riskscanner.viewmodel.MainViewModel
@@ -457,7 +462,7 @@ fun AppCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppIconImage(
-                drawable = appInfo.icon,
+                packageName = appInfo.packageName,
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(10.dp))
@@ -503,6 +508,31 @@ fun AppCard(
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                             )
                         }
+                    }
+                }
+
+                appInfo.aiAssessment?.purposeLabel?.let { purpose ->
+                    Text(
+                        text = "Looks like: $purpose",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                if (!appInfo.aiAssessment?.unexplainedCategories.isNullOrEmpty()) {
+                    Surface(
+                        color = RiskColors.HighBackground,
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "AI: unexplained access",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = RiskColors.High,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                        )
                     }
                 }
             }
@@ -613,22 +643,45 @@ fun RiskBadge(
     }
 }
 
+/**
+ * Icons are loaded lazily and kept in a small LRU cache (64 entries) instead of being
+ * stored on every AppInfo — this keeps memory flat while scrolling hundreds of apps.
+ */
+object AppIconCache {
+    private val cache = LruCache<String, Drawable>(64)
+
+    fun get(context: Context, packageName: String): Drawable? {
+        cache.get(packageName)?.let { return it }
+        return try {
+            context.packageManager.getApplicationIcon(packageName).also { cache.put(packageName, it) }
+        } catch (t: Throwable) {
+            null
+        }
+    }
+}
+
 @Composable
-fun AppIconImage(drawable: Drawable?, modifier: Modifier = Modifier) {
-    if (drawable != null) {
-        val bitmap = remember(drawable) { drawable.toBitmap(96, 96).asImageBitmap() }
+fun AppIconImage(packageName: String?, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val drawable by produceState<Drawable?>(initialValue = null, key1 = packageName) {
+        value = packageName?.let { withContext(Dispatchers.IO) { AppIconCache.get(context, it) } }
+    }
+    val current = drawable
+    if (current != null) {
+        val bitmap = remember(current) { current.toBitmap(96, 96).asImageBitmap() }
         Image(
             painter = BitmapPainter(bitmap),
             contentDescription = "App icon",
             modifier = modifier
         )
     } else {
-        Icon(
-            Icons.Filled.Android,
-            contentDescription = "App icon",
-            modifier = modifier,
-            tint = MaterialTheme.colorScheme.primary
-        )
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Icon(
+                Icons.Filled.Android,
+                contentDescription = "App icon",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 

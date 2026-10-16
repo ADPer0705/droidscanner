@@ -7,8 +7,13 @@ data class DeviceSummary(
     val mediumApps: Int,
     val lowApps: Int,
     val totalPermissionsGranted: Int,
-    val categoryBreakdown: Map<PermissionCategory, Int>, // category -> number of apps with perms in that category
+    val categoryBreakdown: Map<PermissionCategory, Int>, // category -> number of apps holding permissions in it
     val topRiskApps: List<AppInfo>,
-    val sideloadedApps: Int
-)
-
+    val sideloadedApps: Int,
+    val specialAccessApps: Int = 0,
+    val hiddenApps: Int = 0,
+    val aiAnalyzedApps: Int = 0,
+    val aiUnexplainedApps: Int = 0
+) {
+    val highOrCritical: Int get() = criticalApps + highApps
+}

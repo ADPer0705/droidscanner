@@ -1,96 +1,120 @@
 # On-Device App Risk Auditor (PS-01) — Risk Scoring Rubric & Methodology
 
-**System Name:** ShinoDroid Risk Auditor  
-**Engine Version:** 1.0 (On-Device Static Permission & Behavioral Correlator)  
-**Execution Target:** Android 8.0+ (API 26–35) | 100% On-Device & Zero Network Egress  
+**System:** RiskScanner · **Package:** `com.idiots3.riskscanner` · **Engine version:** 2
+**Execution:** Android 8.0+ (API 26+) · 100% on-device · the app declares **no INTERNET permission**
+
+Every number in this document is defined once in `engine/ScoringConfig.kt` and rendered by the
+in-app **Scoring rules** screen, so the documentation can never drift from the engine.
 
 ---
 
-## 1. Overview & Scoring Scale
+## 1. Score bands
 
-Every audited application is evaluated along a normalized risk spectrum from **0 to 100**. The final score maps into four triage bands designed for non-technical users:
-
-| Risk Level | Score Range | Badge Color | User Meaning & Recommended Immediate Action |
-| :--- | :---: | :---: | :--- |
-| **LOW** | 0 – 25 | `#00E676` (Green) | Standard application permissions. No action needed. |
-| **MEDIUM** | 26 – 50 | `#FFEA00` (Yellow) | Moderate capability access. Review granted runtime permissions. |
-| **HIGH** | 51 – 75 | `#FF9100` (Orange) | Suspicious or expansive privilege profile. Audit special access and revoke unused grants. |
-| **CRITICAL** | 76 – 100 | `#FF1744` (Red) | Severe threat indicators or banking trojan / spyware heuristics. **Recommend immediate uninstall**. |
+| Band | Range | Meaning for a non-technical user | Immediate action |
+|---|---|---|---|
+| **LOW** | 0–25 | Standard access, nothing unusual | None |
+| **MEDIUM** | 26–50 | Has sensitive access worth a look | Review granted permissions |
+| **HIGH** | 51–75 | Suspicious capability profile | Audit special access, revoke unused grants |
+| **CRITICAL** | 76–100 | Severe indicators (trojan / spyware patterns) | Review and uninstall |
 
 ---
 
-## 2. Nine Base Permission Categories & Baseline Weights
+## 2. Category weights (nine mandatory domains)
 
-Base scores scale according to declared/granted permissions within the 9 mandatory categories, with highest weight reserved for Special Access (the primary vector abused by Android banking malware):
+A category reaches its full weight once it holds **2.0 "risk units"**.
+One permission contributes:
 
-| # | Category | Baseline Weight | Critical Indicators & Exemplar Permissions | Threat Rationale |
-|---|---|:---:|---|---|
-| **01** | **Special Access** | **25 pts** | `SYSTEM_ALERT_WINDOW`, `REQUEST_INSTALL_PACKAGES`, `PACKAGE_USAGE_STATS`, Accessibility Service, Device Admin, Notification Listener | Fake login overlays, credential phish, uninstall blocking, silent app drops, notification OTP theft. |
-| **02** | **SMS** | **15 pts** | `READ_SMS`, `RECEIVE_SMS`, `SEND_SMS`, `RECEIVE_MMS`, `RECEIVE_WAP_PUSH` | 2FA / Banking OTP theft, transaction hijacking, premium toll SMS fraud. |
-| **03** | **Contacts & Call Logs**| **12 pts** | `READ_CONTACTS`, `WRITE_CONTACTS`, `READ_CALL_LOG`, `WRITE_CALL_LOG`, `GET_ACCOUNTS` | Social graph harvesting, extortion, identity theft, unauthorized address book dumps. |
-| **04** | **Camera & Microphone** | **14 pts** | `CAMERA`, `RECORD_AUDIO` | Covert acoustic surveillance, non-consensual photography, ambient room recording. |
-| **05** | **Location** | **12 pts** | `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `ACCESS_BACKGROUND_LOCATION` | Geofence tracking, stalking, movement pattern profiling. |
-| **06** | **Phone & Identity** | **10 pts** | `READ_PHONE_STATE`, `READ_PHONE_NUMBERS`, `CALL_PHONE`, `PROCESS_OUTGOING_CALLS` | Persistent hardware fingerprinting (IMEI, IMSI, SIM serial), call redirection fraud. |
-| **07** | **Storage & Media** | **8 pts** | `MANAGE_EXTERNAL_STORAGE`, `READ_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES` | Document harvesting, private media exfiltration, ransomware file encryption. |
-| **08** | **Background & Persistence**| **8 pts** | `RECEIVE_BOOT_COMPLETED`, `FOREGROUND_SERVICE`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Surviving OS reboots, continuous background beaconing without active UI. |
-| **09** | **Network** | **3 pts** | `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `BLUETOOTH_CONNECT` | Exfiltration channel; benign alone, force multiplier in combinations. |
+| Permission kind | Units |
+|---|---|
+| Sensitive (dangerous / special) **granted** | **1.00** |
+| Sensitive **declared but not granted** | 0.35 |
+| Normal permission granted | 0.25 |
+| Normal permission declared only | 0.10 |
 
-*Per-category calculation:*  
-$$\text{Score}_{\text{Cat}} = \min\left(W_{\text{Cat}}, \frac{W_{\text{Cat}} \times \min(3, N_{\text{dangerous}})}{3} + 2 \times N_{\text{granted\_dangerous}}\right)$$
+`points = weight × min(1, units / 2.0)`
 
----
-
-## 3. Special Access Privileges (Explicit System Grants)
-
-Special access permissions are verified against OS registries (`AccessibilityManager`, `DevicePolicyManager`, `Settings.Secure`):
-
-| Privilege | Detection Mechanism | Weight Penalty | Plain-Language Justification |
-|---|---|:---:|---|
-| **Active Accessibility Service** | `AccessibilityManager.getEnabledAccessibilityServiceList` | **+20** | Can read full screen content, capture banking credentials, and simulate touches. |
-| **Active Device Administrator** | `DevicePolicyManager.getActiveAdmins` | **+18** | Can lock screen, wipe storage, and prevent uninstallation. |
-| **Notification Listener** | `Settings.Secure.enabled_notification_listeners` | **+15** | Reads all incoming push notifications, bypassing SMS privacy for 2FA OTP codes. |
-| **Screen Overlay (`SYSTEM_ALERT_WINDOW`)** | `Settings.canDrawOverlays` / Manifest | **+12** | Renders invisible or deceptive overlays above legitimate banking/crypto apps. |
-| **Install Packages (`REQUEST_INSTALL_PACKAGES`)**| Manifest / AppOps | **+10** | Can silently download and prompt installation of secondary malware payloads. |
-| **Usage Stats (`PACKAGE_USAGE_STATS`)** | AppOps Manager | **+8** | Monitors foreground app launches to time overlay attacks when banking apps open. |
+| # | Category | Max points | Example permissions |
+|---|---|---|---|
+| 01 | Special Access | *own table, §3* | Accessibility, overlay, device admin, notification listener, install packages, usage stats |
+| 02 | SMS | 12 | `READ_SMS`, `RECEIVE_SMS`, `SEND_SMS`, `RECEIVE_MMS` |
+| 03 | Camera & Microphone | 10 | `CAMERA`, `RECORD_AUDIO` |
+| 04 | Contacts & Call Logs | 8 | `READ_CONTACTS`, `READ_CALL_LOG`, `GET_ACCOUNTS` |
+| 05 | Location | 8 | `ACCESS_FINE_LOCATION`, `ACCESS_BACKGROUND_LOCATION` |
+| 06 | Phone & Identity | 6 | `READ_PHONE_STATE`, `CALL_PHONE`, `READ_PHONE_NUMBERS` |
+| 07 | Storage & Media | 5 | `MANAGE_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO` |
+| 08 | Background & Persistence | 5 | `RECEIVE_BOOT_COMPLETED`, `FOREGROUND_SERVICE`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` |
+| 09 | Network | 2 | `INTERNET`, `ACCESS_NETWORK_STATE`, `BLUETOOTH_CONNECT` |
+| — | Other (calendar, sensors, notifications…) | 0 | Shown in the UI, not scored |
 
 ---
 
-## 4. Multi-Vector Combination Rules (MobSF / Threat Intel Correlated)
+## 3. Special access — highest weight
 
-Attackers rarely rely on single permissions; malware is characterized by coordinated capability chains:
+Special access is granted through separate settings screens and is what banking trojans abuse.
+"Enabled" is verified live (`AppOpsManager`, `Settings.Secure`, `AccessibilityManager`,
+`NotificationManager`, `DevicePolicyManager`); "declared" only means the manifest asked for it.
 
-| Rule Name | Correlated Capabilities | Penalty | Threat Model Classification |
-|---|---|:---:|---|
-| **Banking Trojan Pattern** | `Accessibility Service` + `Overlay (SYSTEM_ALERT_WINDOW)` | **+20** | **Anatsa / Teabot / SharkBot:** Injects fake banking login over banking apps and auto-approves wire transfers. |
-| **SMS Data Stealer** | `SMS (READ/RECEIVE)` + `INTERNET` + `RECEIVE_BOOT_COMPLETED` | **+15** | **SpyNote / Joker:** Intercepts 2FA OTPs on boot and transmits them to C2 server. |
-| **Suspicious Device Admin** | `Device Admin` active on an app whose label is NOT Security/MDM | **+12** | **Ransomware / Persistence:** Blocks user from disabling device admin or uninstalling app. |
-| **Mobile Spyware Pattern** | `CAMERA` + `RECORD_AUDIO` + `LOCATION` + `INTERNET` | **+10** | **Pegasus / FinSpy / SpApp:** Continuous audiovisual and spatial surveillance beacon. |
-| **Social Graph Harvester** | `CONTACTS` + `CALL_LOG` + `SMS` + `INTERNET` | **+12** | **Predatory Loan / Blackmail:** Extracts contact book and call logs for social engineering extortion. |
-| **Sideloaded SMS Risk** | Sideloaded APK (`installer == Sideloaded`) + `SMS` access | **+10** | Bypasses Google Play Protect SMS policy restrictions; high probability of trojanized dropper. |
-| **OTP Exfiltration** | `Notification Listener` + `INTERNET` | **+8** | Intercepts notification OTPs from WhatsApp, Telegram, and banking apps. |
-| **Stealth Background Tracker** | `ACCESS_BACKGROUND_LOCATION` + `INTERNET` | **+8** | Covert 24/7 geolocation tracking without foreground indication. |
-
----
-
-## 5. Context Mismatch Heuristics
-
-Flags low-complexity utility apps requesting high-risk authorizations:
-- **Scope Keywords:** `torch`, `flashlight`, `calculator`, `wallpaper`, `weather`, `clock`, `compass`, `cleaner`, `booster`, `battery saver`, `notes`.
-- **Trigger:** Any matched utility app holding **SMS**, **Contacts**, **Call Logs**, **Camera**, or **Microphone** permissions.
-- **Penalty:** **+15 points** (instantly triggers `CRITICAL` or `HIGH` status with explanation: *"Utility tool holds intrusive data harvesting permissions unmatched to core function"*).
+| Privilege | Enabled | Declared only |
+|---|---|---|
+| Accessibility service (screen reading, input injection) | **+20** | +6 |
+| Device administrator (active) | **+15** | — |
+| Notification listener (OTP interception) | **+15** | — |
+| Screen overlay `SYSTEM_ALERT_WINDOW` (fake logins) | **+12** | +4 |
+| `REQUEST_INSTALL_PACKAGES` (second-stage payloads) | **+10** | +3 |
+| `PACKAGE_USAGE_STATS` (attack timing) | **+8** | +2 |
+| Other privileged permissions (e.g. `WRITE_SECURE_SETTINGS`) | — | +4 each, max +8 |
 
 ---
 
-## 6. Sideloading Provenance Penalty
+## 4. Combination rules (added on top of categories)
 
-- **Verified Play Store / OEM App Store:** 0 penalty.
-- **Sideloaded / Unknown Package Source:** **+10 penalty** if the app declares any dangerous runtime permission.
+| Rule | Condition | Points | Threat model |
+|---|---|---|---|
+| Banking Trojan Pattern | Accessibility **enabled** + overlay **enabled** | **+20** | Anatsa / Teabot: fake login injected over the real bank app |
+| SMS Data Stealer | SMS read/receive/send **granted** + `INTERNET` + `RECEIVE_BOOT_COMPLETED` | **+15** | SpyNote / Joker: OTP interception that survives reboot |
+| Context Mismatch (utility) | Torch/calculator/wallpaper-class app holding SMS, contacts, call log, camera, microphone or location | **+15** | Utility app with no functional need for intrusive access |
+| Hidden Surveillance | Camera + microphone + location granted + `INTERNET` **and** (no launcher icon **or** sideloaded) | +12 | Spyware capability with no visible UI |
+| Social Graph Harvester | Contacts + call log + SMS granted + `INTERNET` | +12 | Blackmail / predatory-loan data extraction |
+| Device Admin on non-security app | Active device admin, app is not a security/MDM tool | +10 | Persistence: blocks uninstall |
+| Sideloaded SMS Access | Sideloaded + SMS access | +10 | Bypasses Play SMS policy |
+| Notification OTP Exfiltration | Notification listener enabled + `INTERNET` + (sideloaded, hidden, accessibility or SMS access) | +8 | Reads banking OTP notifications |
+| Stealth Background Tracker | `ACCESS_BACKGROUND_LOCATION` granted + `INTERNET` | +6 | 24/7 location tracking |
+| Sideloaded source | Installed outside app stores **and** holds sensitive granted permissions | +10 | No Play Protect screening |
 
 ---
 
-## 7. Explainability & Triage (Non-Technical User Answers)
+## 5. On-device AI purpose check (bounded, never authoritative)
 
-For any app in the **High** or **Critical** tier, the auditor generates a minimum of **3 human-readable explanations**:
-1. **Q1: Which of my apps can do the most harm?** $\to$ Highest risk score on Dashboard & Top 5 Threat Card.
-2. **Q2: Why is each one flagged?** $\to$ "Why Flagged" card detailing combination rules triggered, active special access, and sensitive categories.
-3. **Q3: What can I do about it right now?** $\to$ Direct 1-tap buttons: **"Open App Settings"** (to revoke permissions) or **"Uninstall"** (to remove package).
+A bundled Universal Sentence Encoder (≈6 MB, MediaPipe Tasks Text, fully offline) compares each
+app's own metadata (label, package-name words, Android category) against 40 curated app-function
+archetypes and permission-use descriptions. Per sensitive permission it produces
+**Fits purpose / Unclear / Unexplained**.
+
+Scoring rules for the AI signal:
+
+- adds **0 points** unless the app already scores **≥ 26** on the deterministic rules;
+- 1 unexplained category → +2 (+3 if it is SMS or contacts/call log) · 2 → +4 · 3 → +6 · 4+ → **+8 max**;
+- **can never push an app into Critical by itself** (total is capped at 75 whenever the rule score is below 76);
+- always shown as its own line item labelled `AI` in the score breakdown.
+
+Interpretation rules the UI follows:
+
+1. A similarity value (e.g. `0.42`) is a text-overlap score, **never a probability**.
+2. "Unexplained" means the app's metadata does not explain the access — it is **not** a malware verdict.
+3. The deterministic rule engine is authoritative; the AI can only add a small, labelled signal.
+
+---
+
+## 6. Explainability (Q1 / Q2 / Q3)
+
+- **Q1 — which apps can do the most harm:** ranked list + device health score + risk distribution.
+- **Q2 — why is it flagged:** every High/Critical app shows **at least 3 plain-language reasons**
+  plus a full point-by-point breakdown ("what gave this app its score").
+- **Q3 — what can I do right now:** one-tap *App Settings* (revoke permissions) and *Uninstall*,
+  plus a checklist in the PDF report.
+
+## 7. Privacy
+
+No `INTERNET` permission. Inventory, scoring, the ML model, SHA-256 hashes and the PDF report all
+run on the device. Hash lookup against external threat intelligence is intentionally absent —
+"offline" is enforced by the manifest, not by a setting.

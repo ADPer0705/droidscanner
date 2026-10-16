@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "archetypes": [
+    {
+      "id": "messaging",
+      "label": "Messaging / chat",
+      "text": "an app for sending and receiving chat messages with friends, like WhatsApp, Telegram or Signal",
+      "plausible": ["CAMERA_MICROPHONE", "CONTACTS_CALL_LOGS", "STORAGE_MEDIA", "PHONE_IDENTITY", "SMS", "BACKGROUND_PERSISTENCE", "NETWORK"]
+    },
+    {
+      "id": "sms_messenger",
+      "label": "Text messaging (SMS/MMS)",
+      "text": "the default text messaging app that reads, sends and stores SMS and MMS messages",
+      "plausible": ["SMS", "CONTACTS_CALL_LOGS", "PHONE_IDENTITY", "STORAGE_MEDIA", "CAMERA_MICROPHONE", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "phone_dialer",
+      "label": "Phone dialer and contacts",
+      "text": "a phone app that places calls, shows contacts and call history",
+      "plausible": ["CONTACTS_CALL_LOGS", "PHONE_IDENTITY", "SMS", "STORAGE_MEDIA", "NETWORK"]
+    },
+    {
+      "id": "social_media",
+      "label": "Social media",
+      "text": "a social network app with posts, stories, photos and direct messages",
+      "plausible": ["CAMERA_MICROPHONE", "CONTACTS_CALL_LOGS", "LOCATION", "STORAGE_MEDIA", "PHONE_IDENTITY", "BACKGROUND_PERSISTENCE", "NETWORK"]
+    },
+    {
+      "id": "email",
+      "label": "Email client",
+      "text": "an email app that sends and receives mail with attachments",
+      "plausible": ["CAMERA_MICROPHONE", "CONTACTS_CALL_LOGS", "STORAGE_MEDIA", "BACKGROUND_PERSISTENCE", "NETWORK"]
+    },
+    {
+      "id": "browser",
+      "label": "Web browser",
+      "text": "a web browser for visiting websites and downloading files",
+      "plausible": ["CAMERA_MICROPHONE", "LOCATION", "STORAGE_MEDIA", "BACKGROUND_PERSISTENCE", "NETWORK"]
+    },
+    {
+      "id": "camera",
+      "label": "Camera app",
+      "text": "a camera app that takes photos and records videos with location and microphones",
+      "plausible": ["CAMERA_MICROPHONE", "STORAGE_MEDIA", "LOCATION", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "photo_gallery",
+      "label": "Photos and gallery",
+      "text": "a photo gallery or image editor that organises, edits and shares pictures",
+      "plausible": ["STORAGE_MEDIA", "CAMERA_MICROPHONE", "LOCATION", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "video_player",
+      "label": "Video player",
+      "text": "a video player that plays movie files from the device",
+      "plausible": ["STORAGE_MEDIA", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "music_podcast",
+      "label": "Music or podcast player",
+      "text": "a music or podcast app that plays audio in the background",
+      "plausible": ["STORAGE_MEDIA", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "maps_navigation",
+      "label": "Maps and navigation",
+      "text": "a maps and navigation app that shows your position and gives directions",
+      "plausible": ["LOCATION", "NETWORK", "STORAGE_MEDIA", "CAMERA_MICROPHONE", "PHONE_IDENTITY", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "ride_hailing",
+      "label": "Ride hailing or delivery",
+      "text": "a ride hailing app that shows nearby drivers, rides and calls the driver",
+      "plausible": ["LOCATION", "PHONE_IDENTITY", "CAMERA_MICROPHONE", "STORAGE_MEDIA", "CONTACTS_CALL_LOGS", "NETWORK"]
+    },
+    {
+      "id": "shopping_food",
+      "label": "Shopping or food delivery",
+      "text": "an online shopping or food ordering app with deliveries to your address",
+      "plausible": ["LOCATION", "CAMERA_MICROPHONE", "STORAGE_MEDIA", "PHONE_IDENTITY", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "banking",
+      "label": "Banking",
+      "text": "a mobile banking app for accounts, transfers and card management with secure login",
+      "plausible": ["CAMERA_MICROPHONE", "STORAGE_MEDIA", "SPECIAL_ACCESS", "PHONE_IDENTITY", "NETWORK", "LOCATION", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "wallet_upi",
+      "label": "Payments and wallet",
+      "text": "a payments app like a wallet or UPI app for sending money with QR codes and PIN",
+      "plausible": ["CAMERA_MICROPHONE", "STORAGE_MEDIA", "CONTACTS_CALL_LOGS", "PHONE_IDENTITY", "NETWORK", "SPECIAL_ACCESS", "LOCATION"]
+    },
+    {
+      "id": "games",
+      "label": "Game",
+      "text": "a mobile game with levels, scores and in-app purchases",
+      "plausible": ["STORAGE_MEDIA", "PHONE_IDENTITY", "NETWORK", "CAMERA_MICROPHONE", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "flashlight",
+      "label": "Flashlight / torch",
+      "text": "a simple flashlight torch app that turns the LED light on and off with one button",
+      "plausible": []
+    },
+    {
+      "id": "calculator",
+      "label": "Calculator",
+      "text": "a basic calculator app for arithmetic, percentages and unit maths",
+      "plausible": []
+    },
+    {
+      "id": "wallpaper",
+      "label": "Wallpapers and themes",
+      "text": "a wallpaper app that sets pictures and themes as the home screen background",
+      "plausible": ["STORAGE_MEDIA"]
+    },
+    {
+      "id": "compass_level",
+      "label": "Compass or spirit level",
+      "text": "a compass, spirit level or bubble level tool that uses device sensors",
+      "plausible": ["LOCATION"]
+    },
+    {
+      "id": "unit_converter",
+      "label": "Unit converter or utility tool",
+      "text": "a small utility tool that converts units or shows a ruler, timer or mirror",
+      "plausible": []
+    },
+    {
+      "id": "weather",
+      "label": "Weather",
+      "text": "a weather app that shows forecasts and warnings for your current position",
+      "plausible": ["LOCATION", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "news",
+      "label": "News and reading",
+      "text": "a news app that shows articles, headlines and local stories",
+      "plausible": ["NETWORK", "STORAGE_MEDIA", "LOCATION", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "notes_todo",
+      "label": "Notes and to-do",
+      "text": "a notes or to-do app with text, voice memos and attached pictures",
+      "plausible": ["STORAGE_MEDIA", "CAMERA_MICROPHONE", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "calendar",
+      "label": "Calendar",
+      "text": "a calendar app for events, reminders and invitations",
+      "plausible": ["STORAGE_MEDIA", "CONTACTS_CALL_LOGS", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "file_manager",
+      "label": "File manager",
+      "text": "a file manager that browses, copies and deletes files on the device",
+      "plausible": ["STORAGE_MEDIA", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "document_scanner",
+      "label": "Document scanner",
+      "text": "a document scanner that photographs pages, straightens them and exports PDF files",
+      "plausible": ["CAMERA_MICROPHONE", "STORAGE_MEDIA", "NETWORK"]
+    },
+    {
+      "id": "qr_scanner",
+      "label": "QR or barcode scanner",
+      "text": "a QR code and barcode scanner that reads codes with the camera",
+      "plausible": ["CAMERA_MICROPHONE", "STORAGE_MEDIA", "NETWORK"]
+    },
+    {
+      "id": "keyboard",
+      "label": "Keyboard or input method",
+      "text": "an on-screen keyboard that types text in other apps with themes and emoji",
+      "plausible": []
+    },
+    {
+      "id": "launcher",
+      "label": "Launcher / home screen",
+      "text": "a home screen launcher with widgets, app drawer, search and weather",
+      "plausible": ["LOCATION", "CONTACTS_CALL_LOGS", "STORAGE_MEDIA", "PHONE_IDENTITY", "BACKGROUND_PERSISTENCE", "NETWORK"]
+    },
+    {
+      "id": "vpn_security",
+      "label": "VPN or security tool",
+      "text": "a security app with antivirus scan, VPN tunnel and privacy protection",
+      "plausible": ["NETWORK", "SPECIAL_ACCESS", "BACKGROUND_PERSISTENCE", "STORAGE_MEDIA", "PHONE_IDENTITY"]
+    },
+    {
+      "id": "password_manager",
+      "label": "Password manager or authenticator",
+      "text": "a password manager or authenticator app that fills logins and stores codes securely",
+      "plausible": ["SPECIAL_ACCESS", "CAMERA_MICROPHONE", "STORAGE_MEDIA", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "fitness_health",
+      "label": "Fitness and health",
+      "text": "a fitness, step counter or health app that tracks workouts and routes",
+      "plausible": ["LOCATION", "CAMERA_MICROPHONE", "STORAGE_MEDIA", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "education_kids",
+      "label": "Education or kids app",
+      "text": "an education app with lessons, videos, worksheets and quizzes for students",
+      "plausible": ["CAMERA_MICROPHONE", "STORAGE_MEDIA", "NETWORK"]
+    },
+    {
+      "id": "video_editor",
+      "label": "Video or photo editor",
+      "text": "a video editing app with effects, music and exported clips",
+      "plausible": ["CAMERA_MICROPHONE", "STORAGE_MEDIA", "NETWORK"]
+    },
+    {
+      "id": "streaming",
+      "label": "Streaming video or TV",
+      "text": "a streaming app for movies, series and live TV channels",
+      "plausible": ["NETWORK", "STORAGE_MEDIA", "PHONE_IDENTITY", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "dating",
+      "label": "Dating or social discovery",
+      "text": "a dating app with profiles, photos, chat and matching nearby people",
+      "plausible": ["LOCATION", "CAMERA_MICROPHONE", "CONTACTS_CALL_LOGS", "STORAGE_MEDIA", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "government_id",
+      "label": "Government or identity services",
+      "text": "a government services app for identity documents, certificates and applications",
+      "plausible": ["CAMERA_MICROPHONE", "STORAGE_MEDIA", "PHONE_IDENTITY", "NETWORK"]
+    },
+    {
+      "id": "remote_control",
+      "label": "Remote control or smart home",
+      "text": "a remote control app for TVs, air conditioners and smart home devices",
+      "plausible": ["NETWORK", "LOCATION", "STORAGE_MEDIA", "CAMERA_MICROPHONE"]
+    },
+    {
+      "id": "cleaner_optimizer",
+      "label": "Phone cleaner / optimizer",
+      "text": "a phone cleaner and booster app that frees storage, clears cache and saves battery",
+      "plausible": ["STORAGE_MEDIA", "PHONE_IDENTITY", "NETWORK", "BACKGROUND_PERSISTENCE"]
+    },
+    {
+      "id": "system_widget",
+      "label": "Widget or system tool",
+      "text": "a small widget or system tool that shows clocks, battery status and quick settings",
+      "plausible": ["BACKGROUND_PERSISTENCE"]
+    }
+  ],
+  "justifications": {
+    "SPECIAL_ACCESS": [
+      "an app that draws floating windows over other apps, such as chat heads or a screen recorder",
+      "an app that provides accessibility support for users with disabilities",
+      "an app that fills in passwords or one-time codes automatically",
+      "an app that reads notification history, such as a smartwatch companion",
+      "an employer device management or security suite that administers the phone",
+      "an app that installs other apps or updates itself directly"
+    ],
+    "SMS": [
+      "a messaging app that sends and receives text messages for the user",
+      "the default SMS app that manages text and picture messages",
+      "an app that backs up, restores or blocks spam text messages",
+      "an app that verifies your phone number by reading a one-time password from SMS"
+    ],
+    "CONTACTS_CALL_LOGS": [
+      "a phone or contacts app that shows your address book and call history",
+      "a messaging or social app that finds friends from your contacts",
+      "an app that lets you pick a person to call, pay or share something with",
+      "a dialer app that keeps a record of incoming and outgoing calls"
+    ],
+    "CAMERA_MICROPHONE": [
+      "a camera app that takes photos and records videos for the user",
+      "an app that makes video calls or voice calls",
+      "an app that records voice notes, audio or music",
+      "a scanner app that reads documents, QR codes or barcodes with the camera",
+      "an app that uses the microphone for speech recognition or voice commands"
+    ],
+    "LOCATION": [
+      "a maps or navigation app that shows your position and gives directions",
+      "a weather app that shows forecasts for where you are",
+      "a ride hailing or delivery app that shows things near you",
+      "a fitness app that tracks your runs and routes",
+      "an app that tags photos or posts with your location"
+    ],
+    "PHONE_IDENTITY": [
+      "an app that reads the device identity to detect SIM changes and prevent account fraud",
+      "a dialer app that places and manages phone calls",
+      "an app that manages your phone number, voicemail or call forwarding",
+      "an app that needs a stable device identifier for licensing, DRM or analytics"
+    ],
+    "STORAGE_MEDIA": [
+      "an app that edits, organises or shares photos and videos",
+      "a file manager or document app that browses files on the device",
+      "a music or video player that reads your media files",
+      "an app that saves downloads, exports or screenshots for the user"
+    ],
+    "BACKGROUND_PERSISTENCE": [
+      "a messaging or alarm app that must keep running to deliver notifications on time",
+      "an app that restarts automatically after the phone reboots",
+      "a music or podcast app that keeps playing audio in the background",
+      "an app that synchronises data periodically in the background"
+    ],
+    "NETWORK": [
+      "an app that connects to the internet to load content or synchronise data",
+      "an app that talks to a server for accounts, updates or cloud storage",
+      "an app that streams or downloads content from the internet"
+    ]
+  }
+}

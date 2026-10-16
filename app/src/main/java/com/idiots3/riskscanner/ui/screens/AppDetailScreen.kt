@@ -27,6 +27,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.idiots3.riskscanner.model.*
+import com.idiots3.riskscanner.ui.components.PurposeFitCard
+import com.idiots3.riskscanner.ui.components.ScoreBreakdownCard
+import com.idiots3.riskscanner.ui.components.StaticChecksCard
+import com.idiots3.riskscanner.ui.components.FitStatusChip
 import com.idiots3.riskscanner.ui.theme.RiskColors
 import com.idiots3.riskscanner.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
@@ -44,6 +48,11 @@ fun AppDetailScreen(
     val app = remember(uiState.apps, packageName) {
         uiState.apps.find { it.packageName == packageName }
     }
+    LaunchedEffect(packageName) {
+        viewModel.loadStaticChecks(packageName)
+    }
+    val staticChecks = uiState.staticChecks[packageName]
+    val staticChecksLoading = uiState.staticChecksLoading.contains(packageName)
 
     Scaffold(
         topBar = {
@@ -145,12 +154,26 @@ fun AppDetailScreen(
                     RiskScoreSection(app = app)
                 }
 
+                item {
+                    ScoreBreakdownCard(app = app)
+                }
+
+                item {
+                    PurposeFitCard(
+                        assessment = app.aiAssessment,
+                        aiActive = uiState.aiActive
+                    )
+                }
+
                 // Check for combination rule threats
                 val comboReasons = app.riskReasons.filter { reason ->
                     reason.title.contains("Pattern", ignoreCase = true) ||
                     reason.title.contains("Mismatch", ignoreCase = true) ||
                     reason.title.contains("Tracking", ignoreCase = true) ||
+                    reason.title.contains("Tracker", ignoreCase = true) ||
                     reason.title.contains("Exfiltration", ignoreCase = true) ||
+                    reason.title.contains("Harvester", ignoreCase = true) ||
+                    reason.title.contains("Device Admin", ignoreCase = true) ||
                     reason.title.contains("Sideloaded SMS", ignoreCase = true) ||
                     reason.title.contains("Suspicious", ignoreCase = true)
                 }
@@ -169,7 +192,17 @@ fun AppDetailScreen(
                 }
 
                 item {
-                    PermissionCategoriesSection(categories = app.categories)
+                    PermissionCategoriesSection(
+                        categories = app.categories,
+                        assessment = app.aiAssessment
+                    )
+                }
+
+                item {
+                    StaticChecksCard(
+                        checks = staticChecks,
+                        loading = staticChecksLoading
+                    )
                 }
 
                 item {
@@ -203,7 +236,7 @@ fun AppHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AppIconImage(
-                    drawable = app.icon,
+                    packageName = app.packageName,
                     modifier = Modifier
                         .size(72.dp)
                         .clip(RoundedCornerShape(16.dp))
@@ -347,6 +380,37 @@ fun AppHeader(
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium
                     )
+                }
+
+                if (!app.hasLauncherActivity) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VisibilityOff,
+                                contentDescription = null,
+                                tint = RiskColors.High,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Hidden app",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(
+                            text = "No launcher icon",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = RiskColors.High
+                        )
+                    }
                 }
 
                 if (app.isSystemApp) {
@@ -735,7 +799,7 @@ fun SpecialAccessSection(
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = null,
-                        tint = if (specialAccess.activeSpecialAccess.isNotEmpty()) RiskColors.Critical else MaterialTheme.colorScheme.primary,
+                        tint = if (specialAccess.hasAny) RiskColors.Critical else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(22.dp)
                     )
                     Text(
@@ -745,13 +809,13 @@ fun SpecialAccessSection(
                     )
                 }
 
-                if (specialAccess.activeSpecialAccess.isNotEmpty()) {
+                if (specialAccess.enabledLabels.isNotEmpty()) {
                     Surface(
                         color = RiskColors.CriticalBackground,
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "${specialAccess.activeSpecialAccess.size} active",
+                            text = "${specialAccess.enabledLabels.size} active",
                             style = MaterialTheme.typography.labelSmall,
                             color = RiskColors.Critical,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -761,7 +825,7 @@ fun SpecialAccessSection(
                 }
             }
 
-            if (specialAccess.activeSpecialAccess.isEmpty()) {
+            if (!specialAccess.hasAny) {
                 Surface(
                     color = RiskColors.LowBackground,
                     shape = RoundedCornerShape(8.dp),
@@ -779,7 +843,7 @@ fun SpecialAccessSection(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "No high-privilege special device access active",
+                            text = "No high-privilege special device access active or declared",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -787,51 +851,81 @@ fun SpecialAccessSection(
                 }
             } else {
                 Text(
-                    text = "Special privileges grant persistent device-level access that circumvents typical user permission prompts:",
+                    text = "Special privileges are granted through separate system settings screens and bypass normal permission prompts:",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (specialAccess.hasAccessibilityService) {
+                    if (specialAccess.accessibilityEnabled) {
                         SpecialAccessItem(
-                            title = "Accessibility Service",
-                            description = "Full control to read screen content, capture keystrokes, and automate user interaction",
+                            title = "Accessibility Service — ENABLED",
+                            description = "Can read everything on screen, capture passwords and simulate touches. Verified in Settings > Accessibility.",
+                            severity = RiskLevel.CRITICAL
+                        )
+                    } else if (specialAccess.accessibilityDeclared) {
+                        SpecialAccessItem(
+                            title = "Accessibility Service — declared, not enabled",
+                            description = "Ships an accessibility service that is currently switched off. Only enable it if you trust the app.",
+                            severity = RiskLevel.MEDIUM
+                        )
+                    }
+                    if (specialAccess.deviceAdminActive) {
+                        SpecialAccessItem(
+                            title = "Device Administrator — ACTIVE",
+                            description = "Can enforce screen locks, wipe internal storage and block its own uninstallation.",
                             severity = RiskLevel.CRITICAL
                         )
                     }
-                    if (specialAccess.hasDeviceAdmin) {
+                    if (specialAccess.notificationListenerEnabled) {
                         SpecialAccessItem(
-                            title = "Device Administrator",
-                            description = "Can enforce screen locks, wipe internal storage, and block app uninstallation",
+                            title = "Notification Listener — ENABLED",
+                            description = "Can intercept all incoming notifications, including SMS OTPs and private messages.",
                             severity = RiskLevel.CRITICAL
                         )
-                    }
-                    if (specialAccess.hasNotificationListener) {
+                    } else if (specialAccess.notificationListenerDeclared) {
                         SpecialAccessItem(
-                            title = "Notification Listener",
-                            description = "Can intercept all incoming notifications, including SMS OTPs and private messages",
-                            severity = RiskLevel.CRITICAL
+                            title = "Notification Listener — declared, not enabled",
+                            description = "Requests notification access but does not currently hold it.",
+                            severity = RiskLevel.MEDIUM
                         )
                     }
-                    if (specialAccess.hasOverlayPermission) {
+                    if (specialAccess.overlayEnabled) {
                         SpecialAccessItem(
-                            title = "Screen Overlay (SYSTEM_ALERT_WINDOW)",
-                            description = "Can display deceptive floating windows over other apps for phishing or fake inputs",
+                            title = "Screen Overlay — ENABLED",
+                            description = "Can display floating windows over other apps, the classic phishing and clickjacking technique.",
                             severity = RiskLevel.HIGH
                         )
-                    }
-                    if (specialAccess.hasInstallPackages) {
+                    } else if (specialAccess.overlayDeclared) {
                         SpecialAccessItem(
-                            title = "Install Packages",
-                            description = "Can trigger arbitrary APK installation without redirecting to Play Store",
-                            severity = RiskLevel.HIGH
+                            title = "Screen Overlay — declared, not granted",
+                            description = "Asks for \"display over other apps\" but does not hold it yet.",
+                            severity = RiskLevel.MEDIUM
                         )
                     }
-                    if (specialAccess.hasUsageStats) {
+                    if (specialAccess.installPackagesEnabled) {
                         SpecialAccessItem(
-                            title = "Usage Statistics",
-                            description = "Can track other apps being opened and monitor user behavioral patterns",
+                            title = "Install Apps — GRANTED",
+                            description = "Can trigger APK installations without going through an app store.",
+                            severity = RiskLevel.HIGH
+                        )
+                    } else if (specialAccess.installPackagesDeclared) {
+                        SpecialAccessItem(
+                            title = "Install Apps — declared, not granted",
+                            description = "Requests the ability to install packages but does not hold it yet.",
+                            severity = RiskLevel.MEDIUM
+                        )
+                    }
+                    if (specialAccess.usageStatsEnabled) {
+                        SpecialAccessItem(
+                            title = "Usage Statistics — GRANTED",
+                            description = "Can see which apps you open and when, useful for timing overlay attacks.",
+                            severity = RiskLevel.MEDIUM
+                        )
+                    } else if (specialAccess.usageStatsDeclared) {
+                        SpecialAccessItem(
+                            title = "Usage Statistics — declared, not granted",
+                            description = "Requests app-usage history access but does not hold it yet.",
                             severity = RiskLevel.MEDIUM
                         )
                     }
@@ -910,6 +1004,7 @@ private fun SpecialAccessItem(
 @Composable
 fun PermissionCategoriesSection(
     categories: Map<PermissionCategory, List<PermissionDetail>>,
+    assessment: AiAssessment? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -932,7 +1027,8 @@ fun PermissionCategoriesSection(
             val permissions = categories[category] ?: emptyList()
             CategoryCard(
                 category = category,
-                permissions = permissions
+                permissions = permissions,
+                fit = assessment?.permissionFit?.get(category)
             )
         }
     }
@@ -942,6 +1038,7 @@ fun PermissionCategoriesSection(
 fun CategoryCard(
     category: PermissionCategory,
     permissions: List<PermissionDetail>,
+    fit: PermissionFit? = null,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -1047,7 +1144,7 @@ fun CategoryCard(
                         )
                     } else {
                         permissions.forEach { perm ->
-                            PermissionRow(permission = perm)
+                            PermissionRow(permission = perm, fit = fit)
                         }
                     }
                 }
@@ -1059,6 +1156,7 @@ fun CategoryCard(
 @Composable
 fun PermissionRow(
     permission: PermissionDetail,
+    fit: PermissionFit? = null,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -1130,6 +1228,11 @@ fun PermissionRow(
                     fontWeight = FontWeight.SemiBold,
                     color = if (permission.isGranted) Color(0xFF2E7D32) else MaterialTheme.colorScheme.outline
                 )
+
+                if (fit != null && permission.isSensitive) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FitStatusChip(status = fit.status, similarity = fit.similarity)
+                }
             }
         }
     }
