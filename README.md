@@ -19,7 +19,7 @@ Android 8.0+ (API 26+) · Kotlin + Jetpack Compose · 100% on-device · **no `IN
 **Must-haves**
 
 - **App inventory:** label, lazy-loaded icon, package, version, install/update date, installer source, target/min SDK, system-app toggle
-- **Permissions:** declared vs. granted, protection level (normal / dangerous / signature / special), plain-language description for 80+ permissions
+- **Permissions:** declared vs. granted, protection level (normal / dangerous / signature / special), plain-language description for ~380 permissions (curated table for everything that matters + bulk AOSP database for coverage, `PermissionMapper` is generated and test-guarded)
 - **Nine categories:** Special access, SMS, Contacts & call logs, Camera & microphone, Location, Phone & identity, Storage & media, Background & persistence, Network (+ "Other" for the rest) — per app and as a device-wide summary
 - **Special access detection:** enabled accessibility services, active device admins, enabled notification listeners, plus AppOps-verified overlay / install-packages / usage-stats grants (enabled vs merely declared)
 - **Risk score 0–100** in four bands with a transparent breakdown of every point
@@ -57,6 +57,13 @@ app/src/main/assets/
 ```
 
 **Scoring:** see [`SCORING_RUBRIC.md`](SCORING_RUBRIC.md) — also rendered in-app (Dashboard → *Scoring rules*).
+
+**Permission database:** `engine/PermissionMapper.kt` is generated — the curated table (categories,
+protection levels, user-facing wording tuned for scoring) wins on conflicts, bulk AOSP entries are
+added for coverage, and anything outside the nine categories maps to `Other` (visible, zero weight).
+`PermissionMapperTest` pins the scoring-critical mappings. Test apps for on-device verification live
+in the optional `:testkit` module (benign, hostile permission profile, never part of this APK):
+`./gradlew :testkit:assembleDebug`.
 
 **Two-phase scan:** the deterministic pass renders instantly (rules-only scores, reasons), then the
 on-device AI pass refines visible apps in the background with a progress bar; embeddings are cached
