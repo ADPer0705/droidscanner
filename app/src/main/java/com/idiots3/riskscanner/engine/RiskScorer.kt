@@ -1,6 +1,16 @@
 ﻿package com.idiots3.riskscanner.engine
 
-import com.idiots3.riskscanner.model.*
+import com.idiots3.riskscanner.model.AiAssessment
+import com.idiots3.riskscanner.model.AppInfo
+import com.idiots3.riskscanner.model.InstallProvenance
+import com.idiots3.riskscanner.model.PermissionCategory
+import com.idiots3.riskscanner.model.ReasonKind
+import com.idiots3.riskscanner.model.RiskLevel
+import com.idiots3.riskscanner.model.RiskReason
+import com.idiots3.riskscanner.model.ScoreLine
+import com.idiots3.riskscanner.model.ScoreResult
+import com.idiots3.riskscanner.model.ScoreSource
+import com.idiots3.riskscanner.model.SpecialAccessGrantState
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -31,11 +41,11 @@ object RiskScorer {
         "android.permission.REQUEST_INSTALL_PACKAGES",
         "android.permission.PACKAGE_USAGE_STATS"
     )
-    private val INTERNET = "android.permission.INTERNET"
-    private val BOOT = "android.permission.RECEIVE_BOOT_COMPLETED"
-    private val CAMERA = "android.permission.CAMERA"
-    private val MIC = "android.permission.RECORD_AUDIO"
-    private val BACKGROUND_LOCATION = "android.permission.ACCESS_BACKGROUND_LOCATION"
+    private const val INTERNET = "android.permission.INTERNET"
+    private const val BOOT = "android.permission.RECEIVE_BOOT_COMPLETED"
+    private const val CAMERA = "android.permission.CAMERA"
+    private const val MIC = "android.permission.RECORD_AUDIO"
+    private const val BACKGROUND_LOCATION = "android.permission.ACCESS_BACKGROUND_LOCATION"
     private val ANY_LOCATION = setOf(
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
@@ -87,7 +97,11 @@ object RiskScorer {
                     description = buildString {
                         if (granted > 0) {
                             append("$granted sensitive permission(s) granted: ")
-                            append(perms.filter { it.isGranted && it.isSensitive }.take(4).joinToString(", ") { it.shortName })
+                            append(
+                                perms.filter { it.isGranted && it.isSensitive }
+                                    .take(4)
+                                    .joinToString(", ") { it.shortName }
+                            )
                         }
                         if (declaredOnly > 0) {
                             if (granted > 0) append(". ")
@@ -96,70 +110,144 @@ object RiskScorer {
                         append(". ${category.description}.")
                     },
                     severity = severityFor(points, weight),
-                    category = category
+                    category = category,
+                    kind = ReasonKind.CATEGORY
                 )
             }
         }
 
         // ------------------------------------------------------------------
-        // 2. Special access (highest weight; enabled vs declared-only)
+        // 2. Special access (highest weight; verified enabled vs declared)
         // ------------------------------------------------------------------
         val sa = app.specialAccess
+        val overlayEnabled = sa.overlayEnabled || sa.overlayState == SpecialAccessGrantState.ENABLED
+        val installEnabled = sa.installPackagesEnabled || sa.installPackagesState == SpecialAccessGrantState.ENABLED
+        val usageEnabled = sa.usageStatsEnabled || sa.usageStatsState == SpecialAccessGrantState.ENABLED
+
         if (sa.accessibilityEnabled) {
-            addLine("Accessibility service enabled", ScoringConfig.Special.ACCESSIBILITY_ENABLED, "Verified through Android's enabled accessibility services list")
+            addLine(
+                "Accessibility service enabled",
+                ScoringConfig.Special.ACCESSIBILITY_ENABLED,
+                "Verified through Android's enabled accessibility services list"
+            )
             reasons += RiskReason(
                 "Accessibility service enabled",
                 "Can read everything on screen, capture passwords, and tap buttons for you. This is the single most abused special access on Android.",
-                RiskLevel.CRITICAL, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.CRITICAL,
+                PermissionCategory.SPECIAL_ACCESS,
+                ReasonKind.SPECIAL_ACCESS
             )
         } else if (sa.accessibilityDeclared) {
-            addLine("Offers an accessibility service", ScoringConfig.Special.ACCESSIBILITY_DECLARED, "Declared in the manifest but NOT currently enabled")
+            addLine(
+                "Offers an accessibility service",
+                ScoringConfig.Special.ACCESSIBILITY_DECLARED,
+                "Declared in the manifest but NOT currently enabled"
+            )
             reasons += RiskReason(
                 "Offers an accessibility service",
                 "Ships an accessibility service that is not currently enabled. Verify you recognise this app before enabling it.",
-                RiskLevel.MEDIUM, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.MEDIUM,
+                PermissionCategory.SPECIAL_ACCESS,
+                ReasonKind.SPECIAL_ACCESS
             )
         }
+
         if (sa.deviceAdminActive) {
-            addLine("Device administrator active", ScoringConfig.Special.DEVICE_ADMIN_ACTIVE, "App is an active device administrator")
+            addLine(
+                "Device administrator active",
+                ScoringConfig.Special.DEVICE_ADMIN_ACTIVE,
+                "App is an active device administrator"
+            )
             reasons += RiskReason(
                 "Device administrator active",
                 "Can lock the screen, wipe data, and may block its own uninstall. Remove device-admin rights if you did not grant them on purpose.",
-                RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS,
+                ReasonKind.SPECIAL_ACCESS
+            )
+        } else if (sa.deviceAdminDeclared) {
+            addLine(
+                "Offers device administration",
+                ScoringConfig.Special.DEVICE_ADMIN_DECLARED,
+                "Declares a DeviceAdminReceiver (not currently active)"
             )
         }
+
         if (sa.notificationListenerEnabled) {
-            addLine("Notification listener enabled", ScoringConfig.Special.NOTIFICATION_LISTENER_ENABLED, "Verified through the system notification access registry")
+            addLine(
+                "Notification listener enabled",
+                ScoringConfig.Special.NOTIFICATION_LISTENER_ENABLED,
+                "Verified through the system notification access registry"
+            )
             reasons += RiskReason(
                 "Notification access enabled",
                 "Reads every notification, including banking OTP codes and private messages.",
-                RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS,
+                ReasonKind.SPECIAL_ACCESS
             )
         }
-        if (sa.overlayEnabled) {
-            addLine("Screen overlay enabled", ScoringConfig.Special.OVERLAY_ENABLED, "Can draw over other apps (AppOps verified)")
+
+        if (overlayEnabled) {
+            addLine(
+                "Screen overlay enabled",
+                ScoringConfig.Special.OVERLAY_ENABLED,
+                "Can draw over other apps (AppOps verified)"
+            )
             reasons += RiskReason(
                 "Screen overlay enabled",
                 "Can draw windows on top of other apps — the classic way to fake a login screen.",
-                RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS,
+                ReasonKind.SPECIAL_ACCESS
             )
         } else if (sa.overlayDeclared) {
-            addLine("Requests screen overlay", ScoringConfig.Special.OVERLAY_DECLARED, "Declared but not granted")
+            val detail = if (sa.overlayState == SpecialAccessGrantState.DECLARED_UNVERIFIED) {
+                "Declared in manifest (verify grant status in Android Settings)"
+            } else {
+                "Declared but not granted"
+            }
+            addLine("Requests screen overlay", ScoringConfig.Special.OVERLAY_DECLARED, detail)
         }
-        if (sa.installPackagesEnabled) {
-            addLine("Can install apps", ScoringConfig.Special.INSTALL_PACKAGES_ENABLED, "REQUEST_INSTALL_PACKAGES granted (AppOps verified)")
+
+        if (installEnabled) {
+            addLine(
+                "Can install apps",
+                ScoringConfig.Special.INSTALL_PACKAGES_ENABLED,
+                "REQUEST_INSTALL_PACKAGES granted (AppOps verified)"
+            )
             reasons += RiskReason(
                 "Can install other apps",
                 "Can push additional APK installs without the Play Store — a common second-stage malware step.",
-                RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS,
+                ReasonKind.SPECIAL_ACCESS
             )
         } else if (sa.installPackagesDeclared) {
-            addLine("Requests install-apps access", ScoringConfig.Special.INSTALL_PACKAGES_DECLARED, "Declared but not granted")
+            val detail = if (sa.installPackagesState == SpecialAccessGrantState.DECLARED_UNVERIFIED) {
+                "Declared in manifest (verify \"Install unknown apps\" in Settings)"
+            } else {
+                "Declared but not granted"
+            }
+            addLine("Requests install-apps access", ScoringConfig.Special.INSTALL_PACKAGES_DECLARED, detail)
         }
-        if (sa.usageStatsEnabled) {
-            addLine("Usage statistics access", ScoringConfig.Special.USAGE_STATS_ENABLED, "Can see which apps you open and when (AppOps verified)")
+
+        if (usageEnabled) {
+            addLine(
+                "Usage statistics access",
+                ScoringConfig.Special.USAGE_STATS_ENABLED,
+                "Can see which apps you open and when (AppOps verified)"
+            )
         } else if (sa.usageStatsDeclared) {
-            addLine("Requests usage statistics", ScoringConfig.Special.USAGE_STATS_DECLARED, "Declared but not granted")
+            addLine(
+                "Requests usage statistics",
+                ScoringConfig.Special.USAGE_STATS_DECLARED,
+                if (sa.usageStatsState == SpecialAccessGrantState.DECLARED_UNVERIFIED) {
+                    "Declared in manifest (verify in Usage Access Settings)"
+                } else {
+                    "Declared but not granted"
+                }
+            )
         }
 
         val untrackedSpecial = app.permissions.filter {
@@ -178,7 +266,9 @@ object RiskScorer {
             reasons += RiskReason(
                 "Privileged permissions",
                 "Requests high-privilege permissions: ${untrackedSpecial.joinToString(", ") { it.shortName }}.",
-                RiskLevel.MEDIUM, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.MEDIUM,
+                PermissionCategory.SPECIAL_ACCESS,
+                ReasonKind.SPECIAL_ACCESS
             )
         }
 
@@ -198,18 +288,51 @@ object RiskScorer {
         val hidden = !app.hasLauncherActivity
         val sideloaded = app.isSideloaded
 
-        fun combo(id: String, detail: String, severity: RiskLevel = RiskLevel.CRITICAL, category: PermissionCategory = PermissionCategory.SPECIAL_ACCESS) {
+        fun combo(
+            id: String,
+            detail: String,
+            severity: RiskLevel = RiskLevel.CRITICAL,
+            category: PermissionCategory = PermissionCategory.SPECIAL_ACCESS
+        ) {
             val rule = ScoringConfig.comboRules.first { it.id == id }
             addLine(rule.name, rule.points, detail)
-            reasons += RiskReason(rule.name, "${rule.rationale} ($detail)", severity, category)
+            reasons += RiskReason(
+                title = rule.name,
+                description = "${rule.rationale} ($detail)",
+                severity = severity,
+                category = category,
+                kind = ReasonKind.COMBO_RULE
+            )
         }
 
-        if (sa.accessibilityEnabled && sa.overlayEnabled) {
-            combo("banking_trojan", "accessibility + overlay both enabled", RiskLevel.CRITICAL, PermissionCategory.SPECIAL_ACCESS)
+        if (sa.accessibilityEnabled && overlayEnabled) {
+            combo(
+                "banking_trojan",
+                "accessibility + overlay both enabled",
+                RiskLevel.CRITICAL,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        } else if (sa.accessibilityEnabled &&
+            sa.overlayDeclared &&
+            sa.overlayState == SpecialAccessGrantState.DECLARED_UNVERIFIED
+        ) {
+            combo(
+                "banking_trojan_potential",
+                "accessibility enabled + overlay declared (verify overlay grant in Settings)",
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
+            )
         }
-        if (smsGranted && internet && boot) {
-            combo("sms_stealer", "SMS access + internet + starts on boot", RiskLevel.CRITICAL, PermissionCategory.SMS)
+
+        if (smsGranted && internet && boot && !(app.isDefaultSmsApp && !sideloaded)) {
+            combo(
+                "sms_stealer",
+                "SMS access + internet + starts on boot",
+                RiskLevel.CRITICAL,
+                PermissionCategory.SMS
+            )
         }
+
         if (isUtilityApp(app) && (smsGranted || contactsGranted || callLogGranted || mic || camera || location)) {
             val matched = buildList {
                 if (smsGranted) add("SMS")
@@ -222,52 +345,110 @@ object RiskScorer {
             combo(
                 "utility_mismatch",
                 "a ${app.appName} normally needs none of: $matched",
-                RiskLevel.CRITICAL, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.CRITICAL,
+                PermissionCategory.SPECIAL_ACCESS
             )
         }
+
         if (camera && mic && location && internet && hidden) {
             combo(
                 "hidden_spyware",
                 "records, locates and uploads with no launcher icon",
-                RiskLevel.CRITICAL, PermissionCategory.CAMERA_MICROPHONE
+                RiskLevel.CRITICAL,
+                PermissionCategory.CAMERA_MICROPHONE
             )
         }
-        if (hidden && app.grantedSensitive.isNotEmpty()) {
+
+        if (hidden && !app.isEnabledInputMethod && app.grantedSensitive.isNotEmpty()) {
             combo(
                 "hidden_app",
                 "no launcher icon while holding ${app.grantedSensitive.size} sensitive granted permission(s)",
-                RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
             )
         }
-        if (contactsGranted && callLogGranted && smsGranted && internet) {
-            combo("data_harvester", "contacts + call log + SMS + internet", RiskLevel.CRITICAL, PermissionCategory.CONTACTS_CALL_LOGS)
+
+        if (contactsGranted && callLogGranted && smsGranted && internet && !(app.isDefaultSmsApp && !sideloaded)) {
+            combo(
+                "data_harvester",
+                "contacts + call log + SMS + internet",
+                RiskLevel.CRITICAL,
+                PermissionCategory.CONTACTS_CALL_LOGS
+            )
         }
+
         if (sa.deviceAdminActive && !isSecurityTool(app)) {
-            combo("device_admin_mismatch", "device admin on a non-security app", RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS)
+            combo(
+                "device_admin_mismatch",
+                "device admin on a non-security app",
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
+            )
         }
+
         if (sideloaded && smsGranted) {
-            combo("sideloaded_sms", "sideloaded + SMS access", RiskLevel.CRITICAL, PermissionCategory.SMS)
+            combo(
+                "sideloaded_sms",
+                "sideloaded + SMS access",
+                RiskLevel.CRITICAL,
+                PermissionCategory.SMS
+            )
         }
+
+        if (!app.isSystemApp &&
+            app.installProvenance == InstallProvenance.BROWSER_OR_APP_SIDELOAD &&
+            (sa.installPackagesDeclared || sa.accessibilityDeclared)
+        ) {
+            combo(
+                "dropper_chain",
+                "${app.installerSource} with install-apps or accessibility capability",
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        }
+
+        if (sa.accessibilityEnabled && sa.nfcHceDeclared) {
+            combo(
+                "nfc_accessibility",
+                "accessibility enabled + NFC card emulation service",
+                RiskLevel.CRITICAL,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        }
+
         if (sa.notificationListenerEnabled && internet && (sideloaded || hidden || sa.accessibilityEnabled || smsGranted)) {
-            combo("otp_exfiltration", "notification listener + internet + secondary capability", RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS)
+            combo(
+                "otp_exfiltration",
+                "notification listener + internet + secondary capability",
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
+            )
         }
+
         if (backgroundLocation && internet) {
-            combo("background_tracking", "background location + internet", RiskLevel.HIGH, PermissionCategory.LOCATION)
+            combo(
+                "background_tracking",
+                "background location + internet",
+                RiskLevel.HIGH,
+                PermissionCategory.LOCATION
+            )
         }
 
         // ------------------------------------------------------------------
-        // 4. Sideloading provenance
+        // 4. Sideloading provenance (system apps are exempt)
         // ------------------------------------------------------------------
         if (sideloaded && app.grantedSensitive.isNotEmpty()) {
             addLine(
                 "Sideloaded source",
                 ScoringConfig.SIDELOAD_PENALTY,
-                "Not installed from an app store, holds sensitive granted permissions"
+                "${app.installerSource}; holds sensitive granted permissions"
             )
             reasons += RiskReason(
                 "Sideloaded app with sensitive access",
-                "Installed outside app stores (no Play Protect screening) while holding sensitive permissions.",
-                RiskLevel.HIGH, PermissionCategory.SPECIAL_ACCESS
+                "Installed outside recognized app stores (${app.installerSource}) while holding sensitive permissions.",
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS,
+                ReasonKind.PROVENANCE
             )
         }
 
@@ -287,12 +468,13 @@ object RiskScorer {
                     source = ScoreSource.AI
                 )
                 reasons += RiskReason(
-                    "Unexplained access (on-device AI check)",
-                    "This app looks like \"${ai.purposeLabel ?: "an unclear purpose"}\", which does not explain its " +
+                    title = "Unexplained access (on-device AI check)",
+                    description = "This app looks like \"${ai.purposeLabel ?: "an unclear purpose"}\", which does not explain its " +
                         ai.unexplainedCategories.joinToString(", ") { it.label.lowercase() } +
                         " permissions. Weak signal — please verify manually.",
-                    RiskLevel.MEDIUM,
-                    ai.unexplainedCategories.first()
+                    severity = RiskLevel.MEDIUM,
+                    category = ai.unexplainedCategories.first(),
+                    kind = ReasonKind.AI
                 )
             } else if (ai.unexplainedCategories.isNotEmpty()) {
                 breakdown += ScoreLine(
@@ -324,7 +506,8 @@ object RiskScorer {
                         title = line.label,
                         description = "Score driver: ${line.detail}.",
                         severity = RiskLevel.MEDIUM,
-                        category = PermissionCategory.OTHER
+                        category = PermissionCategory.OTHER,
+                        kind = ReasonKind.CATEGORY
                     )
                 }
                 index++

@@ -43,7 +43,7 @@ class PurposeInferenceEngine(
     private val prepareLock = Any()
 
     @Volatile
-    private var ready = false
+    private var vectorsWarmed = false
 
     @Volatile
     private var modelOk = false
@@ -55,22 +55,24 @@ class PurposeInferenceEngine(
     val isModelAvailable: Boolean
         get() = modelOk
 
-    val isReady: Boolean
-        get() = ready
-
-    /** Loads the knowledge base and embeds it (cached on disk across launches). */
+    /**
+     * Loads the knowledge base and ensures the native embedder is initialized.
+     * Safe to call repeatedly across rescans even after [releaseModel] closed the handle.
+     */
     suspend fun prepare(): Boolean = withContext(Dispatchers.Default) {
         ensureReady()
         modelOk
     }
 
     private fun ensureReady() {
-        if (ready) return
         synchronized(prepareLock) {
-            if (ready) return
             loadKnowledgeBase()
-            modelOk = archetypes.isNotEmpty() && embedder.ensureInitialized()
-            if (modelOk) {
+            if (archetypes.isEmpty()) {
+                modelOk = false
+                return
+            }
+            modelOk = embedder.ensureInitialized()
+            if (modelOk && !vectorsWarmed) {
                 archetypes.forEach { archetype ->
                     ensureVector(EmbeddingStore.archetypeKey(archetype.id), archetype.text)
                 }
@@ -79,8 +81,8 @@ class PurposeInferenceEngine(
                         ensureVector(EmbeddingStore.justificationKey(category.name, index), text)
                     }
                 }
+                vectorsWarmed = true
             }
-            ready = true
         }
     }
 
@@ -95,7 +97,7 @@ class PurposeInferenceEngine(
     }
 
     suspend fun assess(app: AppInfo): AiAssessment = withContext(Dispatchers.Default) {
-        if (!ready || !modelOk) {
+        if (!modelOk) {
             return@withContext AiAssessment(
                 purposeLabel = null,
                 purposeSimilarity = 0f,
@@ -108,11 +110,25 @@ class PurposeInferenceEngine(
 
         val text = buildAppText(app)
         if (text.isBlank()) {
-            return@withContext AiAssessment(null, 0f, emptyMap(), emptyList(), modelUsed = false, note = "Not enough app metadata")
+            return@withContext AiAssessment(
+                purposeLabel = null,
+                purposeSimilarity = 0f,
+                permissionFit = emptyMap(),
+                unexplainedCategories = emptyList(),
+                modelUsed = false,
+                note = "Not enough app metadata"
+            )
         }
 
         val appVector = appVector(app, text)
-            ?: return@withContext AiAssessment(null, 0f, emptyMap(), emptyList(), modelUsed = false, note = "Embedding failed for this app")
+            ?: return@withContext AiAssessment(
+                purposeLabel = null,
+                purposeSimilarity = 0f,
+                permissionFit = emptyMap(),
+                unexplainedCategories = emptyList(),
+                modelUsed = false,
+                note = "Embedding failed for this app"
+            )
 
         val best = archetypes
             .mapNotNull { archetype ->
@@ -125,6 +141,11 @@ class PurposeInferenceEngine(
             .map { it.category }
             .distinct()
             .filter { it != PermissionCategory.OTHER }
+
+        val grantedSensitiveCategories = app.permissions
+            .filter { it.isSensitive && it.isGranted }
+            .map { it.category }
+            .toSet()
 
         val fits = LinkedHashMap<PermissionCategory, PermissionFit>()
         for (category in sensitiveCategories) {
@@ -157,7 +178,13 @@ class PurposeInferenceEngine(
             fits[category] = PermissionFit(status, bestSimilarity, evidence)
         }
 
-        val unexplained = fits.filterValues { it.status == FitStatus.UNEXPLAINED }.keys.toList()
+        // Only granted sensitive categories can trigger unexplained score points.
+        val unexplained = fits
+            .filter { (category, fit) ->
+                fit.status == FitStatus.UNEXPLAINED && grantedSensitiveCategories.contains(category)
+            }
+            .keys
+            .toList()
 
         AiAssessment(
             purposeLabel = best?.first?.label,
@@ -173,6 +200,7 @@ class PurposeInferenceEngine(
     private fun appVector(app: AppInfo, text: String): FloatArray? {
         val key = EmbeddingStore.appKey(app.packageName, app.versionCode, text.hashCode())
         store.get(key)?.let { return it }
+        if (!embedder.ensureInitialized()) return null
         val vector = embedder.embed(text) ?: return null
         store.put(key, vector)
         return vector

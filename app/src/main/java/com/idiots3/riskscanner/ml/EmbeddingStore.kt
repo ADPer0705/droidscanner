@@ -57,18 +57,25 @@ class EmbeddingStore(context: Context) {
         try {
             val root = JSONObject()
             vectors.forEach { (key, vector) -> encode(vector)?.let { root.put(key, it) } }
-            file.writeText(root.toString())
+            val tmp = File(file.parentFile, "${file.name}.tmp")
+            tmp.writeText(root.toString())
+            if (!tmp.renameTo(file)) {
+                file.writeText(root.toString())
+                tmp.delete()
+            }
         } catch (_: Throwable) {
         }
     }
 
     companion object {
-        fun archetypeKey(id: String) = "a:$id"
+        private const val CACHE_VERSION = "v1"
 
-        fun justificationKey(category: String, index: Int) = "j:$category:$index"
+        fun archetypeKey(id: String) = "$CACHE_VERSION:a:$id"
+
+        fun justificationKey(category: String, index: Int) = "$CACHE_VERSION:j:$category:$index"
 
         fun appKey(packageName: String, versionCode: Long, textHash: Int) =
-            "p:$packageName:$versionCode:$textHash"
+            "$CACHE_VERSION:p:$packageName:$versionCode:$textHash"
 
         private fun encode(vector: FloatArray): String? = try {
             val buffer = ByteBuffer.allocate(vector.size * 4)

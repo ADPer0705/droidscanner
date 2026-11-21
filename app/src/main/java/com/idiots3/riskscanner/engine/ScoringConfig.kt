@@ -2,11 +2,10 @@ package com.idiots3.riskscanner.engine
 
 import com.idiots3.riskscanner.model.PermissionCategory
 import com.idiots3.riskscanner.model.PermissionDetail
-import com.idiots3.riskscanner.model.ProtectionLevel
 
 /**
  * SINGLE SOURCE OF TRUTH for every number used by the risk engine.
- * SCORING_RUBRIC.md and the in-app "How scoring works" screen are generated from this file.
+ * Rendered directly by the in-app "How scoring works" screen.
  */
 object ScoringConfig {
 
@@ -51,12 +50,13 @@ object ScoringConfig {
 
     // ---------------------------------------------------------------------
     // Special access (highest weight). Enabled = verified through system settings/AppOps.
-    // Declared-only = the app asked for it in its manifest but does not currently hold it.
+    // Declared-only = the app asked for it in its manifest or cannot be verified via AppOps.
     // ---------------------------------------------------------------------
     object Special {
         const val ACCESSIBILITY_ENABLED = 20
         const val ACCESSIBILITY_DECLARED = 6
         const val DEVICE_ADMIN_ACTIVE = 15
+        const val DEVICE_ADMIN_DECLARED = 3
         const val NOTIFICATION_LISTENER_ENABLED = 15
         const val OVERLAY_ENABLED = 12
         const val OVERLAY_DECLARED = 4
@@ -90,10 +90,17 @@ object ScoringConfig {
             "The #1 technique used by banking trojans to inject fake login screens over real banking apps."
         ),
         ComboRule(
+            "banking_trojan_potential",
+            "Accessibility + Overlay Capability",
+            16,
+            "Accessibility service enabled + screen overlay declared (verify overlay in Settings)",
+            "Combines live screen-reading/input control with an overlay capability; verify in Settings that \"Display over other apps\" is off."
+        ),
+        ComboRule(
             "sms_stealer",
             "SMS Data Stealer Pattern",
             20,
-            "SMS read/receive/send granted + INTERNET + RECEIVE_BOOT_COMPLETED",
+            "SMS read/receive/send granted + INTERNET + RECEIVE_BOOT_COMPLETED (non-default SMS)",
             "Intercepts 2FA one-time passwords and exfiltrates them after surviving a reboot."
         ),
         ComboRule(
@@ -114,7 +121,7 @@ object ScoringConfig {
             "hidden_app",
             "Invisible app with sensitive access",
             12,
-            "No launcher icon while holding sensitive granted permissions",
+            "No launcher icon while holding sensitive granted permissions (excluding keyboards)",
             "Background-only apps are legitimate for keyboards and widgets, but combined with sensitive access they deserve scrutiny."
         ),
         ComboRule(
@@ -137,6 +144,20 @@ object ScoringConfig {
             12,
             "Sideloaded app holding SMS access",
             "Bypasses Google Play SMS policy; the classic delivery vehicle for OTP-stealing droppers."
+        ),
+        ComboRule(
+            "dropper_chain",
+            "Browser/App-Sideloaded Dropper Risk",
+            12,
+            "Sideloaded via browser or messaging app while requesting install-packages or accessibility",
+            "Apps installed outside stores that can install additional packages or use accessibility are common multi-stage droppers."
+        ),
+        ComboRule(
+            "nfc_accessibility",
+            "NFC Relay + Accessibility Pattern",
+            18,
+            "Accessibility service enabled alongside NFC card-emulation capability",
+            "Used by modern banking malware to intercept PINs while relaying NFC payment cards."
         ),
         ComboRule(
             "otp_exfiltration",

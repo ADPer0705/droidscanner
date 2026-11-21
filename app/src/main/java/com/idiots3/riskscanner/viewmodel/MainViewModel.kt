@@ -6,19 +6,25 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.idiots3.riskscanner.data.SnapshotStore
 import com.idiots3.riskscanner.engine.PermissionDiff
+import com.idiots3.riskscanner.engine.RecommendationEngine
 import com.idiots3.riskscanner.engine.RiskScorer
 import com.idiots3.riskscanner.ml.EmbeddingStore
 import com.idiots3.riskscanner.ml.PurposeInferenceEngine
 import com.idiots3.riskscanner.ml.TextEmbedderEngine
 import com.idiots3.riskscanner.model.AppInfo
+import com.idiots3.riskscanner.model.BehaviourScanResult
 import com.idiots3.riskscanner.model.ChangeType
+import com.idiots3.riskscanner.model.DevicePosture
 import com.idiots3.riskscanner.model.DeviceSummary
 import com.idiots3.riskscanner.model.PermissionCategory
 import com.idiots3.riskscanner.model.PermissionChange
+import com.idiots3.riskscanner.model.RecommendationSummary
 import com.idiots3.riskscanner.model.RiskLevel
 import com.idiots3.riskscanner.model.StaticChecks
 import com.idiots3.riskscanner.receiver.InstallAlertNotifier
 import com.idiots3.riskscanner.scanner.AppScanner
+import com.idiots3.riskscanner.scanner.BehaviourAnomalyScanner
+import com.idiots3.riskscanner.scanner.DevicePostureScanner
 import com.idiots3.riskscanner.scanner.StaticInspector
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,15 +34,33 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class AppSortOrder(val label: String) {
+    RISK_DESC("Highest risk"),
+    NAME_ASC("Name (A–Z)"),
+    RECENTLY_UPDATED("Recently updated"),
+    PERMISSIONS_DESC("Most permissions")
+}
+
+enum class QuickAppFilter(val label: String) {
+    SIDELOADED("Sideloaded"),
+    SPECIAL_ACCESS("Special access"),
+    HIDDEN("Hidden apps")
+}
+
 data class MainUiState(
     val isLoading: Boolean = true,
     val apps: List<AppInfo> = emptyList(),
     val filteredApps: List<AppInfo> = emptyList(),
     val deviceSummary: DeviceSummary? = null,
+    val devicePosture: DevicePosture? = null,
+    val behaviourResult: BehaviourScanResult = BehaviourScanResult(permissionGranted = false),
+    val recommendations: RecommendationSummary? = null,
     val includeSystemApps: Boolean = false,
     val searchQuery: String = "",
     val selectedFilter: RiskLevel? = null,
     val selectedCategory: PermissionCategory? = null,
+    val quickFilter: QuickAppFilter? = null,
+    val sortOrder: AppSortOrder = AppSortOrder.RISK_DESC,
     val error: String? = null,
     val aiActive: Boolean = false,
     val aiProcessed: Int = 0,
@@ -52,6 +76,8 @@ class MainViewModel(context: Context) : ViewModel() {
 
     private val appContext = context.applicationContext
     private val scanner = AppScanner(appContext)
+    private val postureScanner = DevicePostureScanner(appContext)
+    private val behaviourScanner = BehaviourAnomalyScanner(appContext)
     private val inspector = StaticInspector(appContext)
     private val snapshotStore = SnapshotStore(appContext)
     private val purposeEngine = PurposeInferenceEngine(
@@ -71,6 +97,10 @@ class MainViewModel(context: Context) : ViewModel() {
 
     private var scanJob: Job? = null
     private var aiJob: Job? = null
+    private var packageChangeJob: Job? = null
+
+    @Volatile
+    private var pendingExternalRefresh = false
 
     init {
         scanApps()
@@ -83,34 +113,59 @@ class MainViewModel(context: Context) : ViewModel() {
         scanJob = viewModelScope.launch {
             aiJob?.cancel()
             _uiState.update {
-                it.copy(isLoading = true, error = null, aiActive = false, aiProcessed = 0, aiTotal = 0)
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                    aiActive = false,
+                    aiProcessed = 0,
+                    aiTotal = 0,
+                    staticChecks = emptyMap(),
+                    staticChecksLoading = emptySet()
+                )
             }
             try {
-                // Deterministic pass first: instant, explainable, offline.
+                val includeSystem = _uiState.value.includeSystemApps
                 val previous = snapshotStore.load()
-                val apps = scanner.scanAllApps(_uiState.value.includeSystemApps)
+                val apps = scanner.scanAllApps(includeSystem)
                 val now = System.currentTimeMillis()
                 val changes = PermissionDiff.compute(previous, apps, now)
                 snapshotStore.save(PermissionDiff.snapshotOf(apps))
                 snapshotStore.setLastScanTime(now)
 
+                val posture = postureScanner.scan(apps)
+                val behaviour = behaviourScanner.scan(apps)
+                val summary = buildDeviceSummary(apps)
+                val recommendations = RecommendationEngine.generate(apps, posture, behaviour)
+
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
                         apps = apps,
-                        filteredApps = applyFilters(apps, state.searchQuery, state.selectedFilter, state.selectedCategory),
-                        deviceSummary = buildDeviceSummary(apps),
+                        filteredApps = applyFiltersAndSort(
+                            apps = apps,
+                            query = state.searchQuery,
+                            riskLevel = state.selectedFilter,
+                            category = state.selectedCategory,
+                            quickFilter = state.quickFilter,
+                            sortOrder = state.sortOrder
+                        ),
+                        deviceSummary = summary,
+                        devicePosture = posture,
+                        behaviourResult = behaviour,
+                        recommendations = recommendations,
                         recentChanges = changes,
                         lastScanTime = now
                     )
                 }
-                notifyNewRisks(changes)
+                notifyNewRisks(changes, apps)
 
-                // On-device AI refinement streams in afterwards.
                 launchAiPass()
             } catch (t: Throwable) {
                 _uiState.update {
-                    it.copy(isLoading = false, error = "Scan failed: ${t.message ?: t.javaClass.simpleName}")
+                    it.copy(
+                        isLoading = false,
+                        error = "Scan failed: ${t.message ?: t.javaClass.simpleName}"
+                    )
                 }
             }
         }
@@ -154,14 +209,29 @@ class MainViewModel(context: Context) : ViewModel() {
             }
 
             purposeEngine.flush()
-            // Release the native model memory; it is lazily re-created on the next scan.
+            // Release native TFLite runtime memory until the next scan; prepare() will re-open safely.
             purposeEngine.releaseModel()
 
             _uiState.update { state ->
+                val sortedApps = state.apps.sortedByDescending { it.riskScore }
                 state.copy(
                     aiActive = false,
                     aiProcessed = processed,
-                    deviceSummary = buildDeviceSummary(state.apps)
+                    apps = sortedApps,
+                    filteredApps = applyFiltersAndSort(
+                        apps = sortedApps,
+                        query = state.searchQuery,
+                        riskLevel = state.selectedFilter,
+                        category = state.selectedCategory,
+                        quickFilter = state.quickFilter,
+                        sortOrder = state.sortOrder
+                    ),
+                    deviceSummary = buildDeviceSummary(sortedApps),
+                    recommendations = RecommendationEngine.generate(
+                        sortedApps,
+                        state.devicePosture,
+                        state.behaviourResult
+                    )
                 )
             }
         }
@@ -169,45 +239,74 @@ class MainViewModel(context: Context) : ViewModel() {
 
     private fun replaceApp(updated: AppInfo) {
         _uiState.update { state ->
-            val apps = state.apps.map { if (it.packageName == updated.packageName) updated else it }
+            val apps = state.apps
+                .map { if (it.packageName == updated.packageName) updated else it }
+                .sortedByDescending { it.riskScore }
             state.copy(
                 apps = apps,
-                filteredApps = applyFilters(apps, state.searchQuery, state.selectedFilter, state.selectedCategory)
+                filteredApps = applyFiltersAndSort(
+                    apps = apps,
+                    query = state.searchQuery,
+                    riskLevel = state.selectedFilter,
+                    category = state.selectedCategory,
+                    quickFilter = state.quickFilter,
+                    sortOrder = state.sortOrder
+                )
             )
         }
     }
 
-    private fun notifyNewRisks(changes: List<PermissionChange>) {
+    private fun notifyNewRisks(changes: List<PermissionChange>, apps: List<AppInfo>) {
         if (changes.isEmpty()) return
-        val apps = _uiState.value.apps
+        val appMap = apps.associateBy { it.packageName }
         changes
-            .filter { it.type == ChangeType.NEW_APP && it.newScore >= RiskLevel.HIGH.minScore }
+            .filter {
+                (it.type == ChangeType.NEW_APP || it.type == ChangeType.PERMISSIONS_ADDED) &&
+                    it.newScore >= RiskLevel.HIGH.minScore
+            }
             .forEach { change ->
-                apps.firstOrNull { it.packageName == change.packageName }
-                    ?.let { InstallAlertNotifier.notifyHighRisk(appContext, it) }
+                val app = appMap[change.packageName] ?: return@forEach
+                val prefix = if (change.type == ChangeType.PERMISSIONS_ADDED && change.addedPermissions.isNotEmpty()) {
+                    "Added ${change.addedPermissions.take(2).joinToString(", ")}."
+                } else {
+                    null
+                }
+                InstallAlertNotifier.notifyHighRisk(appContext, app, prefix)
             }
     }
 
-    // ------------------------------------------------------------------ install monitoring
+    // ------------------------------------------------------------------ install & external monitoring
 
-    /** Called (debounced) when the system reports a package install/update/removal. */
-    fun onPackageChanged(packageName: String) {
-        viewModelScope.launch {
+    /** Called (debounced) when the system reports a package install, update, or removal. */
+    fun onPackageChanged(@Suppress("UNUSED_PARAMETER") packageName: String) {
+        packageChangeJob?.cancel()
+        packageChangeJob = viewModelScope.launch {
             delay(SETTLE_DELAY_MS)
             scanApps()
         }
     }
 
-    /** Cheap check used on resume: rescan if the last scan is stale. */
+    /** Marks that the user navigated to Android Settings or Uninstall so returning refreshes immediately. */
+    fun markExternalSettingsOpened() {
+        pendingExternalRefresh = true
+    }
+
+    /** Refreshes on resume if the user just returned from system settings/uninstall, or if the scan is stale. */
     fun checkForExternalChanges() {
         if (_uiState.value.isLoading) return
+        if (pendingExternalRefresh) {
+            pendingExternalRefresh = false
+            scanApps()
+            return
+        }
         val age = System.currentTimeMillis() - snapshotStore.lastScanTime()
         if (age > RESCAN_AGE_MS) scanApps()
     }
 
-    // ------------------------------------------------------------------ filtering
+    // ------------------------------------------------------------------ filtering & sorting
 
     fun toggleSystemApps(include: Boolean) {
+        if (_uiState.value.includeSystemApps == include) return
         _uiState.update { it.copy(includeSystemApps = include) }
         scanApps()
     }
@@ -216,7 +315,14 @@ class MainViewModel(context: Context) : ViewModel() {
         _uiState.update {
             it.copy(
                 searchQuery = query,
-                filteredApps = applyFilters(it.apps, query, it.selectedFilter, it.selectedCategory)
+                filteredApps = applyFiltersAndSort(
+                    apps = it.apps,
+                    query = query,
+                    riskLevel = it.selectedFilter,
+                    category = it.selectedCategory,
+                    quickFilter = it.quickFilter,
+                    sortOrder = it.sortOrder
+                )
             )
         }
     }
@@ -225,7 +331,14 @@ class MainViewModel(context: Context) : ViewModel() {
         _uiState.update {
             it.copy(
                 selectedFilter = riskLevel,
-                filteredApps = applyFilters(it.apps, it.searchQuery, riskLevel, it.selectedCategory)
+                filteredApps = applyFiltersAndSort(
+                    apps = it.apps,
+                    query = it.searchQuery,
+                    riskLevel = riskLevel,
+                    category = it.selectedCategory,
+                    quickFilter = it.quickFilter,
+                    sortOrder = it.sortOrder
+                )
             )
         }
     }
@@ -234,16 +347,99 @@ class MainViewModel(context: Context) : ViewModel() {
         _uiState.update {
             it.copy(
                 selectedCategory = category,
-                filteredApps = applyFilters(it.apps, it.searchQuery, it.selectedFilter, category)
+                filteredApps = applyFiltersAndSort(
+                    apps = it.apps,
+                    query = it.searchQuery,
+                    riskLevel = it.selectedFilter,
+                    category = category,
+                    quickFilter = it.quickFilter,
+                    sortOrder = it.sortOrder
+                )
             )
         }
     }
 
-    private fun applyFilters(
+    fun filterByQuick(quickFilter: QuickAppFilter?) {
+        _uiState.update {
+            it.copy(
+                quickFilter = quickFilter,
+                filteredApps = applyFiltersAndSort(
+                    apps = it.apps,
+                    query = it.searchQuery,
+                    riskLevel = it.selectedFilter,
+                    category = it.selectedCategory,
+                    quickFilter = quickFilter,
+                    sortOrder = it.sortOrder
+                )
+            )
+        }
+    }
+
+    fun setSortOrder(sortOrder: AppSortOrder) {
+        _uiState.update {
+            it.copy(
+                sortOrder = sortOrder,
+                filteredApps = applyFiltersAndSort(
+                    apps = it.apps,
+                    query = it.searchQuery,
+                    riskLevel = it.selectedFilter,
+                    category = it.selectedCategory,
+                    quickFilter = it.quickFilter,
+                    sortOrder = sortOrder
+                )
+            )
+        }
+    }
+
+    fun clearAllFilters() {
+        _uiState.update {
+            it.copy(
+                searchQuery = "",
+                selectedFilter = null,
+                selectedCategory = null,
+                quickFilter = null,
+                filteredApps = applyFiltersAndSort(
+                    apps = it.apps,
+                    query = "",
+                    riskLevel = null,
+                    category = null,
+                    quickFilter = null,
+                    sortOrder = it.sortOrder
+                )
+            )
+        }
+    }
+
+    fun applyDashboardJumpFilter(
+        riskLevel: RiskLevel? = null,
+        category: PermissionCategory? = null,
+        quickFilter: QuickAppFilter? = null
+    ) {
+        _uiState.update {
+            it.copy(
+                searchQuery = "",
+                selectedFilter = riskLevel,
+                selectedCategory = category,
+                quickFilter = quickFilter,
+                filteredApps = applyFiltersAndSort(
+                    apps = it.apps,
+                    query = "",
+                    riskLevel = riskLevel,
+                    category = category,
+                    quickFilter = quickFilter,
+                    sortOrder = it.sortOrder
+                )
+            )
+        }
+    }
+
+    private fun applyFiltersAndSort(
         apps: List<AppInfo>,
         query: String,
         riskLevel: RiskLevel?,
-        category: PermissionCategory?
+        category: PermissionCategory?,
+        quickFilter: QuickAppFilter?,
+        sortOrder: AppSortOrder
     ): List<AppInfo> {
         var filtered = apps
         if (query.isNotBlank()) {
@@ -252,9 +448,33 @@ class MainViewModel(context: Context) : ViewModel() {
                     it.packageName.contains(query, ignoreCase = true)
             }
         }
-        if (riskLevel != null) filtered = filtered.filter { it.riskLevel == riskLevel }
-        if (category != null) filtered = filtered.filter { app -> app.permissions.any { it.category == category } }
-        return filtered
+        if (riskLevel != null) {
+            filtered = filtered.filter { it.riskLevel == riskLevel }
+        }
+        if (category != null) {
+            filtered = filtered.filter { app ->
+                app.permissions.any { it.category == category } ||
+                    (category == PermissionCategory.SPECIAL_ACCESS && app.specialAccess.hasAny)
+            }
+        }
+        if (quickFilter != null) {
+            filtered = when (quickFilter) {
+                QuickAppFilter.SIDELOADED -> filtered.filter { it.isSideloaded }
+                QuickAppFilter.SPECIAL_ACCESS -> filtered.filter { it.specialAccess.hasAny }
+                QuickAppFilter.HIDDEN -> filtered.filter { !it.hasLauncherActivity }
+            }
+        }
+        return when (sortOrder) {
+            AppSortOrder.RISK_DESC -> filtered.sortedWith(
+                compareByDescending<AppInfo> { it.riskScore }.thenBy { it.appName.lowercase() }
+            )
+            AppSortOrder.NAME_ASC -> filtered.sortedBy { it.appName.lowercase() }
+            AppSortOrder.RECENTLY_UPDATED -> filtered.sortedByDescending { it.updateDate }
+            AppSortOrder.PERMISSIONS_DESC -> filtered.sortedWith(
+                compareByDescending<AppInfo> { it.grantedSensitive.size }
+                    .thenByDescending { it.permissions.count { p -> p.isGranted } }
+            )
+        }
     }
 
     // ------------------------------------------------------------------ static checks
@@ -279,14 +499,14 @@ class MainViewModel(context: Context) : ViewModel() {
         }
     }
 
-    fun appFor(packageName: String): AppInfo? =
-        _uiState.value.apps.firstOrNull { it.packageName == packageName }
-
     // ------------------------------------------------------------------ summary
 
     private fun buildDeviceSummary(apps: List<AppInfo>): DeviceSummary {
         val categoryBreakdown = PermissionCategory.entries.associateWith { category ->
-            apps.count { app -> app.permissions.any { it.category == category } }
+            apps.count { app ->
+                app.permissions.any { it.category == category } ||
+                    (category == PermissionCategory.SPECIAL_ACCESS && app.specialAccess.hasAny)
+            }
         }
         return DeviceSummary(
             totalApps = apps.size,
@@ -306,7 +526,7 @@ class MainViewModel(context: Context) : ViewModel() {
     }
 
     private companion object {
-        const val SETTLE_DELAY_MS = 2_000L
+        const val SETTLE_DELAY_MS = 1_500L
         const val RESCAN_AGE_MS = 60_000L
     }
 }

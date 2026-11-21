@@ -15,17 +15,23 @@ import androidx.core.content.ContextCompat
 import com.idiots3.riskscanner.model.AppInfo
 
 /**
- * Live install/update monitoring.
+ * Live install/update monitoring while the app is open.
  *
  * Android 8+ forbids manifest-declared receivers for package change broadcasts, so this
- * receiver is registered at runtime while the app is in the foreground. Background installs
- * are still caught on the next resume/scan through the persisted snapshot diff.
+ * receiver is registered at runtime. Background changes are caught on resume/scan via
+ * the persisted snapshot diff.
  */
 class InstallMonitorReceiver(
     private val onPackageChanged: (String) -> Unit
 ) : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == Intent.ACTION_PACKAGE_REMOVED &&
+            intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)
+        ) {
+            // Skip the intermediate removal broadcast emitted during an in-place app update.
+            return
+        }
         val packageName = intent.data?.schemeSpecificPart ?: return
         if (packageName.isNotBlank()) onPackageChanged(packageName)
     }
@@ -47,12 +53,12 @@ class InstallMonitorReceiver(
     }
 }
 
-/** Local notification for apps that score High or Critical. */
+/** Local notification for apps that score High or Critical on install or permission escalation. */
 object InstallAlertNotifier {
 
     private const val CHANNEL_ID = "risk_alerts"
 
-    fun notifyHighRisk(context: Context, app: AppInfo) {
+    fun notifyHighRisk(context: Context, app: AppInfo, detailPrefix: String? = null) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -62,16 +68,14 @@ object InstallAlertNotifier {
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Risk alerts",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Alerts when an app is installed or updated and scores High or Critical risk"
-            }
-            manager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Risk alerts",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Alerts when an app is installed or updated and scores High or Critical risk"
         }
+        manager.createNotificationChannel(channel)
 
         val launchIntent = context.packageManager
             .getLaunchIntentForPackage(context.packageName) ?: return
@@ -82,14 +86,19 @@ object InstallAlertNotifier {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val text = "${app.appName} scored ${app.riskScore}/100 (${app.riskLevel.label} risk). " +
-            "Tap to see exactly why."
+        val body = buildString {
+            if (!detailPrefix.isNullOrBlank()) {
+                append(detailPrefix)
+                append(" ")
+            }
+            append("${app.appName} scored ${app.riskScore}/100 (${app.riskLevel.label} risk). Tap to see why.")
+        }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("⚠ ${app.riskLevel.label} risk app: ${app.appName}")
-            .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentTitle("${app.riskLevel.label} risk app: ${app.appName}")
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
