@@ -19,7 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "RiskScanner"
+rootProject.name = "DroidScanner"
 include(":app")
 include(":testkit")
- 

@@ -1,6 +1,6 @@
-# RiskScanner — On-Device App Risk Auditor (PS-01)
+# DroidScanner — Rootless Android Security Scanner (PS-01)
 
-**Find suspicious Android apps through their permissions, special access and an explainable risk score.**
+**Find risky Android apps and device-protection gaps through public, rootless Android APIs and an explainable risk score.**
 
 Android 8.0+ (API 26+) · Kotlin + Jetpack Compose · 100% on-device · **no `INTERNET` permission**
 
@@ -22,6 +22,7 @@ Android 8.0+ (API 26+) · Kotlin + Jetpack Compose · 100% on-device · **no `IN
 - **Permissions:** declared vs. granted, protection level (normal / dangerous / signature / special), plain-language description for ~380 permissions (curated table for everything that matters + bulk AOSP database for coverage, `PermissionMapper` is generated and test-guarded)
 - **Nine categories:** Special access, SMS, Contacts & call logs, Camera & microphone, Location, Phone & identity, Storage & media, Background & persistence, Network (+ "Other" for the rest) — per app and as a device-wide summary
 - **Special access detection:** enabled accessibility services, active device admins, enabled notification listeners, plus AppOps-verified overlay / install-packages / usage-stats grants (enabled vs merely declared)
+- **Device protection posture:** secure screen lock, Android patch recency, encryption status where Android exposes it, USB debugging / developer options, and enabled high-impact app access. Each gap has a plain-language recommendation and, where Android permits, a shortcut to the relevant system settings.
 - **Risk score 0–100** in four bands with a transparent breakdown of every point
 
 **Should-haves**
@@ -36,6 +37,23 @@ Android 8.0+ (API 26+) · Kotlin + Jetpack Compose · 100% on-device · **no `IN
 - **Static APK checks:** exported components, cleartext traffic, debuggable flag, SDK range, SHA-256 (computed lazily on the detail screen)
 - **Shareable PDF report** generated with `PdfDocument` inside the app
 - Hash lookup against external threat intelligence is deliberately **not** implemented — see Privacy
+
+## Rootless boundaries
+
+DroidScanner can audit installed packages and the device signals Android deliberately exposes to ordinary apps. It cannot reliably prove that a device is rooted, its bootloader is unlocked, Play Protect is enabled, or the OS is compromised—those claims need privileged hardware attestation, device-owner access, or a trusted remote verifier. The UI labels these limits rather than treating absence of evidence as a clean bill of health.
+
+## ML design and roadmap
+
+The current APK uses a bundled Universal Sentence Encoder through MediaPipe. It runs offline and compares an app's label/package/category against permission-use descriptions and curated app-purpose archetypes. It provides only a bounded, explainable context signal; it never declares malware and cannot by itself make an app Critical.
+
+The next useful models are deliberately staged, so the project does not become a black box:
+
+1. **Signed feature-model for APK metadata:** a compact, calibrated gradient-boosted-tree or linear model using permissions, exported-component counts, SDK age, installer provenance, special-access state, and update deltas. Keep feature contributions visible (for example with per-feature attribution) and require a curated, versioned benign/malicious dataset.
+2. **Local anomaly detector:** Isolation Forest or a small autoencoder trained on each device's historical app feature vectors. It should flag unusual *changes* for review, not label malware. This is particularly useful after an update adds accessibility, overlay, SMS, or notification access.
+3. **Optional cloud reputation, only with affirmative consent:** signed APK-certificate/hash reputation and verified threat-feed matches. A hash is still identifying data; this must be opt-in, transparent, and never block app use on its own.
+4. **Runtime behavioural features only where Android permits:** battery/network usage, notification access, and recent install/update signals can enrich a future model, but Android sandboxing prevents a rootless scanner from inspecting another app's private traffic, process memory, or code execution.
+
+Models should remain secondary to deterministic checks until they have measurable false-positive/false-negative performance on representative Android versions and OEMs.
 
 ## Architecture
 

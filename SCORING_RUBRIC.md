@@ -1,6 +1,6 @@
 # On-Device App Risk Auditor (PS-01) — Risk Scoring Rubric & Methodology
 
-**System:** RiskScanner · **Package:** `com.idiots3.riskscanner` · **Engine version:** 2
+**System:** DroidScanner · **Package:** `com.idiots3.droidscanner` · **Engine version:** 2
 **Execution:** Android 8.0+ (API 26+) · 100% on-device · the app declares **no INTERNET permission**
 
 Every number in this document is defined once in `engine/ScoringConfig.kt` and rendered by the

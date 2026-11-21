@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,11 +7,13 @@ plugins {
 }
 
 android {
+    // Source packages stay stable for upgrade compatibility; the installed APK uses
+    // the DroidScanner application id below.
     namespace = "com.idiots3.riskscanner"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.idiots3.riskscanner"
+        applicationId = "com.idiots3.droidscanner"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -36,9 +40,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -86,4 +87,16 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    constraints {
+        implementation("androidx.concurrent:concurrent-futures:1.2.0") {
+            because("Align transitive concurrent-futures with androidx.test:core 1.7.0 under AGP 9 strict constraints")
+        }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
