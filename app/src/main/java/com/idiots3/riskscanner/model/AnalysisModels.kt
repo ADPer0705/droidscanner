@@ -56,15 +56,33 @@ data class StaticChecks(
     val exportedServices: Int = 0,
     val exportedReceivers: Int = 0,
     val exportedProviders: Int = 0,
+    val unprotectedExportedActivities: Int = 0,
+    val unprotectedExportedServices: Int = 0,
+    val unprotectedExportedReceivers: Int = 0,
+    val unprotectedExportedProviders: Int = 0,
+    val unprotectedComponents: List<UnprotectedComponent> = emptyList(),
     val cleartextTraffic: Boolean? = null,
     val debuggable: Boolean = false,
+    val allowBackup: Boolean = false,
+    val testOnly: Boolean = false,
     val targetSdk: Int = 0,
     val minSdk: Int = 0,
+    val apkSizeBytes: Long = 0L,
+    val splitApkCount: Int = 0,
+    val nativeLibraries: List<String> = emptyList(),
     val sha256: String? = null,
-    val hashError: String? = null
+    val hashError: String? = null,
+    val limitedAnalysisNote: String? = null,
+    val signerInfo: SignerInfo? = null
 ) {
     val exportedComponentCount: Int
         get() = exportedActivities + exportedServices + exportedReceivers + exportedProviders
+
+    val unprotectedExportedCount: Int
+        get() = unprotectedExportedActivities +
+            unprotectedExportedServices +
+            unprotectedExportedReceivers +
+            unprotectedExportedProviders
 }
 
 enum class ChangeType(val label: String) {

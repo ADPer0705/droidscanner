@@ -1,4 +1,42 @@
-﻿package com.idiots3.riskscanner.model
+package com.idiots3.riskscanner.model
+
+/**
+ * Honest verification state for AppOps-backed special access permissions.
+ * On Android 10+, third-party apps cannot reliably read another app's AppOps state,
+ * so declared privileges that cannot be verified are marked [DECLARED_UNVERIFIED]
+ * rather than falsely reporting them as denied.
+ */
+enum class SpecialAccessGrantState(val label: String) {
+    ENABLED("Enabled (verified)"),
+    DECLARED_UNVERIFIED("Declared — verify in Settings"),
+    DECLARED_DENIED("Declared — not granted"),
+    NOT_DECLARED("Not requested")
+}
+
+/**
+ * Structured install origin for an application.
+ */
+enum class InstallProvenance(val label: String, val isSideloaded: Boolean) {
+    OFFICIAL_STORE("Official store", false),
+    ALTERNATIVE_STORE("App store", false),
+    PREINSTALLED_SYSTEM("Pre-installed", false),
+    BROWSER_OR_APP_SIDELOAD("Sideloaded via app", true),
+    PACKAGE_INSTALLER("Sideloaded APK", true),
+    ADB_OR_SHELL("Installed via ADB", true),
+    UNKNOWN("Unknown source", true)
+}
+
+/**
+ * Semantic origin of a [RiskReason], used by the UI instead of brittle title matching.
+ */
+enum class ReasonKind {
+    CATEGORY,
+    SPECIAL_ACCESS,
+    COMBO_RULE,
+    PROVENANCE,
+    STATIC,
+    AI
+}
 
 /**
  * Everything the auditor knows about a single installed application.
@@ -30,15 +68,21 @@ data class AppInfo(
     val riskReasons: List<RiskReason> = emptyList(),
     val scoreBreakdown: List<ScoreLine> = emptyList(),
     val aiAssessment: AiAssessment? = null,
-    val categories: Map<PermissionCategory, List<PermissionDetail>> = emptyMap()
+    val categories: Map<PermissionCategory, List<PermissionDetail>> = emptyMap(),
+    val installerPackage: String? = null,
+    val initiatingPackage: String? = null,
+    val installProvenance: InstallProvenance = inferProvenance(installerSource, isSystemApp),
+    val isUpdatedSystemApp: Boolean = false,
+    val isDefaultSmsApp: Boolean = false,
+    val isDefaultDialer: Boolean = false,
+    val isEnabledInputMethod: Boolean = false
 ) {
     /** Sensitive = dangerous or special protection level. */
     val grantedSensitive: List<PermissionDetail>
         get() = permissions.filter { it.isSensitive && it.isGranted }
 
     val isSideloaded: Boolean
-        get() = installerSource.equals("Sideloaded", ignoreCase = true) ||
-            installerSource.equals("Unknown", ignoreCase = true)
+        get() = !isSystemApp && installProvenance.isSideloaded
 
     fun permission(name: String): PermissionDetail? = permissions.firstOrNull { it.name == name }
 
@@ -51,6 +95,43 @@ data class AppInfo(
 
     /** The on-device context model only needs to run for apps that actually hold sensitive access. */
     fun needsAiAnalysis(): Boolean = grantedSensitive.isNotEmpty()
+
+    companion object {
+        fun inferProvenance(installerSource: String, isSystemApp: Boolean): InstallProvenance {
+            if (isSystemApp && (
+                    installerSource.equals("Unknown", ignoreCase = true) ||
+                        installerSource.contains("Pre-installed", ignoreCase = true) ||
+                        installerSource.equals("Sideloaded", ignoreCase = true)
+                    )
+            ) {
+                return InstallProvenance.PREINSTALLED_SYSTEM
+            }
+            return when {
+                installerSource.contains("Google Play", ignoreCase = true) ||
+                    installerSource.contains("Galaxy Store", ignoreCase = true) ||
+                    installerSource.contains("Amazon", ignoreCase = true) ||
+                    installerSource.contains("Huawei", ignoreCase = true) ||
+                    installerSource.contains("Xiaomi", ignoreCase = true) ||
+                    installerSource.contains("GetApps", ignoreCase = true) ||
+                    installerSource.contains("App Market", ignoreCase = true) ||
+                    installerSource.contains("Vivo", ignoreCase = true) ||
+                    installerSource.contains("GrapheneOS", ignoreCase = true) -> InstallProvenance.OFFICIAL_STORE
+
+                installerSource.contains("F-Droid", ignoreCase = true) ||
+                    installerSource.contains("Droid-ify", ignoreCase = true) ||
+                    installerSource.contains("Neo Store", ignoreCase = true) ||
+                    installerSource.contains("Aurora", ignoreCase = true) ||
+                    installerSource.contains("Obtainium", ignoreCase = true) -> InstallProvenance.ALTERNATIVE_STORE
+
+                installerSource.contains("ADB", ignoreCase = true) -> InstallProvenance.ADB_OR_SHELL
+                installerSource.contains("via ", ignoreCase = true) -> InstallProvenance.BROWSER_OR_APP_SIDELOAD
+                installerSource.contains("APK", ignoreCase = true) ||
+                    installerSource.equals("Sideloaded", ignoreCase = true) -> InstallProvenance.PACKAGE_INSTALLER
+
+                else -> InstallProvenance.UNKNOWN
+            }
+        }
+    }
 }
 
 data class PermissionDetail(
@@ -71,44 +152,64 @@ data class SpecialAccessInfo(
     val accessibilityEnabled: Boolean = false,
     val accessibilityDeclared: Boolean = false,
     val deviceAdminActive: Boolean = false,
+    val deviceAdminDeclared: Boolean = false,
     val notificationListenerEnabled: Boolean = false,
     val notificationListenerDeclared: Boolean = false,
     val overlayEnabled: Boolean = false,
     val overlayDeclared: Boolean = false,
+    val overlayState: SpecialAccessGrantState = deriveState(overlayEnabled, overlayDeclared),
     val installPackagesEnabled: Boolean = false,
     val installPackagesDeclared: Boolean = false,
+    val installPackagesState: SpecialAccessGrantState = deriveState(installPackagesEnabled, installPackagesDeclared),
     val usageStatsEnabled: Boolean = false,
-    val usageStatsDeclared: Boolean = false
+    val usageStatsDeclared: Boolean = false,
+    val usageStatsState: SpecialAccessGrantState = deriveState(usageStatsEnabled, usageStatsDeclared),
+    val allFilesAccessDeclared: Boolean = false,
+    val vpnServiceDeclared: Boolean = false,
+    val nfcHceDeclared: Boolean = false
 ) {
     val enabledLabels: List<String>
         get() = buildList {
             if (accessibilityEnabled) add("Accessibility Service")
             if (deviceAdminActive) add("Device Administrator")
             if (notificationListenerEnabled) add("Notification Listener")
-            if (overlayEnabled) add("Screen Overlay")
-            if (installPackagesEnabled) add("Install Packages")
-            if (usageStatsEnabled) add("Usage Statistics")
+            if (overlayEnabled || overlayState == SpecialAccessGrantState.ENABLED) add("Screen Overlay")
+            if (installPackagesEnabled || installPackagesState == SpecialAccessGrantState.ENABLED) add("Install Packages")
+            if (usageStatsEnabled || usageStatsState == SpecialAccessGrantState.ENABLED) add("Usage Statistics")
         }
 
     val declaredOnlyLabels: List<String>
         get() = buildList {
             if (accessibilityDeclared && !accessibilityEnabled) add("Accessibility Service")
+            if (deviceAdminDeclared && !deviceAdminActive) add("Device Administrator")
             if (notificationListenerDeclared && !notificationListenerEnabled) add("Notification Listener")
-            if (overlayDeclared && !overlayEnabled) add("Screen Overlay")
-            if (installPackagesDeclared && !installPackagesEnabled) add("Install Packages")
-            if (usageStatsDeclared && !usageStatsEnabled) add("Usage Statistics")
+            if (overlayDeclared && !overlayEnabled && overlayState != SpecialAccessGrantState.ENABLED) add("Screen Overlay")
+            if (installPackagesDeclared && !installPackagesEnabled && installPackagesState != SpecialAccessGrantState.ENABLED) add("Install Packages")
+            if (usageStatsDeclared && !usageStatsEnabled && usageStatsState != SpecialAccessGrantState.ENABLED) add("Usage Statistics")
+            if (allFilesAccessDeclared) add("All Files Access")
+            if (vpnServiceDeclared) add("VPN Service")
+            if (nfcHceDeclared) add("NFC Card Emulation")
         }
 
     val activeCount: Int get() = enabledLabels.size
 
     val hasAny: Boolean get() = enabledLabels.isNotEmpty() || declaredOnlyLabels.isNotEmpty()
+
+    companion object {
+        fun deriveState(enabled: Boolean, declared: Boolean): SpecialAccessGrantState = when {
+            enabled -> SpecialAccessGrantState.ENABLED
+            declared -> SpecialAccessGrantState.DECLARED_UNVERIFIED
+            else -> SpecialAccessGrantState.NOT_DECLARED
+        }
+    }
 }
 
 data class RiskReason(
     val title: String,
     val description: String,
     val severity: RiskLevel,
-    val category: PermissionCategory
+    val category: PermissionCategory,
+    val kind: ReasonKind = ReasonKind.CATEGORY
 )
 
 enum class RiskLevel(val label: String, val minScore: Int, val maxScore: Int) {
