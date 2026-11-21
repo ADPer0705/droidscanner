@@ -1,75 +1,95 @@
 ﻿package com.idiots3.riskscanner.ui.screens
 
-import android.graphics.drawable.Drawable
-import androidx.compose.animation.*
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-//import androidx.compose.foundation.shape.CircularShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Dangerous
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.GppBad
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
-import com.idiots3.riskscanner.model.*
+import com.idiots3.riskscanner.model.AppInfo
+import com.idiots3.riskscanner.model.DeviceSummary
+import com.idiots3.riskscanner.model.PermissionCategory
+import com.idiots3.riskscanner.model.RecommendationSummary
+import com.idiots3.riskscanner.model.RiskLevel
 import com.idiots3.riskscanner.ui.components.AiProgressCard
+import com.idiots3.riskscanner.ui.components.AppIconImage
+import com.idiots3.riskscanner.ui.components.DevicePostureSummaryCard
 import com.idiots3.riskscanner.ui.components.RecentChangesCard
+import com.idiots3.riskscanner.ui.components.RecommendationsCard
 import com.idiots3.riskscanner.ui.components.ReportActionsCard
-import com.idiots3.riskscanner.ui.theme.RiskColors
+import com.idiots3.riskscanner.ui.components.RiskBadge
+import com.idiots3.riskscanner.ui.components.getCategoryIcon
+import com.idiots3.riskscanner.ui.components.healthScoreColor
+import com.idiots3.riskscanner.ui.components.riskBgColor
+import com.idiots3.riskscanner.ui.components.riskColor
 import com.idiots3.riskscanner.viewmodel.MainViewModel
-import com.idiots3.riskscanner.viewmodel.MainUiState
-
-private val CriticalColor = Color(0xFFFF1744)
-private val CriticalBgColor = Color(0x1AFF1744)
-private val HighColor = Color(0xFFFF9100)
-private val HighBgColor = Color(0x1AFF9100)
-private val MediumColor = Color(0xFFFFC107)
-private val MediumBgColor = Color(0x1AFFC107)
-private val LowColor = Color(0xFF00E676)
-private val LowBgColor = Color(0x1A00E676)
-
-fun getRiskLevelColor(riskLevel: RiskLevel): Color = when (riskLevel) {
-    RiskLevel.CRITICAL -> CriticalColor
-    RiskLevel.HIGH -> HighColor
-    RiskLevel.MEDIUM -> MediumColor
-    RiskLevel.LOW -> LowColor
-}
-
-fun getRiskLevelBgColor(riskLevel: RiskLevel): Color = when (riskLevel) {
-    RiskLevel.CRITICAL -> CriticalBgColor
-    RiskLevel.HIGH -> HighBgColor
-    RiskLevel.MEDIUM -> MediumBgColor
-    RiskLevel.LOW -> LowBgColor
-}
-
-// getCategoryIcon is defined in AppListScreen.kt (same package)
+import com.idiots3.riskscanner.viewmodel.QuickAppFilter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     viewModel: MainViewModel,
-    onNavigateToAppList: () -> Unit,
+    onNavigateToApps: () -> Unit,
+    onNavigateToDeviceHub: () -> Unit,
     onNavigateToAppDetail: (String) -> Unit,
     onNavigateToRubric: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -81,10 +101,10 @@ fun DashboardScreen(
                             imageVector = Icons.Filled.Security,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                         Text(
-                            text = "RiskScanner",
+                            text = "DroidScanner",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             maxLines = 1,
@@ -93,7 +113,6 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
-                    // System apps toggle
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -105,7 +124,8 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.Filled.Android,
                             contentDescription = "Toggle system apps",
-                            tint = if (uiState.includeSystemApps) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (uiState.includeSystemApps) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -115,7 +135,6 @@ fun DashboardScreen(
                         )
                     }
 
-                    // Refresh scan button
                     IconButton(onClick = { viewModel.scanApps() }) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
@@ -154,6 +173,7 @@ fun DashboardScreen(
                     }
                 }
             }
+
             uiState.error != null -> {
                 Box(
                     modifier = Modifier
@@ -202,6 +222,7 @@ fun DashboardScreen(
                     }
                 }
             }
+
             else -> {
                 val summary = uiState.deviceSummary
                 if (summary != null) {
@@ -212,17 +233,42 @@ fun DashboardScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // 1. Security Overview Card with Circular Progress
                         item {
-                            SecurityOverviewCard(summary = summary)
+                            SecurityOverviewCard(
+                                summary = summary,
+                                recommendations = uiState.recommendations
+                            )
                         }
 
-                        // 2. Risk Distribution Summary (4 colored cards)
-                        item {
-                            RiskDistributionRow(summary = summary)
+                        uiState.recommendations?.let { recs ->
+                            item {
+                                RecommendationsCard(
+                                    recommendations = recs,
+                                    onNavigateToAppDetail = onNavigateToAppDetail,
+                                    onExternalSettingsOpened = { viewModel.markExternalSettingsOpened() }
+                                )
+                            }
                         }
 
-                        // 3. Recently installed / updated apps (install monitoring + permission diff)
+                        uiState.devicePosture?.let { posture ->
+                            item {
+                                DevicePostureSummaryCard(
+                                    posture = posture,
+                                    onOpenDeviceTab = onNavigateToDeviceHub
+                                )
+                            }
+                        }
+
+                        item {
+                            RiskDistributionRow(
+                                summary = summary,
+                                onSelectRiskLevel = { level ->
+                                    viewModel.applyDashboardJumpFilter(riskLevel = level)
+                                    onNavigateToApps()
+                                }
+                            )
+                        }
+
                         item {
                             RecentChangesCard(
                                 changes = uiState.recentChanges,
@@ -230,12 +276,18 @@ fun DashboardScreen(
                             )
                         }
 
-                        // 4. Sideloaded Apps Warning Card
                         item {
-                            SideloadedWarningCard(count = summary.sideloadedApps)
+                            SideloadedWarningCard(
+                                count = summary.sideloadedApps,
+                                onClick = {
+                                    if (summary.sideloadedApps > 0) {
+                                        viewModel.applyDashboardJumpFilter(quickFilter = QuickAppFilter.SIDELOADED)
+                                        onNavigateToApps()
+                                    }
+                                }
+                            )
                         }
 
-                        // 5. On-device AI progress
                         item {
                             AiProgressCard(
                                 active = uiState.aiActive,
@@ -245,12 +297,16 @@ fun DashboardScreen(
                             )
                         }
 
-                        // 6. Category Breakdown Section
                         item {
-                            CategoryBreakdownSection(summary = summary)
+                            CategoryBreakdownSection(
+                                summary = summary,
+                                onSelectCategory = { category ->
+                                    viewModel.applyDashboardJumpFilter(category = category)
+                                    onNavigateToApps()
+                                }
+                            )
                         }
 
-                        // 7. Top Risky Apps Section
                         item {
                             TopRiskyAppsSection(
                                 apps = summary.topRiskApps,
@@ -258,39 +314,39 @@ fun DashboardScreen(
                             )
                         }
 
-                        // 8. Report + rubric actions
                         item {
                             ReportActionsCard(
                                 summary = summary,
                                 apps = uiState.apps,
+                                posture = uiState.devicePosture,
+                                recommendations = uiState.recommendations,
                                 onNavigateToRubric = onNavigateToRubric
                             )
                         }
 
-                        // 6. View All Apps Button
                         item {
                             Button(
-                                onClick = onNavigateToAppList,
+                                onClick = {
+                                    viewModel.clearAllFilters()
+                                    onNavigateToApps()
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(52.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                )
+                                shape = RoundedCornerShape(12.dp)
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
                                 ) {
                                     Text(
-                                        text = "View All Apps (${summary.totalApps})",
+                                        text = "Browse All Apps (${summary.totalApps})",
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 16.sp
+                                        fontSize = 15.sp
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Icon(
-                                        imageVector = Icons.Filled.ArrowForward,
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -298,9 +354,8 @@ fun DashboardScreen(
                             }
                         }
 
-                        // Bottom spacer for comfortable scrolling
                         item {
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 }
@@ -312,22 +367,21 @@ fun DashboardScreen(
 @Composable
 fun SecurityOverviewCard(
     summary: DeviceSummary,
+    recommendations: RecommendationSummary?,
     modifier: Modifier = Modifier
 ) {
-    // 100 minus (weighted average of top 10 app risk scores, clamped 0-100)
-    val top10Apps = summary.topRiskApps.take(10)
-    val avgRisk = if (top10Apps.isNotEmpty()) {
-        top10Apps.map { it.riskScore }.average().toInt()
-    } else {
-        0
+    val healthScore = recommendations?.deviceScore ?: run {
+        val top10 = summary.topRiskApps.take(10)
+        val avgRisk = if (top10.isNotEmpty()) top10.map { it.riskScore }.average().toInt() else 0
+        (100 - avgRisk).coerceIn(0, 100)
     }
-    val healthScore = (100 - avgRisk).coerceIn(0, 100)
 
-    val (healthLabel, healthColor, healthIcon) = when {
-        healthScore >= 75 -> Triple("Good Security Health", LowColor, Icons.Filled.CheckCircle)
-        healthScore >= 50 -> Triple("Moderate Risk Detected", MediumColor, Icons.Filled.Warning)
-        healthScore >= 25 -> Triple("High Risk Detected", HighColor, Icons.Filled.WarningAmber)
-        else -> Triple("Critical Risk Detected", CriticalColor, Icons.Filled.GppBad)
+    val healthColor = healthScoreColor(healthScore)
+    val (healthLabel, healthIcon) = when {
+        healthScore >= 75 -> "Good Security Health" to Icons.Filled.CheckCircle
+        healthScore >= 50 -> "Moderate Risk Detected" to Icons.Filled.Warning
+        healthScore >= 25 -> "High Risk Detected" to Icons.Filled.WarningAmber
+        else -> "Critical Risk Detected" to Icons.Filled.GppBad
     }
 
     Card(
@@ -340,7 +394,7 @@ fun SecurityOverviewCard(
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -348,7 +402,7 @@ fun SecurityOverviewCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Device Health Score",
+                    text = "Device Security Score",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -371,7 +425,7 @@ fun SecurityOverviewCard(
                         )
                         Text(
                             text = healthLabel,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = healthColor
                         )
@@ -384,9 +438,8 @@ fun SecurityOverviewCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Circular progress indicator with score in center
                 Box(
-                    modifier = Modifier.size(110.dp),
+                    modifier = Modifier.size(106.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
@@ -396,12 +449,10 @@ fun SecurityOverviewCard(
                         color = healthColor,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "$healthScore",
-                            fontSize = 32.sp,
+                            fontSize = 30.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -414,79 +465,69 @@ fun SecurityOverviewCard(
                     }
                 }
 
-                // Device summary metrics
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Apps,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "${summary.totalApps} Audited Apps",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                    OverviewStatRow(
+                        icon = Icons.Filled.Apps,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        text = "${summary.totalApps} Audited Apps"
+                    )
+                    OverviewStatRow(
+                        icon = Icons.Filled.Key,
+                        iconTint = MaterialTheme.colorScheme.secondary,
+                        text = "${summary.totalPermissionsGranted} Permissions Granted"
+                    )
+                    val threatColor = if (summary.highOrCritical > 0) riskColor(RiskLevel.CRITICAL)
+                    else MaterialTheme.colorScheme.onSurface
+                    OverviewStatRow(
+                        icon = Icons.Filled.Dangerous,
+                        iconTint = threatColor,
+                        text = "${summary.highOrCritical} High/Critical App(s)",
+                        textColor = threatColor
+                    )
+                    val saColor = if (summary.specialAccessApps > 0) riskColor(RiskLevel.HIGH)
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                    OverviewStatRow(
+                        icon = Icons.Filled.Security,
+                        iconTint = saColor,
+                        text = "${summary.specialAccessApps} verified special-access app(s)",
+                        textColor = if (summary.specialAccessApps > 0) saColor else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Key,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "${summary.totalPermissionsGranted} Permissions Granted",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Dangerous,
-                            contentDescription = null,
-                            tint = CriticalColor,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "${summary.criticalApps + summary.highApps} High Risk Threat(s)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = if (summary.criticalApps + summary.highApps > 0) CriticalColor else MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Security,
-                            contentDescription = null,
-                            tint = if (summary.specialAccessApps > 0) HighColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "${summary.specialAccessApps} apps hold special access",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = if (summary.specialAccessApps > 0) HighColor else MaterialTheme.colorScheme.onSurface
-                        )
+            if (recommendations != null && recommendations.scoreBreakdown.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    recommendations.scoreBreakdown.forEach { (label, value) ->
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "$value",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = healthScoreColor(value)
+                                )
+                                Text(
+                                    text = label,
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -495,8 +536,35 @@ fun SecurityOverviewCard(
 }
 
 @Composable
+private fun OverviewStatRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    text: String,
+    textColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(17.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = textColor
+        )
+    }
+}
+
+@Composable
 fun RiskDistributionRow(
     summary: DeviceSummary,
+    onSelectRiskLevel: (RiskLevel) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -515,31 +583,27 @@ fun RiskDistributionRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             RiskCountCard(
-                label = "Critical",
+                level = RiskLevel.CRITICAL,
                 count = summary.criticalApps,
-                accentColor = CriticalColor,
-                bgColor = CriticalBgColor,
+                onClick = { onSelectRiskLevel(RiskLevel.CRITICAL) },
                 modifier = Modifier.weight(1f)
             )
             RiskCountCard(
-                label = "High",
+                level = RiskLevel.HIGH,
                 count = summary.highApps,
-                accentColor = HighColor,
-                bgColor = HighBgColor,
+                onClick = { onSelectRiskLevel(RiskLevel.HIGH) },
                 modifier = Modifier.weight(1f)
             )
             RiskCountCard(
-                label = "Medium",
+                level = RiskLevel.MEDIUM,
                 count = summary.mediumApps,
-                accentColor = MediumColor,
-                bgColor = MediumBgColor,
+                onClick = { onSelectRiskLevel(RiskLevel.MEDIUM) },
                 modifier = Modifier.weight(1f)
             )
             RiskCountCard(
-                label = "Low",
+                level = RiskLevel.LOW,
                 count = summary.lowApps,
-                accentColor = LowColor,
-                bgColor = LowBgColor,
+                onClick = { onSelectRiskLevel(RiskLevel.LOW) },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -548,13 +612,16 @@ fun RiskDistributionRow(
 
 @Composable
 private fun RiskCountCard(
-    label: String,
+    level: RiskLevel,
     count: Int,
-    accentColor: Color,
-    bgColor: Color,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val accentColor = riskColor(level)
+    val bgColor = riskBgColor(level)
+
     Card(
+        onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor),
@@ -575,7 +642,7 @@ private fun RiskCountCard(
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = label,
+                text = level.label,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = accentColor
@@ -587,6 +654,7 @@ private fun RiskCountCard(
 @Composable
 fun CategoryBreakdownSection(
     summary: DeviceSummary,
+    onSelectCategory: (PermissionCategory) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -605,14 +673,13 @@ fun CategoryBreakdownSection(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "9 Monitored",
+                text = "Tap to filter",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
-        // 3 columns grid layout
-        val categories = PermissionCategory.entries
+        val categories = PermissionCategory.entries.filter { it != PermissionCategory.OTHER }
         val chunkedCategories = categories.chunked(3)
 
         chunkedCategories.forEach { rowCategories ->
@@ -625,6 +692,7 @@ fun CategoryBreakdownSection(
                     val icon = getCategoryIcon(category)
 
                     Card(
+                        onClick = { onSelectCategory(category) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
@@ -641,7 +709,7 @@ fun CategoryBreakdownSection(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(34.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center
@@ -650,7 +718,7 @@ fun CategoryBreakdownSection(
                                     imageVector = icon,
                                     contentDescription = category.label,
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                             Text(
@@ -671,7 +739,6 @@ fun CategoryBreakdownSection(
                     }
                 }
 
-                // Fill remaining space if row has less than 3 items
                 if (rowCategories.size < 3) {
                     repeat(3 - rowCategories.size) {
                         Spacer(modifier = Modifier.weight(1f))
@@ -727,7 +794,7 @@ fun TopRiskyAppsSection(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No risky applications detected.",
+                        text = "No applications detected.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -739,19 +806,15 @@ fun TopRiskyAppsSection(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 topApps.forEach { app ->
+                    val levelColor = riskColor(app.riskLevel)
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onAppClick(app.packageName) },
+                        onClick = { onAppClick(app.packageName) },
+                        modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
                         ),
-                        border = BorderStroke(
-                            1.dp,
-                            getRiskLevelColor(app.riskLevel).copy(alpha = 0.25f)
-                        )
+                        border = BorderStroke(1.dp, levelColor.copy(alpha = 0.25f))
                     ) {
                         Row(
                             modifier = Modifier
@@ -786,9 +849,11 @@ fun TopRiskyAppsSection(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "${app.permissions.count { it.isGranted }} perms granted â€¢ ${app.installerSource}",
+                                    text = "${app.permissions.count { it.isGranted }} perms granted · ${app.installerSource}",
                                     fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.outline
+                                    color = MaterialTheme.colorScheme.outline,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
@@ -801,7 +866,7 @@ fun TopRiskyAppsSection(
                                     text = "Score: ${app.riskScore}",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = getRiskLevelColor(app.riskLevel)
+                                    color = levelColor
                                 )
                             }
                         }
@@ -812,23 +877,24 @@ fun TopRiskyAppsSection(
     }
 }
 
-// AppIconImage is defined in AppListScreen.kt (same package)
-
-// RiskBadge is defined in AppListScreen.kt (same package)
-
 @Composable
 fun SideloadedWarningCard(
     count: Int,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val highColor = riskColor(RiskLevel.HIGH)
+    val highBg = riskBgColor(RiskLevel.HIGH)
+    val lowColor = riskColor(RiskLevel.LOW)
+    val lowBg = riskBgColor(RiskLevel.LOW)
+
     if (count > 0) {
         Card(
+            onClick = onClick,
             modifier = modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = HighBgColor
-            ),
-            border = BorderStroke(1.dp, HighColor.copy(alpha = 0.5f))
+            colors = CardDefaults.cardColors(containerColor = highBg),
+            border = BorderStroke(1.dp, highColor.copy(alpha = 0.45f))
         ) {
             Row(
                 modifier = Modifier
@@ -841,13 +907,13 @@ fun SideloadedWarningCard(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(HighColor.copy(alpha = 0.2f)),
+                        .background(highColor.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Warning,
                         contentDescription = null,
-                        tint = HighColor,
+                        tint = highColor,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -860,10 +926,10 @@ fun SideloadedWarningCard(
                         text = "$count Sideloaded App${if (count > 1) "s" else ""} Detected",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = HighColor
+                        color = highColor
                     )
                     Text(
-                        text = "Installed outside official app stores without verified Google Play Protect screening.",
+                        text = "Installed outside recognized stores. Tap to inspect sideloaded apps.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -874,10 +940,8 @@ fun SideloadedWarningCard(
         Card(
             modifier = modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = LowBgColor
-            ),
-            border = BorderStroke(1.dp, LowColor.copy(alpha = 0.35f))
+            colors = CardDefaults.cardColors(containerColor = lowBg),
+            border = BorderStroke(1.dp, lowColor.copy(alpha = 0.35f))
         ) {
             Row(
                 modifier = Modifier
@@ -890,13 +954,13 @@ fun SideloadedWarningCard(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(LowColor.copy(alpha = 0.2f)),
+                        .background(lowColor.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
-                        tint = LowColor,
+                        tint = lowColor,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -909,10 +973,10 @@ fun SideloadedWarningCard(
                         text = "No Sideloaded Apps Detected",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = LowColor
+                        color = lowColor
                     )
                     Text(
-                        text = "All audited applications are installed from recognized application sources.",
+                        text = "All audited user apps were installed from recognized app stores.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -921,4 +985,3 @@ fun SideloadedWarningCard(
         }
     }
 }
-

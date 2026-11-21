@@ -1,12 +1,30 @@
 package com.idiots3.riskscanner.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +34,8 @@ import androidx.compose.ui.unit.sp
 import com.idiots3.riskscanner.engine.ScoringConfig
 import com.idiots3.riskscanner.model.PermissionCategory
 import com.idiots3.riskscanner.model.RiskLevel
-import com.idiots3.riskscanner.ui.theme.RiskColors
+import com.idiots3.riskscanner.ui.components.riskBgColor
+import com.idiots3.riskscanner.ui.components.riskColor
 
 /**
  * The one-page scoring rubric, rendered directly from ScoringConfig so the in-app
@@ -25,7 +44,6 @@ import com.idiots3.riskscanner.ui.theme.RiskColors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -75,12 +93,12 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Surface(
-                                    color = getRiskBackgroundColor(level),
+                                    color = riskBgColor(level),
                                     shape = RoundedCornerShape(4.dp)
                                 ) {
                                     Text(
                                         text = level.label.uppercase(),
-                                        color = getRiskColor(level),
+                                        color = riskColor(level),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -102,13 +120,18 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
                 RubricSection("Category weights (maximum points per category)") {
                     PermissionCategory.entries.forEach { category ->
                         val weight = ScoringConfig.categoryWeight(category)
+                        val labelText = when {
+                            weight > 0 -> "$weight pts"
+                            category == PermissionCategory.SPECIAL_ACCESS -> "own table"
+                            else -> "not scored"
+                        }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(category.label, style = MaterialTheme.typography.bodySmall)
                             Text(
-                                text = if (weight > 0) "$weight pts" else "own table",
+                                text = labelText,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = if (weight > 0) MaterialTheme.colorScheme.primary
@@ -116,7 +139,7 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
                             )
                         }
                     }
-                    Divider(Modifier.padding(vertical = 6.dp))
+                    HorizontalDivider(Modifier.padding(vertical = 6.dp))
                     Text(
                         text = "A category reaches its full weight at " +
                             "%.1f".format(ScoringConfig.CATEGORY_SATURATION_UNITS) + " risk units " +
@@ -134,13 +157,21 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
                     ScoreRow("Accessibility service — enabled", ScoringConfig.Special.ACCESSIBILITY_ENABLED)
                     ScoreRow("Accessibility service — declared only", ScoringConfig.Special.ACCESSIBILITY_DECLARED)
                     ScoreRow("Device administrator — active", ScoringConfig.Special.DEVICE_ADMIN_ACTIVE)
+                    ScoreRow("Device administrator — declared only", ScoringConfig.Special.DEVICE_ADMIN_DECLARED)
                     ScoreRow("Notification listener — enabled", ScoringConfig.Special.NOTIFICATION_LISTENER_ENABLED)
-                    ScoreRow("Screen overlay — enabled", ScoringConfig.Special.OVERLAY_ENABLED)
-                    ScoreRow("Screen overlay — declared only", ScoringConfig.Special.OVERLAY_DECLARED)
-                    ScoreRow("Install other apps — granted", ScoringConfig.Special.INSTALL_PACKAGES_ENABLED)
-                    ScoreRow("Install other apps — declared only", ScoringConfig.Special.INSTALL_PACKAGES_DECLARED)
-                    ScoreRow("Usage statistics — granted", ScoringConfig.Special.USAGE_STATS_ENABLED)
-                    ScoreRow("Usage statistics — declared only", ScoringConfig.Special.USAGE_STATS_DECLARED)
+                    ScoreRow("Screen overlay — enabled (verified)", ScoringConfig.Special.OVERLAY_ENABLED)
+                    ScoreRow("Screen overlay — declared", ScoringConfig.Special.OVERLAY_DECLARED)
+                    ScoreRow("Install other apps — granted (verified)", ScoringConfig.Special.INSTALL_PACKAGES_ENABLED)
+                    ScoreRow("Install other apps — declared", ScoringConfig.Special.INSTALL_PACKAGES_DECLARED)
+                    ScoreRow("Usage statistics — granted (verified)", ScoringConfig.Special.USAGE_STATS_ENABLED)
+                    ScoreRow("Usage statistics — declared", ScoringConfig.Special.USAGE_STATS_DECLARED)
+                    HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                    Text(
+                        text = "On Android 10+, third-party apps cannot query AppOps grants of other apps directly. " +
+                            "Declared overlay, install-apps, and usage-access entries prompt you to verify in Settings.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
             }
 
@@ -155,13 +186,14 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
                                 Text(
                                     text = rule.name,
                                     style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.weight(1f)
                                 )
                                 Text(
                                     text = "+${rule.points}",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = RiskColors.High
+                                    color = riskColor(RiskLevel.HIGH)
                                 )
                             }
                             Text(
@@ -176,7 +208,7 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
                             )
                         }
                     }
-                    Divider(Modifier.padding(vertical = 6.dp))
+                    HorizontalDivider(Modifier.padding(vertical = 6.dp))
                     ScoreRow("Sideloaded install + sensitive permissions", ScoringConfig.SIDELOAD_PENALTY)
                 }
             }
@@ -186,12 +218,12 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
                     Text(
                         text = "A bundled Universal Sentence Encoder (6 MB, runs offline) compares the app's own " +
                             "metadata against a curated list of app functions and permission-use descriptions. " +
-                            "Unexplained access adds at most ${ScoringConfig.AI_MAX_DELTA} points, only for apps already " +
+                            "Unexplained granted access adds at most ${ScoringConfig.AI_MAX_DELTA} points, only for apps already " +
                             "scoring ${ScoringConfig.AI_MIN_RULE_SCORE}+ on the rules, and it can never make an app Critical by itself.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Divider(Modifier.padding(vertical = 6.dp))
+                    HorizontalDivider(Modifier.padding(vertical = 6.dp))
                     Text(
                         text = "The similarity value shown in the app (for example 0.42) is a text-overlap score, " +
                             "not a probability. \"Unexplained\" means the app's purpose does not explain the access — " +
@@ -253,7 +285,7 @@ private fun ScoreRow(label: String, points: Int) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, style = MaterialTheme.typography.bodySmall)
+        Text(label, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
         Text(
             text = "+$points",
             style = MaterialTheme.typography.bodySmall,

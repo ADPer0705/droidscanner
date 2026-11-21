@@ -1,67 +1,155 @@
 ﻿package com.idiots3.riskscanner.ui.screens
 
-import android.content.Context
-import android.graphics.drawable.Drawable
-import android.util.LruCache
-import androidx.compose.animation.*
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.graphics.drawable.toBitmap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import com.idiots3.riskscanner.model.*
-import com.idiots3.riskscanner.ui.theme.RiskColors
+import com.idiots3.riskscanner.model.AppInfo
+import com.idiots3.riskscanner.model.PermissionCategory
+import com.idiots3.riskscanner.model.RiskLevel
+import com.idiots3.riskscanner.ui.components.AppIconImage
+import com.idiots3.riskscanner.ui.components.InstallerTag
+import com.idiots3.riskscanner.ui.components.RiskBadge
+import com.idiots3.riskscanner.ui.components.SmallRiskCircle
+import com.idiots3.riskscanner.ui.components.getCategoryIcon
+import com.idiots3.riskscanner.ui.components.riskBgColor
+import com.idiots3.riskscanner.ui.components.riskColor
+import com.idiots3.riskscanner.viewmodel.AppSortOrder
 import com.idiots3.riskscanner.viewmodel.MainViewModel
-import com.idiots3.riskscanner.viewmodel.MainUiState
+import com.idiots3.riskscanner.viewmodel.QuickAppFilter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppListScreen(
     viewModel: MainViewModel,
-    onNavigateToAppDetail: (String) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateToAppDetail: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var sortMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "All Apps",
+                        text = "Installed Apps",
                         fontWeight = FontWeight.Bold
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                actions = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { viewModel.toggleSystemApps(!uiState.includeSystemApps) }
+                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                    ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            imageVector = Icons.Default.Android,
+                            contentDescription = "Include system apps",
+                            tint = if (uiState.includeSystemApps) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Switch(
+                            checked = uiState.includeSystemApps,
+                            onCheckedChange = { viewModel.toggleSystemApps(it) }
                         )
                     }
-                },
-                actions = {
+
+                    Box {
+                        IconButton(onClick = { sortMenuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.SwapVert,
+                                contentDescription = "Sort apps"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = sortMenuExpanded,
+                            onDismissRequest = { sortMenuExpanded = false }
+                        ) {
+                            AppSortOrder.entries.forEach { order ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = order.label,
+                                            fontWeight = if (uiState.sortOrder == order) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    onClick = {
+                                        viewModel.setSortOrder(order)
+                                        sortMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
                     IconButton(onClick = { viewModel.scanApps() }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
@@ -80,7 +168,6 @@ fun AppListScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Search Bar
             SearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = { viewModel.updateSearchQuery(it) },
@@ -89,14 +176,14 @@ fun AppListScreen(
                     .padding(horizontal = 16.dp, vertical = 6.dp)
             )
 
-            // Risk Level Filter Chips
             FilterChipsRow(
                 selectedFilter = uiState.selectedFilter,
+                quickFilter = uiState.quickFilter,
                 onFilterChange = { viewModel.filterByRisk(it) },
+                onQuickFilterChange = { viewModel.filterByQuick(it) },
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Category Filter Dropdown + Reset Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -110,14 +197,13 @@ fun AppListScreen(
                     modifier = Modifier.weight(1f)
                 )
 
-                if (uiState.selectedCategory != null || uiState.selectedFilter != null || uiState.searchQuery.isNotEmpty()) {
-                    FilledTonalIconButton(
-                        onClick = {
-                            viewModel.updateSearchQuery("")
-                            viewModel.filterByRisk(null)
-                            viewModel.filterByCategory(null)
-                        }
-                    ) {
+                val hasActiveFilters = uiState.selectedCategory != null ||
+                    uiState.selectedFilter != null ||
+                    uiState.quickFilter != null ||
+                    uiState.searchQuery.isNotEmpty()
+
+                if (hasActiveFilters) {
+                    FilledTonalIconButton(onClick = { viewModel.clearAllFilters() }) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Clear all filters",
@@ -127,7 +213,6 @@ fun AppListScreen(
                 }
             }
 
-            // Results count
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -136,7 +221,7 @@ fun AppListScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val countText = if (uiState.filteredApps.size == uiState.apps.size) {
-                    "${uiState.apps.size} apps found"
+                    "${uiState.apps.size} apps · ${uiState.sortOrder.label}"
                 } else {
                     "Showing ${uiState.filteredApps.size} of ${uiState.apps.size} apps"
                 }
@@ -147,17 +232,16 @@ fun AppListScreen(
                     fontWeight = FontWeight.Medium
                 )
 
-                if (uiState.selectedFilter != null) {
+                uiState.selectedFilter?.let { activeLevel ->
                     Text(
-                        text = "Severity: ${uiState.selectedFilter?.label}",
+                        text = "Severity: ${activeLevel.label}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = getRiskColor(uiState.selectedFilter!!),
+                        color = riskColor(activeLevel),
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            // App List / State View
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier
@@ -206,13 +290,7 @@ fun AppListScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
-                        Button(
-                            onClick = {
-                                viewModel.updateSearchQuery("")
-                                viewModel.filterByRisk(null)
-                                viewModel.filterByCategory(null)
-                            }
-                        ) {
+                        Button(onClick = { viewModel.clearAllFilters() }) {
                             Text("Reset Filters")
                         }
                     }
@@ -286,7 +364,9 @@ fun SearchBar(
 @Composable
 fun FilterChipsRow(
     selectedFilter: RiskLevel?,
+    quickFilter: QuickAppFilter?,
     onFilterChange: (RiskLevel?) -> Unit,
+    onQuickFilterChange: (QuickAppFilter?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -297,12 +377,15 @@ fun FilterChipsRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         FilterChip(
-            selected = selectedFilter == null,
-            onClick = { onFilterChange(null) },
+            selected = selectedFilter == null && quickFilter == null,
+            onClick = {
+                onFilterChange(null)
+                onQuickFilterChange(null)
+            },
             label = {
                 Text(
                     text = "All",
-                    fontWeight = if (selectedFilter == null) FontWeight.Bold else FontWeight.Normal
+                    fontWeight = if (selectedFilter == null && quickFilter == null) FontWeight.Bold else FontWeight.Normal
                 )
             },
             colors = FilterChipDefaults.filterChipColors(
@@ -313,8 +396,8 @@ fun FilterChipsRow(
 
         RiskLevel.entries.forEach { level ->
             val isSelected = selectedFilter == level
-            val levelColor = getRiskColor(level)
-            val levelBg = getRiskBackgroundColor(level)
+            val levelColor = riskColor(level)
+            val levelBg = riskBgColor(level)
 
             FilterChip(
                 selected = isSelected,
@@ -344,6 +427,20 @@ fun FilterChipsRow(
                     borderColor = if (isSelected) levelColor else MaterialTheme.colorScheme.outlineVariant,
                     selectedBorderColor = levelColor
                 )
+            )
+        }
+
+        QuickAppFilter.entries.forEach { quick ->
+            val isSelected = quickFilter == quick
+            FilterChip(
+                selected = isSelected,
+                onClick = { onQuickFilterChange(if (isSelected) null else quick) },
+                label = {
+                    Text(
+                        text = quick.label,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                    )
+                }
             )
         }
     }
@@ -379,7 +476,7 @@ fun CategoryFilterDropdown(
                 )
             },
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
                 .fillMaxWidth(),
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
@@ -470,7 +567,7 @@ fun AppCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = appInfo.appName,
                     style = MaterialTheme.typography.titleMedium,
@@ -485,7 +582,7 @@ fun AppCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -495,19 +592,17 @@ fun AppCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
                     )
-                    InstallerTag(source = appInfo.installerSource)
+                    InstallerTag(
+                        source = appInfo.installerSource,
+                        provenance = appInfo.installProvenance
+                    )
                     if (appInfo.isSystemApp) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                text = "System",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                            )
-                        }
+                        SmallChip("System")
+                    }
+                    if (appInfo.isDefaultSmsApp) {
+                        SmallChip("Default SMS")
+                    } else if (appInfo.isDefaultDialer) {
+                        SmallChip("Default Phone")
                     }
                 }
 
@@ -523,13 +618,13 @@ fun AppCard(
 
                 if (!appInfo.aiAssessment?.unexplainedCategories.isNullOrEmpty()) {
                     Surface(
-                        color = RiskColors.HighBackground,
+                        color = riskBgColor(RiskLevel.HIGH),
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
                             text = "AI: unexplained access",
                             style = MaterialTheme.typography.labelSmall,
-                            color = RiskColors.High,
+                            color = riskColor(RiskLevel.HIGH),
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                         )
@@ -554,161 +649,16 @@ fun AppCard(
 }
 
 @Composable
-fun SmallRiskCircle(
-    score: Int,
-    riskLevel: RiskLevel,
-    modifier: Modifier = Modifier
-) {
-    val color = getRiskColor(riskLevel)
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier.size(42.dp)
-    ) {
-        CircularProgressIndicator(
-            progress = { (score / 100f).coerceIn(0f, 1f) },
-            modifier = Modifier.fillMaxSize(),
-            color = color,
-            trackColor = color.copy(alpha = 0.2f),
-            strokeWidth = 3.5.dp
-        )
-        Text(
-            text = "$score",
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
-    }
-}
-
-@Composable
-fun InstallerTag(
-    source: String,
-    modifier: Modifier = Modifier
-) {
-    val isPlayStore = source.contains("Play Store", ignoreCase = true)
-    val isSideloaded = source.equals("Sideloaded", ignoreCase = true) || source.equals("Unknown", ignoreCase = true)
-
-    val (bgColor, textColor, label) = when {
-        isPlayStore -> Triple(
-            RiskColors.LowBackground,
-            RiskColors.Low,
-            "Play Store"
-        )
-        isSideloaded -> Triple(
-            RiskColors.CriticalBackground,
-            RiskColors.Critical,
-            "Sideloaded"
-        )
-        else -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
-            source
-        )
-    }
-
+private fun SmallChip(label: String) {
     Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(4.dp),
-        modifier = modifier
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(4.dp)
     ) {
         Text(
             text = label,
-            color = textColor,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
         )
     }
 }
-
-@Composable
-fun RiskBadge(
-    riskLevel: RiskLevel,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        color = getRiskBackgroundColor(riskLevel),
-        shape = RoundedCornerShape(4.dp),
-        modifier = modifier
-    ) {
-        Text(
-            text = riskLevel.label.uppercase(),
-            color = getRiskColor(riskLevel),
-            fontSize = 9.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-        )
-    }
-}
-
-/**
- * Icons are loaded lazily and kept in a small LRU cache (64 entries) instead of being
- * stored on every AppInfo — this keeps memory flat while scrolling hundreds of apps.
- */
-object AppIconCache {
-    private val cache = LruCache<String, Drawable>(64)
-
-    fun get(context: Context, packageName: String): Drawable? {
-        cache.get(packageName)?.let { return it }
-        return try {
-            context.packageManager.getApplicationIcon(packageName).also { cache.put(packageName, it) }
-        } catch (t: Throwable) {
-            null
-        }
-    }
-}
-
-@Composable
-fun AppIconImage(packageName: String?, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    val drawable by produceState<Drawable?>(initialValue = null, key1 = packageName) {
-        value = packageName?.let { withContext(Dispatchers.IO) { AppIconCache.get(context, it) } }
-    }
-    val current = drawable
-    if (current != null) {
-        val bitmap = remember(current) { current.toBitmap(96, 96).asImageBitmap() }
-        Image(
-            painter = BitmapPainter(bitmap),
-            contentDescription = "App icon",
-            modifier = modifier
-        )
-    } else {
-        Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            Icon(
-                Icons.Filled.Android,
-                contentDescription = "App icon",
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
-fun getRiskColor(level: RiskLevel): Color = when (level) {
-    RiskLevel.CRITICAL -> RiskColors.Critical
-    RiskLevel.HIGH -> RiskColors.High
-    RiskLevel.MEDIUM -> RiskColors.Medium
-    RiskLevel.LOW -> RiskColors.Low
-}
-
-fun getRiskBackgroundColor(level: RiskLevel): Color = when (level) {
-    RiskLevel.CRITICAL -> RiskColors.CriticalBackground
-    RiskLevel.HIGH -> RiskColors.HighBackground
-    RiskLevel.MEDIUM -> RiskColors.MediumBackground
-    RiskLevel.LOW -> RiskColors.LowBackground
-}
-
-fun getCategoryIcon(category: PermissionCategory): ImageVector = when (category) {
-    PermissionCategory.SPECIAL_ACCESS -> Icons.Filled.Security
-    PermissionCategory.SMS -> Icons.Filled.Sms
-    PermissionCategory.CONTACTS_CALL_LOGS -> Icons.Filled.Contacts
-    PermissionCategory.CAMERA_MICROPHONE -> Icons.Filled.Videocam
-    PermissionCategory.LOCATION -> Icons.Filled.LocationOn
-    PermissionCategory.PHONE_IDENTITY -> Icons.Filled.PhoneAndroid
-    PermissionCategory.STORAGE_MEDIA -> Icons.Filled.Folder
-    PermissionCategory.BACKGROUND_PERSISTENCE -> Icons.Filled.Sync
-    PermissionCategory.NETWORK -> Icons.Filled.Wifi
-    PermissionCategory.OTHER -> Icons.Filled.MoreHoriz
-}
-

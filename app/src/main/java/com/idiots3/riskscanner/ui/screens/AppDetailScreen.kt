@@ -1,19 +1,69 @@
 ﻿package com.idiots3.riskscanner.ui.screens
 
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
-import androidx.compose.animation.*
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,16 +76,30 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.idiots3.riskscanner.model.*
+import com.idiots3.riskscanner.model.AiAssessment
+import com.idiots3.riskscanner.model.AppInfo
+import com.idiots3.riskscanner.model.PermissionCategory
+import com.idiots3.riskscanner.model.PermissionDetail
+import com.idiots3.riskscanner.model.PermissionFit
+import com.idiots3.riskscanner.model.ProtectionLevel
+import com.idiots3.riskscanner.model.ReasonKind
+import com.idiots3.riskscanner.model.RiskLevel
+import com.idiots3.riskscanner.model.RiskReason
+import com.idiots3.riskscanner.model.SpecialAccessGrantState
+import com.idiots3.riskscanner.model.SpecialAccessInfo
+import com.idiots3.riskscanner.ui.components.AppIconImage
+import com.idiots3.riskscanner.ui.components.BehaviourProfileCard
+import com.idiots3.riskscanner.ui.components.FitStatusChip
+import com.idiots3.riskscanner.ui.components.InstallerTag
 import com.idiots3.riskscanner.ui.components.PurposeFitCard
 import com.idiots3.riskscanner.ui.components.ScoreBreakdownCard
+import com.idiots3.riskscanner.ui.components.SettingsIntents
 import com.idiots3.riskscanner.ui.components.StaticChecksCard
-import com.idiots3.riskscanner.ui.components.FitStatusChip
-import com.idiots3.riskscanner.ui.theme.RiskColors
+import com.idiots3.riskscanner.ui.components.formatDate
+import com.idiots3.riskscanner.ui.components.getCategoryIcon
+import com.idiots3.riskscanner.ui.components.riskBgColor
+import com.idiots3.riskscanner.ui.components.riskColor
 import com.idiots3.riskscanner.viewmodel.MainViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +117,7 @@ fun AppDetailScreen(
     }
     val staticChecks = uiState.staticChecks[packageName]
     val staticChecksLoading = uiState.staticChecksLoading.contains(packageName)
+    val behaviourProfile = uiState.behaviourResult.profiles[packageName]
 
     Scaffold(
         topBar = {
@@ -87,6 +152,7 @@ fun AppDetailScreen(
                 ) {
                     ActionButtons(
                         packageName = packageName,
+                        onExternalLaunched = { viewModel.markExternalSettingsOpened() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .navigationBarsPadding()
@@ -146,17 +212,11 @@ fun AppDetailScreen(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                item {
-                    AppHeader(app = app)
-                }
+                item { AppHeader(app = app) }
 
-                item {
-                    RiskScoreSection(app = app)
-                }
+                item { RiskScoreSection(app = app) }
 
-                item {
-                    ScoreBreakdownCard(app = app)
-                }
+                item { ScoreBreakdownCard(app = app) }
 
                 item {
                     PurposeFitCard(
@@ -165,30 +225,23 @@ fun AppDetailScreen(
                     )
                 }
 
-                // Check for combination rule threats
-                val comboReasons = app.riskReasons.filter { reason ->
-                    reason.title.contains("Pattern", ignoreCase = true) ||
-                    reason.title.contains("Mismatch", ignoreCase = true) ||
-                    reason.title.contains("Tracking", ignoreCase = true) ||
-                    reason.title.contains("Tracker", ignoreCase = true) ||
-                    reason.title.contains("Exfiltration", ignoreCase = true) ||
-                    reason.title.contains("Harvester", ignoreCase = true) ||
-                    reason.title.contains("Device Admin", ignoreCase = true) ||
-                    reason.title.contains("Sideloaded SMS", ignoreCase = true) ||
-                    reason.title.contains("Suspicious", ignoreCase = true)
-                }
+                val comboReasons = app.riskReasons.filter { it.kind == ReasonKind.COMBO_RULE }
                 if (comboReasons.isNotEmpty()) {
-                    item {
-                        CombinationAlertsCard(reasons = comboReasons)
-                    }
+                    item { CombinationAlertsCard(reasons = comboReasons) }
                 }
 
-                item {
-                    WhyFlaggedPanel(reasons = app.riskReasons)
-                }
+                item { WhyFlaggedPanel(reasons = app.riskReasons) }
 
                 item {
-                    SpecialAccessSection(specialAccess = app.specialAccess)
+                    SpecialAccessSection(
+                        packageName = app.packageName,
+                        specialAccess = app.specialAccess,
+                        onExternalLaunched = { viewModel.markExternalSettingsOpened() }
+                    )
+                }
+
+                if (behaviourProfile != null) {
+                    item { BehaviourProfileCard(profile = behaviourProfile) }
                 }
 
                 item {
@@ -205,9 +258,7 @@ fun AppDetailScreen(
                     )
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
     }
@@ -220,9 +271,7 @@ fun AppHeader(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier.fillMaxWidth()
     ) {
@@ -232,9 +281,7 @@ fun AppHeader(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 AppIconImage(
                     packageName = app.packageName,
                     modifier = Modifier
@@ -268,67 +315,11 @@ fun AppHeader(
                 }
             }
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-            // Metadata rows
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Installed",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Text(
-                        text = formatDate(app.installDate),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Last Updated",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Text(
-                        text = formatDate(app.updateDate),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                MetadataRow(Icons.Default.DateRange, "Installed", formatDate(app.installDate))
+                MetadataRow(Icons.Default.Refresh, "Last Updated", formatDate(app.updateDate))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -351,36 +342,14 @@ fun AppHeader(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    InstallerTag(source = app.installerSource)
+                    InstallerTag(source = app.installerSource, provenance = app.installProvenance)
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Build,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Target SDK",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Text(
-                        text = "${app.targetSdk} (Min: ${app.minSdk})",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium
-                    )
+                if (!app.initiatingPackage.isNullOrBlank() && app.isSideloaded) {
+                    MetadataRow(Icons.Default.Info, "Initiated by", app.initiatingPackage)
                 }
+
+                MetadataRow(Icons.Default.Build, "Target SDK", "${app.targetSdk} (Min: ${app.minSdk})")
 
                 if (!app.hasLauncherActivity) {
                     Row(
@@ -395,45 +364,47 @@ fun AppHeader(
                             Icon(
                                 imageVector = Icons.Default.VisibilityOff,
                                 contentDescription = null,
-                                tint = RiskColors.High,
+                                tint = riskColor(RiskLevel.HIGH),
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Hidden app",
+                                text = "Launcher icon",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Text(
-                            text = "No launcher icon",
+                            text = if (app.isEnabledInputMethod) "No launcher (Keyboard)" else "No launcher icon",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
-                            color = RiskColors.High
+                            color = if (app.isEnabledInputMethod) MaterialTheme.colorScheme.onSurfaceVariant else riskColor(RiskLevel.HIGH)
                         )
                     }
                 }
 
-                if (app.isSystemApp) {
+                val badges = buildList {
+                    if (app.isSystemApp) add(if (app.isUpdatedSystemApp) "System (Updated)" else "System App")
+                    if (app.isDefaultSmsApp) add("Default SMS")
+                    if (app.isDefaultDialer) add("Default Phone")
+                    if (app.isEnabledInputMethod) add("Enabled Keyboard")
+                }
+                if (badges.isNotEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = "Type",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                text = "System App",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
+                        badges.forEach { badge ->
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = badge,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -443,20 +414,53 @@ fun AppHeader(
 }
 
 @Composable
+private fun MetadataRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
 fun RiskScoreSection(
     app: AppInfo,
     modifier: Modifier = Modifier
 ) {
-    val riskColor = getRiskColor(app.riskLevel)
-    val riskBg = getRiskBackgroundColor(app.riskLevel)
+    val color = riskColor(app.riskLevel)
+    val bg = riskBgColor(app.riskLevel)
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.5.dp, riskColor.copy(alpha = 0.35f)),
+        border = BorderStroke(1.5.dp, color.copy(alpha = 0.35f)),
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
@@ -472,7 +476,6 @@ fun RiskScoreSection(
                 fontWeight = FontWeight.Bold
             )
 
-            // Large 120dp circular progress indicator
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.size(120.dp)
@@ -480,19 +483,17 @@ fun RiskScoreSection(
                 CircularProgressIndicator(
                     progress = { (app.riskScore / 100f).coerceIn(0f, 1f) },
                     modifier = Modifier.fillMaxSize(),
-                    color = riskColor,
-                    trackColor = riskColor.copy(alpha = 0.15f),
+                    color = color,
+                    trackColor = color.copy(alpha = 0.15f),
                     strokeWidth = 10.dp,
                     strokeCap = StrokeCap.Round
                 )
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "${app.riskScore}",
                         fontSize = 38.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = riskColor
+                        color = color
                     )
                     Text(
                         text = "/ 100",
@@ -503,21 +504,16 @@ fun RiskScoreSection(
                 }
             }
 
-            // Risk badge
-            Surface(
-                color = riskBg,
-                shape = RoundedCornerShape(8.dp)
-            ) {
+            Surface(color = bg, shape = RoundedCornerShape(8.dp)) {
                 Text(
                     text = "${app.riskLevel.label.uppercase()} RISK",
-                    color = riskColor,
+                    color = color,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                 )
             }
 
-            // Descriptive assessment text
             val riskDescription = when (app.riskLevel) {
                 RiskLevel.CRITICAL -> "Critical risk level. This app exhibits permission patterns or special device access commonly linked with high-risk malware, spyware, or banking trojans."
                 RiskLevel.HIGH -> "High risk level. This app requests sensitive permissions or combinations that pose notable security and data privacy threats."
@@ -541,12 +537,13 @@ fun CombinationAlertsCard(
     reasons: List<RiskReason>,
     modifier: Modifier = Modifier
 ) {
+    val criticalColor = riskColor(RiskLevel.CRITICAL)
+    val criticalBg = riskBgColor(RiskLevel.CRITICAL)
+
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = RiskColors.CriticalBackground.copy(alpha = 0.5f)
-        ),
-        border = BorderStroke(2.dp, RiskColors.Critical),
+        colors = CardDefaults.cardColors(containerColor = criticalBg),
+        border = BorderStroke(1.5.dp, criticalColor),
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
@@ -562,26 +559,26 @@ fun CombinationAlertsCard(
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = "Threat Pattern Alert",
-                    tint = RiskColors.Critical,
+                    tint = criticalColor,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Dangerous Threat Patterns Detected!",
+                    text = "High-Risk Capability Combinations",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = RiskColors.Critical
+                    color = criticalColor
                 )
             }
 
             Text(
-                text = "Multiple permissions have been correlated matching known malicious profiles (e.g. data stealer, banking trojan, spyware, or context mismatch):",
+                text = "Multiple permissions or privileges combined match known abuse patterns:",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             reasons.forEach { reason ->
                 Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -596,14 +593,14 @@ fun CombinationAlertsCard(
                             Icon(
                                 imageVector = Icons.Default.Security,
                                 contentDescription = null,
-                                tint = RiskColors.Critical,
+                                tint = criticalColor,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = reason.title,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = RiskColors.Critical
+                                color = criticalColor
                             )
                         }
                         Text(
@@ -625,9 +622,7 @@ fun WhyFlaggedPanel(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier.fillMaxWidth()
     ) {
@@ -700,8 +695,8 @@ fun ReasonItem(
     reason: RiskReason,
     modifier: Modifier = Modifier
 ) {
-    val severityColor = getRiskColor(reason.severity)
-    val severityBg = getRiskBackgroundColor(reason.severity)
+    val severityColor = riskColor(reason.severity)
+    val severityBg = riskBgColor(reason.severity)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -739,10 +734,7 @@ fun ReasonItem(
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Surface(
-                    color = severityBg,
-                    shape = RoundedCornerShape(4.dp)
-                ) {
+                Surface(color = severityBg, shape = RoundedCornerShape(4.dp)) {
                     Text(
                         text = reason.severity.label.uppercase(),
                         color = severityColor,
@@ -770,14 +762,20 @@ fun ReasonItem(
 
 @Composable
 fun SpecialAccessSection(
+    packageName: String,
     specialAccess: SpecialAccessInfo,
+    onExternalLaunched: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val criticalColor = riskColor(RiskLevel.CRITICAL)
+    val criticalBg = riskBgColor(RiskLevel.CRITICAL)
+    val lowColor = riskColor(RiskLevel.LOW)
+    val lowBg = riskBgColor(RiskLevel.LOW)
+
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier.fillMaxWidth()
     ) {
@@ -799,7 +797,7 @@ fun SpecialAccessSection(
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = null,
-                        tint = if (specialAccess.hasAny) RiskColors.Critical else MaterialTheme.colorScheme.primary,
+                        tint = if (specialAccess.hasAny) criticalColor else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(22.dp)
                     )
                     Text(
@@ -810,14 +808,11 @@ fun SpecialAccessSection(
                 }
 
                 if (specialAccess.enabledLabels.isNotEmpty()) {
-                    Surface(
-                        color = RiskColors.CriticalBackground,
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
+                    Surface(color = criticalBg, shape = RoundedCornerShape(12.dp)) {
                         Text(
                             text = "${specialAccess.enabledLabels.size} active",
                             style = MaterialTheme.typography.labelSmall,
-                            color = RiskColors.Critical,
+                            color = criticalColor,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -827,7 +822,7 @@ fun SpecialAccessSection(
 
             if (!specialAccess.hasAny) {
                 Surface(
-                    color = RiskColors.LowBackground,
+                    color = lowBg,
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -839,7 +834,7 @@ fun SpecialAccessSection(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = RiskColors.Low,
+                            tint = lowColor,
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
@@ -851,7 +846,7 @@ fun SpecialAccessSection(
                 }
             } else {
                 Text(
-                    text = "Special privileges are granted through separate system settings screens and bypass normal permission prompts:",
+                    text = "Special privileges are granted through separate system settings screens:",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -861,72 +856,187 @@ fun SpecialAccessSection(
                         SpecialAccessItem(
                             title = "Accessibility Service — ENABLED",
                             description = "Can read everything on screen, capture passwords and simulate touches. Verified in Settings > Accessibility.",
-                            severity = RiskLevel.CRITICAL
+                            severity = RiskLevel.CRITICAL,
+                            actionLabel = "Accessibility Settings",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openAccessibilitySettings(context)
+                            }
                         )
                     } else if (specialAccess.accessibilityDeclared) {
                         SpecialAccessItem(
                             title = "Accessibility Service — declared, not enabled",
                             description = "Ships an accessibility service that is currently switched off. Only enable it if you trust the app.",
-                            severity = RiskLevel.MEDIUM
+                            severity = RiskLevel.MEDIUM,
+                            actionLabel = "Accessibility Settings",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openAccessibilitySettings(context)
+                            }
                         )
                     }
+
                     if (specialAccess.deviceAdminActive) {
                         SpecialAccessItem(
                             title = "Device Administrator — ACTIVE",
                             description = "Can enforce screen locks, wipe internal storage and block its own uninstallation.",
-                            severity = RiskLevel.CRITICAL
+                            severity = RiskLevel.CRITICAL,
+                            actionLabel = "Device Admin Settings",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openDeviceAdminSettings(context)
+                            }
+                        )
+                    } else if (specialAccess.deviceAdminDeclared) {
+                        SpecialAccessItem(
+                            title = "Device Administrator — declared, not active",
+                            description = "Includes a device-admin receiver (currently inactive).",
+                            severity = RiskLevel.LOW,
+                            actionLabel = "Device Admin Settings",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openDeviceAdminSettings(context)
+                            }
                         )
                     }
+
                     if (specialAccess.notificationListenerEnabled) {
                         SpecialAccessItem(
                             title = "Notification Listener — ENABLED",
                             description = "Can intercept all incoming notifications, including SMS OTPs and private messages.",
-                            severity = RiskLevel.CRITICAL
+                            severity = RiskLevel.CRITICAL,
+                            actionLabel = "Notification Access",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openNotificationListenerSettings(context)
+                            }
                         )
                     } else if (specialAccess.notificationListenerDeclared) {
                         SpecialAccessItem(
                             title = "Notification Listener — declared, not enabled",
                             description = "Requests notification access but does not currently hold it.",
-                            severity = RiskLevel.MEDIUM
+                            severity = RiskLevel.MEDIUM,
+                            actionLabel = "Notification Access",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openNotificationListenerSettings(context)
+                            }
                         )
                     }
-                    if (specialAccess.overlayEnabled) {
-                        SpecialAccessItem(
+
+                    when (specialAccess.overlayState) {
+                        SpecialAccessGrantState.ENABLED -> SpecialAccessItem(
                             title = "Screen Overlay — ENABLED",
-                            description = "Can display floating windows over other apps, the classic phishing and clickjacking technique.",
-                            severity = RiskLevel.HIGH
+                            description = "Can display floating windows over other apps, the classic phishing technique.",
+                            severity = RiskLevel.HIGH,
+                            actionLabel = "Overlay Settings",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openOverlaySettings(context, packageName)
+                            }
                         )
-                    } else if (specialAccess.overlayDeclared) {
-                        SpecialAccessItem(
+                        SpecialAccessGrantState.DECLARED_UNVERIFIED -> SpecialAccessItem(
+                            title = "Screen Overlay — declared (verify in Settings)",
+                            description = "Declares SYSTEM_ALERT_WINDOW. Android restricts reading another app's overlay toggle directly — verify in Settings.",
+                            severity = RiskLevel.MEDIUM,
+                            actionLabel = "Verify in Settings",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openOverlaySettings(context, packageName)
+                            }
+                        )
+                        SpecialAccessGrantState.DECLARED_DENIED -> SpecialAccessItem(
                             title = "Screen Overlay — declared, not granted",
-                            description = "Asks for \"display over other apps\" but does not hold it yet.",
-                            severity = RiskLevel.MEDIUM
+                            description = "Requests \"display over other apps\" but does not hold it.",
+                            severity = RiskLevel.LOW
                         )
+                        SpecialAccessGrantState.NOT_DECLARED -> Unit
                     }
-                    if (specialAccess.installPackagesEnabled) {
-                        SpecialAccessItem(
-                            title = "Install Apps — GRANTED",
+
+                    when (specialAccess.installPackagesState) {
+                        SpecialAccessGrantState.ENABLED -> SpecialAccessItem(
+                            title = "Install Unknown Apps — GRANTED",
                             description = "Can trigger APK installations without going through an app store.",
-                            severity = RiskLevel.HIGH
+                            severity = RiskLevel.HIGH,
+                            actionLabel = "Install Apps Settings",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openInstallUnknownAppsSettings(context, packageName)
+                            }
                         )
-                    } else if (specialAccess.installPackagesDeclared) {
+                        SpecialAccessGrantState.DECLARED_UNVERIFIED -> SpecialAccessItem(
+                            title = "Install Unknown Apps — declared (verify in Settings)",
+                            description = "Declares REQUEST_INSTALL_PACKAGES. Verify \"Install unknown apps\" is set to Not allowed in Settings.",
+                            severity = RiskLevel.MEDIUM,
+                            actionLabel = "Verify in Settings",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openInstallUnknownAppsSettings(context, packageName)
+                            }
+                        )
+                        SpecialAccessGrantState.DECLARED_DENIED -> SpecialAccessItem(
+                            title = "Install Unknown Apps — declared, not granted",
+                            description = "Requests APK installation permission but does not currently hold it.",
+                            severity = RiskLevel.LOW
+                        )
+                        SpecialAccessGrantState.NOT_DECLARED -> Unit
+                    }
+
+                    when (specialAccess.usageStatsState) {
+                        SpecialAccessGrantState.ENABLED -> SpecialAccessItem(
+                            title = "Usage Statistics — GRANTED",
+                            description = "Can see which apps you open and when.",
+                            severity = RiskLevel.MEDIUM,
+                            actionLabel = "Usage Access",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openUsageAccessSettings(context)
+                            }
+                        )
+                        SpecialAccessGrantState.DECLARED_UNVERIFIED -> SpecialAccessItem(
+                            title = "Usage Statistics — declared (verify in Settings)",
+                            description = "Declares PACKAGE_USAGE_STATS. Verify in Usage Access Settings.",
+                            severity = RiskLevel.MEDIUM,
+                            actionLabel = "Usage Access",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openUsageAccessSettings(context)
+                            }
+                        )
+                        SpecialAccessGrantState.DECLARED_DENIED -> SpecialAccessItem(
+                            title = "Usage Statistics — declared, not granted",
+                            description = "Requests app-usage history access but does not hold it.",
+                            severity = RiskLevel.LOW
+                        )
+                        SpecialAccessGrantState.NOT_DECLARED -> Unit
+                    }
+
+                    if (specialAccess.allFilesAccessDeclared) {
                         SpecialAccessItem(
-                            title = "Install Apps — declared, not granted",
-                            description = "Requests the ability to install packages but does not hold it yet.",
-                            severity = RiskLevel.MEDIUM
+                            title = "All-Files Access — declared",
+                            description = "Declares MANAGE_EXTERNAL_STORAGE (broad shared-storage read/write). Verify in All Files Access settings.",
+                            severity = RiskLevel.MEDIUM,
+                            actionLabel = "All Files Access",
+                            onAction = {
+                                onExternalLaunched()
+                                SettingsIntents.openAllFilesAccessSettings(context, packageName)
+                            }
                         )
                     }
-                    if (specialAccess.usageStatsEnabled) {
+
+                    if (specialAccess.vpnServiceDeclared) {
                         SpecialAccessItem(
-                            title = "Usage Statistics — GRANTED",
-                            description = "Can see which apps you open and when, useful for timing overlay attacks.",
-                            severity = RiskLevel.MEDIUM
+                            title = "VPN Service — declared",
+                            description = "Ships a VpnService capable of routing network traffic when active.",
+                            severity = RiskLevel.LOW
                         )
-                    } else if (specialAccess.usageStatsDeclared) {
+                    }
+
+                    if (specialAccess.nfcHceDeclared) {
                         SpecialAccessItem(
-                            title = "Usage Statistics — declared, not granted",
-                            description = "Requests app-usage history access but does not hold it yet.",
-                            severity = RiskLevel.MEDIUM
+                            title = "NFC Card Emulation — declared",
+                            description = "Ships a host-based NFC card-emulation service.",
+                            severity = RiskLevel.LOW
                         )
                     }
                 }
@@ -939,10 +1049,12 @@ fun SpecialAccessSection(
 private fun SpecialAccessItem(
     title: String,
     description: String,
-    severity: RiskLevel
+    severity: RiskLevel,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
 ) {
-    val color = getRiskColor(severity)
-    val bg = getRiskBackgroundColor(severity)
+    val color = riskColor(severity)
+    val bg = riskBgColor(severity)
 
     Surface(
         color = bg,
@@ -978,10 +1090,7 @@ private fun SpecialAccessItem(
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
-                    Surface(
-                        color = color,
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
+                    Surface(color = color, shape = RoundedCornerShape(4.dp)) {
                         Text(
                             text = severity.label.uppercase(),
                             color = Color.White,
@@ -996,6 +1105,13 @@ private fun SpecialAccessItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (actionLabel != null && onAction != null) {
+                    TextButton(onClick = onAction) {
+                        Text(actionLabel, style = MaterialTheme.typography.labelMedium)
+                        Spacer(Modifier.width(4.dp))
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(14.dp))
+                    }
+                }
             }
         }
     }
@@ -1018,7 +1134,7 @@ fun PermissionCategoriesSection(
         )
 
         Text(
-            text = "Grouped by risk impact across all 9 Android permission domains:",
+            text = "Grouped by risk impact across Android permission domains:",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -1046,15 +1162,14 @@ fun CategoryCard(
         it.protectionLevel == ProtectionLevel.DANGEROUS || it.protectionLevel == ProtectionLevel.SPECIAL
     }
     val grantedCount = permissions.count { it.isGranted }
+    val highlightColor = riskColor(RiskLevel.HIGH)
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = if (hasDangerous && permissions.isNotEmpty()) {
-            BorderStroke(1.dp, RiskColors.High.copy(alpha = 0.5f))
+            BorderStroke(1.dp, highlightColor.copy(alpha = 0.5f))
         } else null,
         modifier = modifier.fillMaxWidth()
     ) {
@@ -1101,7 +1216,7 @@ fun CategoryCard(
                     Text(
                         text = countSubtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (hasDangerous) RiskColors.High else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (hasDangerous) highlightColor else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -1126,9 +1241,7 @@ fun CategoryCard(
                         .padding(start = 14.dp, end = 14.dp, bottom = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
                     Text(
                         text = category.description,
@@ -1159,6 +1272,8 @@ fun PermissionRow(
     fit: PermissionFit? = null,
     modifier: Modifier = Modifier
 ) {
+    val grantedColor = riskColor(RiskLevel.LOW)
+
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         shape = RoundedCornerShape(8.dp),
@@ -1173,7 +1288,7 @@ fun PermissionRow(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Granted",
-                    tint = Color(0xFF2E7D32),
+                    tint = grantedColor,
                     modifier = Modifier
                         .size(20.dp)
                         .padding(top = 2.dp)
@@ -1226,7 +1341,7 @@ fun PermissionRow(
                     text = if (permission.isGranted) "Status: Granted" else "Status: Declared (Not Granted)",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (permission.isGranted) Color(0xFF2E7D32) else MaterialTheme.colorScheme.outline
+                    color = if (permission.isGranted) grantedColor else MaterialTheme.colorScheme.outline
                 )
 
                 if (fit != null && permission.isSensitive) {
@@ -1244,29 +1359,16 @@ fun ProtectionLevelBadge(
     modifier: Modifier = Modifier
 ) {
     val (bgColor, textColor) = when (level) {
-        ProtectionLevel.DANGEROUS -> Pair(
-            RiskColors.CriticalBackground,
-            RiskColors.Critical
-        )
-        ProtectionLevel.SPECIAL -> Pair(
-            Color(0x339C27B0),
-            Color(0xFFAB47BC)
-        )
-        ProtectionLevel.SIGNATURE -> Pair(
-            Color(0x332196F3),
-            Color(0xFF42A5F5)
-        )
+        ProtectionLevel.DANGEROUS -> Pair(riskBgColor(RiskLevel.CRITICAL), riskColor(RiskLevel.CRITICAL))
+        ProtectionLevel.SPECIAL -> Pair(Color(0x339C27B0), Color(0xFFAB47BC))
+        ProtectionLevel.SIGNATURE -> Pair(Color(0x332196F3), Color(0xFF42A5F5))
         ProtectionLevel.NORMAL -> Pair(
             MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 
-    Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(4.dp),
-        modifier = modifier
-    ) {
+    Surface(color = bgColor, shape = RoundedCornerShape(4.dp), modifier = modifier) {
         Text(
             text = level.label.uppercase(),
             color = textColor,
@@ -1280,6 +1382,7 @@ fun ProtectionLevelBadge(
 @Composable
 fun ActionButtons(
     packageName: String,
+    onExternalLaunched: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -1290,10 +1393,8 @@ fun ActionButtons(
     ) {
         OutlinedButton(
             onClick = {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-                context.startActivity(intent)
+                onExternalLaunched()
+                SettingsIntents.openAppDetails(context, packageName)
             },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(10.dp)
@@ -1309,10 +1410,8 @@ fun ActionButtons(
 
         Button(
             onClick = {
-                val uninstallIntent = Intent(Intent.ACTION_DELETE).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-                context.startActivity(uninstallIntent)
+                onExternalLaunched()
+                SettingsIntents.requestUninstall(context, packageName)
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.error,
@@ -1331,9 +1430,3 @@ fun ActionButtons(
         }
     }
 }
-
-fun formatDate(timestamp: Long): String {
-    if (timestamp <= 0L) return "Unknown"
-    return SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(timestamp))
-}
-
