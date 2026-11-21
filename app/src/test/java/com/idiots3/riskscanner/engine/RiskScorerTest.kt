@@ -3,13 +3,18 @@ package com.idiots3.riskscanner.engine
 import com.idiots3.riskscanner.model.AiAssessment
 import com.idiots3.riskscanner.model.AppInfo
 import com.idiots3.riskscanner.model.FitStatus
+import com.idiots3.riskscanner.model.InstallProvenance
 import com.idiots3.riskscanner.model.PermissionCategory
 import com.idiots3.riskscanner.model.PermissionDetail
 import com.idiots3.riskscanner.model.PermissionFit
 import com.idiots3.riskscanner.model.ProtectionLevel
+import com.idiots3.riskscanner.model.ReasonKind
 import com.idiots3.riskscanner.model.RiskLevel
+import com.idiots3.riskscanner.model.ScoreSource
+import com.idiots3.riskscanner.model.SpecialAccessGrantState
 import com.idiots3.riskscanner.model.SpecialAccessInfo
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -36,7 +41,11 @@ class RiskScorerTest {
         permissions: List<PermissionDetail> = emptyList(),
         specialAccess: SpecialAccessInfo = SpecialAccessInfo(),
         installerSource: String = "Google Play Store",
-        hasLauncher: Boolean = true
+        hasLauncher: Boolean = true,
+        isSystemApp: Boolean = false,
+        isDefaultSmsApp: Boolean = false,
+        isEnabledInputMethod: Boolean = false,
+        installProvenance: InstallProvenance = AppInfo.inferProvenance(installerSource, isSystemApp)
     ) = AppInfo(
         appName = name,
         packageName = pkg,
@@ -47,12 +56,15 @@ class RiskScorerTest {
         installerSource = installerSource,
         targetSdk = 34,
         minSdk = 26,
-        isSystemApp = false,
+        isSystemApp = isSystemApp,
         hasLauncherActivity = hasLauncher,
         androidCategory = null,
         apkPath = "",
         permissions = permissions,
-        specialAccess = specialAccess
+        specialAccess = specialAccess,
+        installProvenance = installProvenance,
+        isDefaultSmsApp = isDefaultSmsApp,
+        isEnabledInputMethod = isEnabledInputMethod
     )
 
     @Test
@@ -95,8 +107,25 @@ class RiskScorerTest {
                 )
             )
         )
-        assertTrue(result.reasons.any { it.title.contains("Banking Trojan") })
+        assertTrue(result.reasons.any { it.title.contains("Banking Trojan") && it.kind == ReasonKind.COMBO_RULE })
         assertTrue("score=${result.score}", result.score >= 51)
+    }
+
+    @Test
+    fun `accessibility plus unverified overlay triggers potential banking trojan warning`() {
+        val result = RiskScorer.score(
+            app(
+                permissions = listOf(permission("INTERNET", PermissionCategory.NETWORK, ProtectionLevel.NORMAL)),
+                specialAccess = SpecialAccessInfo(
+                    accessibilityEnabled = true,
+                    overlayEnabled = false,
+                    overlayDeclared = true,
+                    overlayState = SpecialAccessGrantState.DECLARED_UNVERIFIED
+                )
+            )
+        )
+        assertTrue(result.reasons.any { it.title.contains("Accessibility + Overlay") && it.kind == ReasonKind.COMBO_RULE })
+        assertTrue("score=${result.score}", result.score >= 40)
     }
 
     @Test
@@ -137,6 +166,85 @@ class RiskScorerTest {
     }
 
     @Test
+    fun `default sms app from play store is exempt from sms stealer combo`() {
+        val result = RiskScorer.score(
+            app(
+                name = "Messages",
+                installerSource = "Google Play Store",
+                isDefaultSmsApp = true,
+                permissions = listOf(
+                    permission("READ_SMS", PermissionCategory.SMS),
+                    permission("RECEIVE_SMS", PermissionCategory.SMS),
+                    permission("INTERNET", PermissionCategory.NETWORK, ProtectionLevel.NORMAL),
+                    permission("RECEIVE_BOOT_COMPLETED", PermissionCategory.BACKGROUND_PERSISTENCE, ProtectionLevel.NORMAL)
+                )
+            )
+        )
+        assertFalse(result.reasons.any { it.title.contains("SMS Data Stealer") })
+    }
+
+    @Test
+    fun `enabled keyboard with no launcher icon is exempt from hidden app penalty`() {
+        val result = RiskScorer.score(
+            app(
+                name = "BoardKey",
+                hasLauncher = false,
+                isEnabledInputMethod = true,
+                permissions = listOf(
+                    permission("RECORD_AUDIO", PermissionCategory.CAMERA_MICROPHONE)
+                )
+            )
+        )
+        assertFalse(result.reasons.any { it.title.contains("Invisible app") })
+    }
+
+    @Test
+    fun `system app with unknown installer is never penalized as sideloaded`() {
+        val result = RiskScorer.score(
+            app(
+                name = "System Carrier",
+                installerSource = "Unknown",
+                isSystemApp = true,
+                permissions = listOf(
+                    permission("READ_PHONE_STATE", PermissionCategory.PHONE_IDENTITY)
+                )
+            )
+        )
+        assertFalse(result.reasons.any { it.kind == ReasonKind.PROVENANCE })
+        assertTrue(result.score < 26)
+    }
+
+    @Test
+    fun `browser sideloaded app requesting install packages triggers dropper combo`() {
+        val result = RiskScorer.score(
+            app(
+                name = "Free Update",
+                installerSource = "Sideloaded via Chrome",
+                installProvenance = InstallProvenance.BROWSER_OR_APP_SIDELOAD,
+                specialAccess = SpecialAccessInfo(
+                    installPackagesDeclared = true,
+                    installPackagesState = SpecialAccessGrantState.DECLARED_UNVERIFIED
+                )
+            )
+        )
+        assertTrue(result.reasons.any { it.title.contains("Dropper") && it.kind == ReasonKind.COMBO_RULE })
+    }
+
+    @Test
+    fun `nfc card emulation plus accessibility triggers relay combo`() {
+        val result = RiskScorer.score(
+            app(
+                name = "TapPay Helper",
+                specialAccess = SpecialAccessInfo(
+                    accessibilityEnabled = true,
+                    nfcHceDeclared = true
+                )
+            )
+        )
+        assertTrue(result.reasons.any { it.title.contains("NFC Relay") && it.kind == ReasonKind.COMBO_RULE })
+    }
+
+    @Test
     fun `utility app with sms access is flagged for context mismatch`() {
         val result = RiskScorer.score(
             app(
@@ -162,7 +270,6 @@ class RiskScorerTest {
             ),
             modelUsed = true
         )
-        // Rules-only score at Medium or above via several granted sensitive permissions.
         val result = RiskScorer.score(
             app(
                 permissions = listOf(
@@ -225,7 +332,7 @@ class RiskScorerTest {
             )
         )
         val rulesPoints = result.breakdown
-            .filter { it.source == com.idiots3.riskscanner.model.ScoreSource.RULES }
+            .filter { it.source == ScoreSource.RULES }
             .sumOf { it.points }
         assertEquals(result.ruleScore, rulesPoints)
     }

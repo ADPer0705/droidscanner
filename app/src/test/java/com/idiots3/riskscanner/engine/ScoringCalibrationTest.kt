@@ -43,7 +43,9 @@ class ScoringCalibrationTest {
         permissions: List<PermissionDetail>,
         installer: String = "Google Play Store",
         special: SpecialAccessInfo = SpecialAccessInfo(),
-        hasLauncher: Boolean = true
+        hasLauncher: Boolean = true,
+        isSystem: Boolean = false,
+        isDefaultSms: Boolean = false
     ) = AppInfo(
         appName = name,
         packageName = pkg,
@@ -54,12 +56,13 @@ class ScoringCalibrationTest {
         installerSource = installer,
         targetSdk = 34,
         minSdk = 26,
-        isSystemApp = false,
+        isSystemApp = isSystem,
         hasLauncherActivity = hasLauncher,
         androidCategory = null,
         apkPath = "",
         permissions = permissions,
-        specialAccess = special
+        specialAccess = special,
+        isDefaultSmsApp = isDefaultSms
     )
 
     private fun score(app: AppInfo) = RiskScorer.score(app, null)
@@ -182,6 +185,26 @@ class ScoringCalibrationTest {
         )
         val result = score(app)
         assertTrue("gcam mod score=${result.score}", result.score < 76)
+    }
+
+    @Test
+    fun `preinstalled system default sms app stays medium or low`() {
+        val app = app(
+            "Messages", "com.android.messaging",
+            listOf(
+                perm("READ_SMS", PermissionCategory.SMS),
+                perm("RECEIVE_SMS", PermissionCategory.SMS),
+                perm("SEND_SMS", PermissionCategory.SMS),
+                perm("READ_CONTACTS", PermissionCategory.CONTACTS_CALL_LOGS),
+                normal("RECEIVE_BOOT_COMPLETED", PermissionCategory.BACKGROUND_PERSISTENCE),
+                normal("INTERNET", PermissionCategory.NETWORK)
+            ),
+            installer = "Pre-installed (System)",
+            isSystem = true,
+            isDefaultSms = true
+        )
+        val result = score(app)
+        assertTrue("system default sms score=${result.score}", result.score <= 50)
     }
 
     @Test
