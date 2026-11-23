@@ -12,13 +12,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.idiots3.riskscanner.MainActivity
 import com.idiots3.riskscanner.model.AppInfo
 
 /**
  * Live install/update monitoring while the app is open.
  *
  * Android 8+ forbids manifest-declared receivers for package change broadcasts, so this
- * receiver is registered at runtime. Background changes are caught on resume/scan via
+ * receiver is registered at runtime. Background changes while DroidScanner is closed are
+ * caught by [com.idiots3.riskscanner.worker.BackgroundSecurityWorker] and on resume via
  * the persisted snapshot diff.
  */
 class InstallMonitorReceiver(
@@ -53,12 +55,48 @@ class InstallMonitorReceiver(
     }
 }
 
-/** Local notification for apps that score High or Critical on install or permission escalation. */
+/**
+ * Deep-linked local notifications for high-risk installs, special-access or signer changes,
+ * invalidated trusted apps, and device-posture regressions.
+ */
 object InstallAlertNotifier {
 
-    private const val CHANNEL_ID = "risk_alerts"
+    const val EXTRA_OPEN_PACKAGE = "extra_open_package"
+    const val EXTRA_OPEN_TAB = "extra_open_tab"
+    const val TAB_DEVICE = "device"
+    const val TAB_HISTORY = "history"
+
+    private const val CHANNEL_RISK = "risk_alerts"
+    private const val CHANNEL_POSTURE = "posture_alerts"
 
     fun notifyHighRisk(context: Context, app: AppInfo, detailPrefix: String? = null) {
+        val body = buildString {
+            if (!detailPrefix.isNullOrBlank()) {
+                append(detailPrefix)
+                append(" ")
+            }
+            append("${app.appName} scored ${app.riskScore}/100 (${app.riskLevel.label} risk). Tap to see why.")
+        }
+        notifySecurityEvent(
+            context = context,
+            notificationId = app.packageName.hashCode(),
+            title = "${app.riskLevel.label} risk app: ${app.appName}",
+            body = body,
+            targetPackage = app.packageName,
+            openTab = null,
+            highPriority = true
+        )
+    }
+
+    fun notifySecurityEvent(
+        context: Context,
+        notificationId: Int,
+        title: String,
+        body: String,
+        targetPackage: String? = null,
+        openTab: String? = null,
+        highPriority: Boolean = true
+    ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -67,46 +105,53 @@ object InstallAlertNotifier {
         }
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
+        ensureChannels(manager)
 
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Risk alerts",
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Alerts when an app is installed or updated and scores High or Critical risk"
+        val launchIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            if (!targetPackage.isNullOrBlank()) putExtra(EXTRA_OPEN_PACKAGE, targetPackage)
+            if (!openTab.isNullOrBlank()) putExtra(EXTRA_OPEN_TAB, openTab)
         }
-        manager.createNotificationChannel(channel)
-
-        val launchIntent = context.packageManager
-            .getLaunchIntentForPackage(context.packageName) ?: return
         val pendingIntent = PendingIntent.getActivity(
             context,
-            0,
+            notificationId,
             launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val body = buildString {
-            if (!detailPrefix.isNullOrBlank()) {
-                append(detailPrefix)
-                append(" ")
-            }
-            append("${app.appName} scored ${app.riskScore}/100 (${app.riskLevel.label} risk). Tap to see why.")
-        }
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val channelId = if (highPriority) CHANNEL_RISK else CHANNEL_POSTURE
+        val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("${app.riskLevel.label} risk app: ${app.appName}")
+            .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(if (highPriority) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 
         try {
-            manager.notify(app.packageName.hashCode(), notification)
+            manager.notify(notificationId, notification)
         } catch (_: Throwable) {
         }
+    }
+
+    private fun ensureChannels(manager: NotificationManager) {
+        val riskChannel = NotificationChannel(
+            CHANNEL_RISK,
+            "App security alerts",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Alerts for new High/Critical apps, special-access grants, or signing changes"
+        }
+        val postureChannel = NotificationChannel(
+            CHANNEL_POSTURE,
+            "Device configuration alerts",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Alerts when a key device security setting weakens (e.g. new CA cert or debugging)"
+        }
+        manager.createNotificationChannel(riskChannel)
+        manager.createNotificationChannel(postureChannel)
     }
 }
