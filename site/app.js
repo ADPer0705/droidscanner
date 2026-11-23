@@ -319,7 +319,7 @@
 
       if (relRes.ok) {
         const rel = await relRes.json();
-        const tag = rel.tag_name || "v1.1.1";
+        const tag = rel.tag_name || "v1.1.2";
         const tagEl = document.getElementById("release-tag");
         const relPill = document.getElementById("release-pill");
         const installBadge = document.getElementById("install-version-badge");
