@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Clean Material You monochrome silhouette -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeWidth="4.0"
+        android:strokeLineJoin="round"
+        android:strokeColor="#FFFFFF"
+        android:pathData="M54,26 L76.5,34.4 C77.5,34.8 78.2,35.7 78.2,36.8 L78.2,52.8 C78.2,66.6 68.2,76.5 55.2,81.8 C54.4,82.1 53.6,82.1 52.8,81.8 C39.8,76.5 29.8,66.6 29.8,52.8 L29.8,36.8 C29.8,35.7 30.5,34.8 31.5,34.4 Z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeWidth="2.4"
+        android:strokeColor="#FFFFFF"
+        android:pathData="M54,41 A12,12 0 1,0 54,65 A12,12 0 1,0 54,41 Z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeColor="#FFFFFF"
+        android:pathData="M48.4,53.2 L52.3,57.1 L60.1,48.8" />
+</vector>
