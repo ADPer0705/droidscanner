@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <exclude domain="sharedpref" path="risk_snapshot.xml" />
+    <exclude domain="sharedpref" path="scanner_prefs.xml" />
     <exclude domain="file" path="embedding_cache.json" />
+    <exclude domain="file" path="trusted_items.json" />
+    <exclude domain="file" path="audit_history.json" />
 </full-backup-content>

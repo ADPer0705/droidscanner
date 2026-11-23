@@ -16,25 +16,39 @@ android {
         applicationId = "com.idiots3.droidscanner"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
 
-        // MediaPipe ships a large native runtime per ABI. Restrict to the ABIs that
-        // matter (modern phones + x86_64 emulators) to keep the single APK small.
-        ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
+    // Per-ABI APKs keep GitHub Releases / Obtainium downloads compact while supporting
+    // both 64-bit (arm64-v8a) and 32-bit (armeabi-v7a) consumer Android devices, plus a
+    // universal fallback APK for manual installation.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // If release signing credentials are supplied via environment variables or Gradle
+            // properties, use them; otherwise keep debug signing for Obtainium/local testing
+            // only when explicitly requested via -PuseDebugSigningForRelease=true.
+            val useDebugSigning = project.findProperty("useDebugSigningForRelease") == "true"
+            if (useDebugSigning) {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
     compileOptions {
@@ -76,6 +90,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // On-device purpose inference (Universal Sentence Encoder via MediaPipe Tasks Text).
     implementation(libs.mediapipe.tasks.text)
