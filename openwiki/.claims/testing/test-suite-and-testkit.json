@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:efa135f1fcca83d5310743c39885e99449cc5de9f23923ed355506b210404a5a",
+  "claims": [
+    {
+      "id": "claim_747806c47a83418ca62aa0da9aac94df",
+      "statement": "ScoringCalibrationTest (8 tests) and RiskScorerTest (22 tests) guard realistic app band placement, all combo rules, camera-utility and device-migration exemptions, impersonation/debug-cert penalties, self-app zeroing, bounded AI contribution, and 100% score-breakdown traceability.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/test/java/com/idiots3/riskscanner/engine/RiskScorerTest.kt#L66-L445",
+          "version": "repo-lines-v1:sha256:015ddefb3adadfb55e0645a24d47e19d3bbbc0d9122769db94a4e345bef62a25:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkNzRiOWYzMjkzNzEzOGQzNzJhNDdiYTYwZTk3OThiMTRhOWRmNjgxYjA4MmUyNWFkZDdlMDA3MDhhNWI3ZGU3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyMTAxNDU5MzhmZDRhMjczYjhhY2YxMzdiNWFiODc1NTY4M2YwMDNhZmMxYjE3MjgyNzI0M2QxOTI0MDM0ZjFjIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://app/src/test/java/com/idiots3/riskscanner/engine/ScoringCalibrationTest.kt#L68-L221",
+          "version": "repo-lines-v1:sha256:0c8d2666f1a8fdecf6860f46ebb5dd2628a3aec9073e4464bf2c1a4c49f9a080:eyJzZWxlY3RlZExpbmVDb3VudCI6MTU0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4N2EzZmI4Njk5OWI1YWRiOThjZTQzZWIzNzc2MmY5MDM0YmYyMWRjMDkwZjI5NDU4YzJjMGE1MGIzYmVhOTdjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1YjFkYjZlMGRmNzI1YmUxZTJlZjJiZDJlMGY1OGMxNDNjMzU1ZTBiODI2OGZhZmU3NTAxYTU0MDE2MDc0ZWQxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_eb405e0e26b6433882bc9edff88c2c47",
+      "statement": "PermissionMapperTest pins scoring-critical permissions across all nine categories, verifies at least 350 mapped entries, and ensures unmapped or system permissions stay in OTHER.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/test/java/com/idiots3/riskscanner/engine/PermissionMapperTest.kt#L16-L105",
+          "version": "repo-lines-v1:sha256:4b0cd359e850e021383dcb02bb3f9cc5f69bab91b41063e036a9b0449f6e18f0:eyJzZWxlY3RlZExpbmVDb3VudCI6OTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwZmRjODU1ZGU5ZDFiYmM2ODU1NTdhNDhkYTQ2M2FlZTIyYjVhZTJkNWRkOWI0ZjAyNjBiMTg1ODk3NGRlODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4ZDkwNGJiOWRiOGExM2IyMmRlNDEyZTkxZmRlZWNkMzVhMTAxY2MxMDhmNjAzNmFmYWIzMWYwZWE5MjRkZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9c6fc2f76fb44b8e9cf598c08b13af69",
+      "statement": "The standalone :testkit module builds a dependency-free benign Torch Pro decoy APK with stubbed special-access components and hostile permission declarations for safe on-device verification.",
+      "evidence": [
+        {
+          "resource": "repo://testkit/build.gradle.kts#L6-L44",
+          "version": "repo-lines-v1:sha256:7db141d94f0934da0d6bd8c644c6ac6b1eda90652892a8904edda93eca7ff7b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhMjMwMWZiNzQxNzM3ODU1OTliYTU2YWRiYjAyYTAyZmRiNWJlNmFmYTMxM2E3MzIxZDRjNGQ4MDM1ZmM0OWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVmYWM5YzRlYmIwZmUzMjMzZGFiYjI4NWRkZmEzZTU2NGEyYjE4YjhkNTFlZTdkYTlkNDE0NTk0YzA5NWIwOTAifQ"
+        },
+        {
+          "resource": "repo://testkit/src/main/AndroidManifest.xml#L1-L84",
+          "version": "repo-lines-v1:sha256:5331f859ed4150c9d9d0ce6be8671ea937c10700754ff176a5f22aff9cb5db5e:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzOGRmYjA5MGQ3YjE5MTgyNjY5OTA4YTg5MTE4NjM2OGQ0YWY1YjAxOWE5ZTcxNjhlNGMwOGM5MjgyN2I1NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyODY0MzNiZTcxNTdjZDZiNjIyOTdhZTdlM2JhZWI0ZDU2MjljZTRmZGI3NzMxYjg0YzY3MjcyMWFkOTViN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://testkit/src/main/java/com/torch/pro/TestComponents.kt#L15-L47",
+          "version": "repo-lines-v1:sha256:c0d2261fa2d5a7073573a8700945b959c41f1464ea2ea508be7d6fe5f2791599:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc1ZDNmNmFjZDlmMDFhZmJjNTEwMmQ2OTA3MzQ0NmY2NDIyY2NjZGFlMzIwMTk3M2UwYzQyMjEzZTdlZTc1YzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7a78cf6661574fd794b510df19be5f7d",
+      "statement": "Pure-JVM unit tests verify Cyrillic/zero-width impersonation and typosquatting (ImpersonationDetectorTest), automatic app-trust and posture-dismissal invalidation (TrustValidatorTest), synthetic minimal DEX 035 parsing and corrupt-buffer safety (DexParserTest), and all 16 device posture evaluators (DevicePostureEvaluatorTest).",
+      "evidence": [
+        {
+          "resource": "repo://app/src/test/java/com/idiots3/riskscanner/engine/ImpersonationDetectorTest.kt#L50-L87",
+          "version": "repo-lines-v1:sha256:b0efb252acb5e9de57f7936efbf14b62ee8cf37219106e84bd46ae5b246cdb6b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjZjA5ZWIwYzU3NDRmYjk3MzMxYjk4ZmYzZmJmMDVhNjAyYmEzZjdmNjdlNWRhNWJlOTA5NTAzM2Y2MjU4MjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgxOWUwMWU1ZGE5NzViNDllOTE0NGI4NGYwNjg3NTkxNWY3YWNiZTU2MDIxZmY4M2JmNDVmMzA2Y2ZlYzhhOWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://app/src/test/java/com/idiots3/riskscanner/model/TrustValidatorTest.kt#L45-L105",
+          "version": "repo-lines-v1:sha256:f805e4bd3359ef2bcf339b678ef84b0564aef0190f50e52144373b78fd32f3ed:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjZjA5ZWIwYzU3NDRmYjk3MzMxYjk4ZmYzZmJmMDVhNjAyYmEzZjdmNjdlNWRhNWJlOTA5NTAzM2Y2MjU4MjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4YmNjNGQwYTFhYjk3NmIzNzcwOGMwMGI0M2M5NjgxMDBlZmY2ZTJjZDgzMjJlYTNiNWUxMjhhOWQzYjhlYzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://app/src/test/java/com/idiots3/riskscanner/scanner/DevicePostureEvaluatorTest.kt#L13-L113",
+          "version": "repo-lines-v1:sha256:4176bbd67b0063df51fa1bd006371405617bf11964496ca61a7a4e27605e5fb2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0Y2YwOWViMGM1NzQ0ZmI5NzMzMWI5OGZmM2ZiZjA1YTYwMmJhM2Y3ZjY3ZTVkYTViZTkwOTUwMzNmNjI1ODI1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3MzI0ZWQzNDRlM2U3MGE4NTA0NWI0MzAxMGQ0YjM3ZDk3MmI4MTYyNzg4NmZhZjMyNzUyNDYyY2UwMzBjNjdjIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://app/src/test/java/com/idiots3/riskscanner/scanner/DexParserTest.kt#L13-L131",
+          "version": "repo-lines-v1:sha256:9e1b12ab24509c86ef167aab59e9a2f2f3e3a463929fd455a2387430c59cd79b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0Y2YwOWViMGM1NzQ0ZmI5NzMzMWI5OGZmM2ZiZjA1YTYwMmJhM2Y3ZjY3ZTVkYTViZTkwOTUwMzNmNjI1ODI1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIxMzc2NDc5OGNlZTI1Mzc0ZDVhMTE0M2FjNzU0YTg4MWUzNjc0MTZlNWIzY2VhMzcyMzk4ZmQzOGRhNGI0OTc3IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-23T19:21:54.091Z"
+  }
+}

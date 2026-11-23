@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:3bc253ae9ee2daa4249533093296604cb91538075c08573d06269bdf4da842da",
+  "claims": [
+    {
+      "id": "claim_ff6767ddfb054fd896e36049f39d819c",
+      "statement": "PurposeInferenceEngine safely re-initializes TextEmbedderEngine on rescans after releaseModel() closes the native MediaPipe handle, while warming archetype and justification vectors only once per session.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/ml/PurposeInferenceEngine.kt#L179-L185",
+          "version": "repo-lines-v1:sha256:c5f41485f30a8c19979407a38ac6b5af30dbefcd49ef6d2c9221ec5894b89c11:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTUyMmM0MmNkMTljNmQwM2Q4MDhjNDUyNzIwNTUyODI1YjdlYTFjNWI0OTFiMjE4NTExY2FjNzQxNWNmOWQ5YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGFjNTAxZWUxMDYxMzFlMDQwMDQzMGE0NzIzZDBkM2EwOThlMDc4ZTM4OTQ0NTlkMDIyZjkyZTVkYTNjOTk3MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzNjODkwOTlhYjFjOWUwOGJhZjA3ZTZiZTQ0MWYwNDExNjVmODVmNGY3Njc4Njc2MWM2ZWQ0MTM3Y2M1NWQ2MyJ9"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/ml/PurposeInferenceEngine.kt#L60-L98",
+          "version": "repo-lines-v1:sha256:3eb0165d3654ebbf5f7e32021ba1595a7243f69100fc99e0937053883ca6d4da:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkMGJjOGIxNmE5ZTRkNGYyNjcyZmFkZjZmZjBiZmRkNDZmYTQzODg2YWRlMGUwYmZhYTI4YzRmZTliYzVjOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4YTJjMTkwNGFlNDk4NDU0M2I1MWYxZTE5ODk3NTRiNDRiMGUyOTFmNWIwNzFiNjhhMWJkZDUxZTEyNGY1N2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiODcyOTRmNTlhMDI2ZjZkMjRmZWEzMTcxZGNjM2M2NWEyY2M3OWZmMTJkMDUxZGI2ZTBlNzY4NTFlODRhZDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4d77300d3634ef3b56b73ef3e7aa097",
+      "statement": "The AI purpose signal only penalizes granted unexplained sensitive categories, requires a rules score of at least 26, adds at most 8 points, and caps total score at 75 when rules score is below 76.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/RiskScorer.kt#L664-L703",
+          "version": "repo-lines-v1:sha256:cf8081683a16f29b6b0c1a565732d138e680d7370b3fe98309cafca252cd256b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1NzMyNzVkZjhkZGNlZDgxMzNhOWFlNDM1NGU3NTNiYjZhYzIyYzg2OTY1YTE3MzhiMGNlZGFjYTA5OTJlMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxNzU1MzZlMDEwMjQyZTU2NjBjMTBlNmJmNGNkNWM0ZjQyMGJmMzE4Yzg4NjU1Nzk3NmNhN2NiNjJlZWNjZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZiY2IyOGEwNGY2MDA1YTBjNDMyNzA1Mzg4ZjRlYjJkYjkwOTY3MzQ3YTI2NWY4YmY5YTA4ZDA4OTg5MTQ2ODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5NGUyZjlmZmZlMWNmNzFjNmRjMDdiM2M4Njk3ZWYzMTdhNmYwNTZmNGNlNmEwMDNhMDY4YWE0NzQyNjQ5MWEifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/RiskScorer.kt#L746-L762",
+          "version": "repo-lines-v1:sha256:d6f21bd8ad98c646b28c6f496bbc3cb76fa33bbb0fddc25de8ed30d3b36476fc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5Y2JiYzY1NDY5ZGIxY2EyODQyZWZkOTdkZjdlZTJjZTZjYzE1NzE0ODJkMDFhMThiNzkwYTEwYzdjNTEwZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4MDJkNjZmMzE5ZjMwYmU1NmVlMzg4MDEwOWVlZWJhNDVmOWFkZDYyNjY0OTdmMDUxZjJiMzE5ZTAwZmE3MGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxZTFlOWZmOGEyYTE2MzY2ZjI0NzBlNTI5NTg4OGQyN2IwMzk5YTNiNzAzMjE5ZDA0YTJjMDdmYWNhMTNmNzkifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/ScoringConfig.kt#L237-L252",
+          "version": "repo-lines-v1:sha256:f2764a03981913691e7a03c65bd70093091508323877a00b6c1a465611eca62f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MjkyMmZhOTFjNTE0MzliOTFhYzFlYTQzYzNlZDBjZjI3OGNmOGI4NDFhZTBkNWQyZTI3ODZmMTBmNjgwODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1ZjJkYTk2YmUyN2Y0Y2UwOWQ2ODQ4OTk4ZWMyZmE5NmUzZTMyMDYwODU5ZjNmN2M1MTExNGQ4ZjgwZDJkNmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2YzEyZjRkNTFkNGQ4MjJlMzFmOTc1NWZhOGU3MzRkNTI5NTAzMTI5YzVmZDhlYjE4NWNjZmI2OWZjY2MwNGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1NmUxNjczMTQ1NzE5ZDZlOTRlYTkwODE4ZjcyMzZhMWUyMTNmZmJhMWU2YTQyMjc3ODZiMTc0ZDVmOTY2YTkifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/ml/PurposeInferenceEngine.kt#L126-L176",
+          "version": "repo-lines-v1:sha256:116bc8fe49d53b44dfd175ae43e1ed2732cf4bc18c8b4e105dca4242b1dbbcd5:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiNzVmMTlkMzE2OThmYTQzYTY0MzA0MDk2ZjA4ZDY2MzQzZjVjNDM1ZDQyNDNlYjBhYjNjY2Q1ZDZhNjlmN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiMDNhZDNlYWQwZTZkNTVhMGI2N2UxYTI1NjFkZWZiZTIyNWRjMmUwNTg3ZTIzYjhkNzMyZDBkNTMxNjBlYWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMGYzNWI0Y2U0MmUzM2YyMjlmODFjMDE4MzA2YjdhMTZhMTBhZWQ3ZTU1ZWMwZTNiYzkwYzQ2MDE0OTM5OGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1ZmYxNGMxNWUwZmVkMWY4ZGU0OWQ0NGU5NDIzYWE3OTliYmY3MWY2YjBjMjI0NzMxN2M0YjFlZWNiMzkwNDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1a49fe3e747e45eea3461c530f2676ad",
+      "statement": "EmbeddingStore caches base64-encoded 512-dim vectors under versioned keys and persists them atomically via a temporary file rename.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/ml/EmbeddingStore.kt#L56-L79",
+          "version": "repo-lines-v1:sha256:f7e7ecdb599ba142e78535ac83cee732a0e893b636329b3938c272564155ab33:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmZjU5MmMwYWQ3MDE1NmEzOTFlYjM5MDYyMmVlNTVmMDQzNjc1ZWYyYjViMzM5ZGQyYjk2NmU2MTNjODc0ZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkZDc1MDA3YTQxYmE2MDA1ZWMyMjBiMmY5YWJiZjkwYWYwY2M0YzdiMzM3ODIyMTEwZGM5YWM0OGM2MjA5ZGEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-23T19:21:54.091Z"
+  }
+}

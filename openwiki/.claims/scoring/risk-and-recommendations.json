@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:429a88613195e9a589ae82d69fe4d93ed1d23f24acd00595f4db6756e2664f2d",
+  "claims": [
+    {
+      "id": "claim_df1989943d684ff0b9df4d51f89fa19e",
+      "statement": "ScoringConfig (VERSION = 3) defines all deterministic category weights, special-access weights, fast static/signing red flags, and 19 combination rules, while RiskScorer enforces at least 3 plain-language reasons for every High or Critical app.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/RiskScorer.kt#L705-L724",
+          "version": "repo-lines-v1:sha256:6327b755cf10ab9e26123af42a899330e568c104518b2a6c6cd8640d96d6e8e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2NWU3N2Q4NTllMjJmYTZmNTE3MDc0OGFhNjQzYWFmMjk3MTcyNzVlOTk3ZWVlMWRiYTI2MGU4MjY4YzcwOTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmMWVhNGUwYjNjNjg5ODJhNGUyNzhjZTYyMDNhNzdmNGU2NzE5NGFmNzVkYzllZDk3M2FiMDgxMmQ3MWFlYjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmYjM1ZmZlNzZhMjVkNjFjZjFhN2JmYmNlM2QyZjE0MGIxYjkyZTRjNmE2MzdjMGI0MzdhZDAzZjEzNThkNWEifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/RiskScorer.kt#L99-L151",
+          "version": "repo-lines-v1:sha256:765c011323b8246bbeca0ec9f5903ba0f02f81fc1b9f34637f373676a911fbda:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1NzMyNzVkZjhkZGNlZDgxMzNhOWFlNDM1NGU3NTNiYjZhYzIyYzg2OTY1YTE3MzhiMGNlZGFjYTA5OTJlMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZiY2IyOGEwNGY2MDA1YTBjNDMyNzA1Mzg4ZjRlYjJkYjkwOTY3MzQ3YTI2NWY4YmY5YTA4ZDA4OTg5MTQ2ODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliOTgxN2JiYmRlMTVlYjFlYzAzNTY4ODk0MGM0NjY2NTBkZTZmYmI0Yjk3MGVjYjU3OWY4YTBhMTExZDI0MzYifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/ScoringConfig.kt#L10-L280",
+          "version": "repo-lines-v1:sha256:dd18bb4df77cb478aa1c0f2439d194435719bb6fb18a2473d1a68beb76315f46:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkMDEzOTJhNjc0OTYyOTU0N2VkODYyNzAyOTE5ODJjN2IzOGIxZDkwYzYzNjljOTY5ZThmODk4OWYwZDczNjYzIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjZjg0MjkwYTFmNTFhZGYyNWNjOWRhOWI3ZmYxZTYzMjBiNDhlNzY3ZDJlYWJiZTdmMjRjYjg4NmU1NTdmMDRmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e450945c55a4f56985d93c0d18c6b0c",
+      "statement": "RiskScorer exempts pre-installed system and device-migrated apps from sideloading penalties, verified Default SMS apps from SMS stealer/harvester rules, enabled keyboards from hidden-app penalties, and camera utilities (QR/barcode/mirror) from camera-only utility mismatch.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/RiskScorer.kt#L490-L548",
+          "version": "repo-lines-v1:sha256:f258e6d17801aeccd53ad82142c4bf54a5f36fb8aa32ae2e028cfda3789ad3f7:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllZmY1MmIyMmM3M2FjOTRiOTRjNGY2YzZjMTJiNGU4YjUzZmEyZTk0MWI4ZWM3OWFkNWVmOGViOWUxMzc5NmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZiY2IyOGEwNGY2MDA1YTBjNDMyNzA1Mzg4ZjRlYjJkYjkwOTY3MzQ3YTI2NWY4YmY5YTA4ZDA4OTg5MTQ2ODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4OWNlNjA4NDA2MjVlZTA3MDQ4MjFlYTUwN2YyM2JkMWRjNTdlOWQxNzQyZTEzMzU4MmJlN2ZhMzA4ZjI5ZWIifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/RiskScorer.kt#L646-L662",
+          "version": "repo-lines-v1:sha256:ba4f502799826477a5e01ebb898410a786bafcadcb874cd977450e7e0b6b6c81:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1NzMyNzVkZjhkZGNlZDgxMzNhOWFlNDM1NGU3NTNiYjZhYzIyYzg2OTY1YTE3MzhiMGNlZGFjYTA5OTJlMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZiY2IyOGEwNGY2MDA1YTBjNDMyNzA1Mzg4ZjRlYjJkYjkwOTY3MzQ3YTI2NWY4YmY5YTA4ZDA4OTg5MTQ2ODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkOGEyMmEyMDg5MzFhYmMxZGIyODljZGY4NTA4YjQyZWFlY2E0NzZkNWI1NWY1MzIxNWJiNmVhNGUxOTdiOTYifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/model/AppInfo.kt#L103-L105",
+          "version": "repo-lines-v1:sha256:6d6efc74ff0132bc660a745f1b47d47101d9ab5066f12e9465eabde957a6d92e:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmQ3OGFhMzk4OTlmZDM2ZmJkZWM2ZWVjMDlmNDYzZjBlN2VhMmMyOGU5MjViNGYxMzVkYWE5NjdkMDFhZTkxMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzY5Yjc0NmUyMTBjZmE5YmMzNGIzMzNkYTc5MjExMGFiOTdiMDQ0ODBmZjM2NzM4YmNlNmNjNWEyOWI3ZDIwMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWNkNjc3YWU0NTI5MmJkYzY2ODIxODAyODNlM2VkOGE1M2JmYjJmYzNkMTcwZjhkYWQ5ZTkxMGI2YzRmN2M1MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb1ea3cdf2b647799b1ada481a589b56",
+      "statement": "RecommendationEngine excludes user-trusted apps and dismissed posture checks, caps Medium-app penalties at 20 points in App Safety, and computes the unified 0-100 Device Security Score using 60/40 App Safety and Device Hardening weights by default (switching to 50/35/15 only when optional Usage Access data is active).",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/RecommendationEngine.kt#L28-L78",
+          "version": "repo-lines-v1:sha256:562e8ec199cbf15b2c953d9cbd6ab3588d458cb63f817e2102ff22d90a01388c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2OTgzOTE1MjY5MmJjZDFhMDM0NGY3NmQ3ZWMyNDhjYmQzMGE0YzI4NDQ3ZTU3MDRmOTE4ZTVmMTMzZTM4OWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiN2JkNTdhOGZiYzg4YzVjNWZmMDNhNzNiMjQ5NDQ1NzFiNzMzZDE3YzljZjhlNWFiYzUzYzExNzA0MGZjYTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1OTQwMTM5YTE4MGVjNDNkZjJmNjU3Njg5OTc4Y2NlNWUyNTNlMzY3NWNkOGQ0NzVmMTdiNGNkYmVlZDU4ZTMifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/RecommendationEngine.kt#L311-L318",
+          "version": "repo-lines-v1:sha256:865d89185119758f0a17abb725ec02fe0c0acd521aa7fb7e286cf65699b6f137:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTQ5YWY5ZDA5MDM3YTdhYmNkMTI1NjZkYWEyMWI0NmNmZjEzN2FhNWVmZTJiNzNmMzM5ZGFhZjk2NGFjNDZmNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmM5OThhNTM1ZDRhZjUwODcxYTBkMWM0NDY3OThhNThlNjE5NWJkMGQ4YzhlYWZlNDkwMGYyNjQ5ZWJhNWVkZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTU3MmU5ZGJkMTkwYzdjOGYyOWFjZjk1ODg4MmE5NGQwMzQwMzQwMzg2OGQ0YjhlYWU0MGU2YWEzMjFmZTllYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ac331ee3035c42559756108b94be2cee",
+      "statement": "PermissionMapper maps over 350 Android permissions to the nine scored categories or OTHER, and PermissionDiff diffs user apps consistently against SnapshotStore to emit up to 30 changes prioritized from SIGNER_CHANGED and SPECIAL_ACCESS_GRANTED down to APP_REMOVED.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/PermissionDiff.kt#L31-L177",
+          "version": "repo-lines-v1:sha256:fb513a12aedd6234e02152839483012eaa613b04a381e32d02e48ff2adb650b3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJjY2NkNzJjMWI3OGI4YzM3MWU0YzBjMTFkNmI5ZjMyZTJkNzE2NjllYmUzOTlkNDU2YWJiYmMwMzc1NDdiOGNiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmZmZiMTIwM2FlNDljNDhiNmEwY2FhOWY0NDA4ZDBhOWMxY2U3MGI0ZTMwZTY1OGYzMDk2ZjhiYjVlNTAxOGQyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MSwiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIn0"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/PermissionMapper.kt#L18-L444",
+          "version": "repo-lines-v1:sha256:8ed6228a8d669700af7c3ecabc9c6b23ee082647ab604a2b5b10e8cacaab806c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDI3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhNGY0NDQwNDYxY2EzM2VjOTVhZjMxMjE5NjdhNjI0Y2VlY2YyNjRjYzlmMDNmMTE1YWQ3MGM3N2IzYThhNmM0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwOWQ3NWExNmY0NzBhMGNiNTlhZjM5YTBjMjQxZTNkZmE4OWRhNjUxMTZjYjUzY2E5ZDY2ZGQ5OTE3Yjk4MGIzIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_615e6f25bda344daa0445526588773f9",
+      "statement": "ImpersonationDetector strips zero-width characters, applies NFKC normalization and Cyrillic/Greek/digit homoglyph folding, and detects Levenshtein 1..2 sideloaded package typosquatting across 38 targets, while KnownSafeApps verifies 24 legitimate high-privilege tools strictly excluding debug, weak-key, or sideloaded builds.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/ImpersonationDetector.kt#L71-L194",
+          "version": "repo-lines-v1:sha256:93f2740ab45e7b46aea38f0c1e98f5d22fbc0ef1f333713bb8023a94e7e3b710:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhYzAzMWE1YzI5ODk1YTA3YjhkNzBmOGQxMjgxMTFiMzQ5MGMwYWFiMDljYWRiMTc4ODlkMzdlNzZkZDY4ZDM0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5OTliZGVmZWVhY2E2MzQwZTAyOTBkYzg2ZTg4OWM4OWQ1ZTE4OWFhNWJhNDRiNTg1YjNiNzA3MzRmNGE2MmQ4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/engine/KnownSafeApps.kt#L71-L93",
+          "version": "repo-lines-v1:sha256:a9fd88220e3d54be6f52c563d2e6e6c232fbf5b0eb11b4df5560580943c09470:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyZGVjYmIyMjZhNjdlOTNjZThhZmE1YTY3YTAxMGY4ZWM3OGZjODdkZDE4ZjBlN2MwZWNhOWQzZDA3YWFkMDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjliYjI1MGMxMWI4ZWVlZDllMDA0ODIxOGFlMDBmMmEzM2E3ODAyZmEzMDY2ZTA0MWMzY2RiNzI0MGYzMzVjMjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-23T19:21:54.091Z"
+  }
+}

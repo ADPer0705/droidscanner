@@ -1,0 +1,5 @@
+# Files
+
+- [App Inventory, Provenance & Special Access](app-and-special-access.md) - Documents AppScanner's batched package enumeration, OEM store and device migration install provenance, full OS default-role resolution, fast signing metadata, and SpecialAccessRegistry's 4-state Android 10+ AppOps verification.
+- [Device Posture & Behavioural Insights](device-posture-and-behaviour.md) - Documents DroidScanner's 16 rootless device-protection checks (lock-screen OTP privacy, Private DNS, CA cert subjects, VPN/captive Wi-Fi, networked keyboards, MDM, build hygiene) and optional batched UsageStats/NetworkStats upload-ratio outlier analysis.
+- [Static APK, DEX Bytecode, Certificates & Pre-Install Scanner](static-and-certificates.md) - Documents lazy StaticInspector execution across base and split APKs, hidden payload and packer checks, memory-mapped DexParser/DexInspector tracker and sensitive-API analysis, CertificateInspector v1–v3.1 scheme detection, and the zero-storage-permission SAF Pre-Install APK Scanner.

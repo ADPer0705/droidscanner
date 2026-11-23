@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:d8d3b62240b2837f6609b752ff7ae09a3c5ff4c9f3715d48575310e5c646ed49",
+  "claims": [
+    {
+      "id": "claim_fd0af54c1bc246fea43966499501d6e8",
+      "statement": "StaticInspector lazily inspects unprotected exported components (excluding the main launcher activity), base and split-APK native libraries and commercial packers, ZIP anomalies, 4-byte magic hidden payloads in assets/res/raw, and streaming SHA-256, falling back cleanly with limitedAnalysisNote when sourceDir is unreadable.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/StaticInspector.kt#L183-L256",
+          "version": "repo-lines-v1:sha256:c848737605988cd90af278e56122c8cf9afd7016ebe6e4537c15fa3cfaf89196:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkYzA5Y2I2NmQ2ZTIyYTkwN2Q1YmEyYmY2YWZjNzJiODYyMWY0MTFhOWRiYzk4NjRkN2E3NWJhOGNlYjE5NTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjMmM3YmQxYmYxY2U2MmRkZWY0NWVkMTMwMDljMmExYWIxYjQ3M2JhZWY5MmIxNGQ0YmY0NTg5ZDVmZWU4NTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0ZmQyZWRhNWQ5M2ZlYTVjMTFmMGY2YmNhNDdkZTBiYzU5OTVjMjM1NGUzYmU3ZjQ2MzM2ZTQ1Y2QyNWFlODgifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/StaticInspector.kt#L31-L175",
+          "version": "repo-lines-v1:sha256:cdc3af169ed952973aa62c8d1b023568d8b81e90ab57bfe313c8b9f0d77d5034:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwNWM1MGNiZWE3MzI5NGFiYTU4YzJlYzZjMTNlMGY0YjcyZDAzN2Y0YzA4YmU5OTg1ZWU3MmQ1Mjc5NDkxMTdlIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJkNzc4MjlkN2NiMjY3Y2E0OTBiZGIzNDE3ZWViMzE2ZTU4YzgyZTZkOGQwNjFkMGIwNjllOTA0YTJiMTk3MWQwIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI3MTA1Yzk1NDU3ODQyMTVhZDhjOGFiZTA5MmIxOGU5OWIwNTU1OTk0YTgzYmRhODQ0OTI5YWEzZDA4OGE1Y2FmIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_3a4185dcbaf647af8da0f2b5dc351d63",
+      "statement": "ApkSignatureSchemeDetector detects v1 (META-INF) and v2/v3/v3.1 (APK Sig Block 42) signing schemes via RandomAccessFile without loading APKs into memory, while CertInfo flags debug, expired, and weak RSA/EC signing keys.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/model/SecurityModels.kt#L17-L34",
+          "version": "repo-lines-v1:sha256:3329eb473abc57c75e59d2175895bb2cce7ca927a6b5a03f3e05edeb8b38c83b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjNzJhZDZmNDY1NmU4MjQ4NWJkZjBlNDc2OTAwYjg4NmUwNDc3MzNiZWJjMzI0MDE3YWZmN2RhMWIxYmM2N2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4ZTdmOTE0YTJiOTljY2M1MTM4ZTE1YjVkNWQ1NWMwMWY1NzdiMjZhMTcxNGY4MTQwYzAxYmMwZTY1ZjhiOGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkODMwZmFmNjBhYzJiMzY0ZjkwZDY4ZTg0YmMzNWEyMDNmYjQ0NjY3ZWRiNjg4YmE2MGQxZjkxZTMyMzE3ZGEifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/CertificateInspector.kt#L165-L285",
+          "version": "repo-lines-v1:sha256:d8828551aac31a5033b7039301c2338bbcaafc9720bca6c1e0012d0619104f4d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiNzRlZGZmNDk2MzIxNTI3ZmE0MGI1MzAyNDRkNDkzMDFhMTliOWIwNTM3MjZhZmI0MWRlMTM0M2JiYTE5MTM1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmYzUzMTcxYjY5Y2ZiZTk4MWNjNTNmYTRlNjU4NDdjODIxNmEwYTUwMWMyYWVhNjA3OTYwYjU5NzU0MGYzMWVhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_a4018da916d24ce49664a6982a1ddd79",
+      "statement": "DexInspector streams classes*.dex entries through read-only memory-mapped temp files with RAM-tier limits (4×12 MB on low-RAM devices, 8×22 MB otherwise), while pure-JVM DexParser scans type_ids, method_ids, and string_ids for 66 tracker SDK prefixes, 10 high-risk framework APIs, 76 finance targets, cleartext URLs, and public IPv4 endpoints without crashing on malformed buffers.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/DexInspector.kt#L23-L121",
+          "version": "repo-lines-v1:sha256:b8d6c1e68269fa5a89627511f2ac2aa6fe55767b97c25ab18ed5201f693410ea:eyJzZWxlY3RlZExpbmVDb3VudCI6OTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkZmRiZTRhZmJjZmUzZDE5ZTFiZWJlNzdjNzhlM2RmZTUzNWE1OTQxNGY1ODdmMTE5YzUzMGI3NzNmYmQxOGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5ZGE4ZjVhY2MxZDFlZjljODU4ZjgwMzY1NDM1ZTdlM2RiZjQ2NjIwMzFjOGNhNWVkMGJlZjEyYTYyYWY2MzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0YTQ2MTAyZDVlOWNkYzc0MmZiOWNhOWI2MDY4YTE5ZjNhYTQ3ZThkM2M5MmJhMjY2YzA5ZDNjOGRiOTRiZWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmYWFkOGMwOWIwZTA2MmQ2YmY4ZTQ5M2Q5N2YxYzcyM2NlMjIzN2EzNDhiOGU1ODdiMzViMzc5ZWQ2NWZhZmIifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/DexParser.kt#L74-L278",
+          "version": "repo-lines-v1:sha256:ec397e8687d41da3b2683d4d9e6278aadf37dc008bd6e5604597dd43298286b7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjA1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyNDk2MGIwZDM5ZTQ3ZDk2MGU3Mjc3ZjY4OWE0OWEyOTQwMDllYTMzNjBmYjQwMTQyNjAzYjdiNDIzNjcyMmJmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhNzdkMmI1NjkxNDhlNmZkZjIwOTVhMTU0NGRjYmY3ZWIzNTEzODgzNzNhNDBkMzBiMzk4NGE3MWZmN2VkYjlmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4MzdmNDcxMjEwZjAyNzM1YWYwNzg0OGYzMGY3ZTBhZDg1ODYxNWRmZDY4MTA5MGUxNmE3YmMyMTE4Mjk2ZTkzIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_7bdfc2289d314bb4b1c07933fd95e306",
+      "statement": "ApkFileScanner inspects user-selected SAF content:// APKs (up to 250 MB, always deleting the temp copy) with zero storage permission, checking manifest risk, impersonation, hidden payloads, DEX signals, and whether the candidate APK's signing certificate mismatches an already-installed copy of the same package.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/ApkFileScanner.kt#L37-L282",
+          "version": "repo-lines-v1:sha256:5c00ef89c62672b90f02d40ee8077e831e4e788d8122a47f7f79571cdeac5744:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQ2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJlMGIxOWE0YmE2ZjBjZjUyNGEzM2VjZmNmY2VjNDE5YTEzYjk4ZDNmNWMzYzk4OWI3NjFlNzYzYmZlOTFhMTQyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiYWYxNDE4NWJkYTRjZTVhODhhNTllYWQyYmYzYzdmODFjNDRmODY2M2U3ODEzMDE1OGJhNjNlMDdjMmVjNDUyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmYmYwYzY1Y2RlZGEyYThhMzc5YWExZGE2ZTgwMmE3NzlhZjhhODFmOGJmZDhjYjM1NWQ1ZjUxNDk4NTRlMTBiIn0"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-23T19:21:54.091Z"
+  }
+}

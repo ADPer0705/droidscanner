@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:e48cd8b00a4c50258cc3885d276799158628864e0bfaedd850d2aa7394e9d967",
+  "claims": [
+    {
+      "id": "claim_bcefe1ecdb2f4b3d9eb946548d1f4d39",
+      "statement": "MainViewModel executes scans in two phases: a deterministic pass (AppScanner, TrustValidator, user-app-consistent PermissionDiff, DevicePostureScanner, AuditHistoryStore posture regression checks, BehaviourAnomalyScanner, RecommendationEngine) published immediately to StateFlow, followed by a streaming MediaPipe AI refinement pass that releases native model memory when done.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/viewmodel/MainViewModel.kt#L148-L267",
+          "version": "repo-lines-v1:sha256:aa9a8897bc8f62b788194f273303eb0183e954693213855bdccca73bdfc9cd8f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJmYzNmN2M2NTVhYWMxMjZkMjg1OTZlODBiNjc0ZDY1MGY4ODg1MzM1OWU5MmI1NTk3ODRjOWZhOTg0ZTdjZDRjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIzYjU1MzQzM2I4MTYzMmNkMThiNmQ0NzZjZGJhYzAxNTkxZGRmYTUzMTVkZjAzODIwODIwMDJjNGI0YjM4YTkxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmOGU5YmM4NjI4YzVmMjdjZTA3NjY3NTg3Y2U3ZmUzNDI2OTNhYzQ2ZGM3NTRiNzIzZDNjMDBkMGZhYWYwNjY2In0"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/viewmodel/MainViewModel.kt#L269-L332",
+          "version": "repo-lines-v1:sha256:20ef08d2612d3dfc09377e7c0b3f7f1f01348398736a62d74f07e4459df9a4e6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2OGJjYzgxMTNmYzVmZWUxYTdmYWUzMmRiM2MyZTVmNTI2ZTZlOWU3OGU4N2VkM2JkZGNkNGZhM2ZjZDc5YjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxZGM1MzFmOGUwMjRlMWExMTdlNzkxODlmYzllOTVhY2NkZGE3ZTA5NTI3ZDcyYmI1ZjdkYmQ5MGNlN2NlOTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_af57c46d82cf4501bf9f83b66ea861f0",
+      "statement": "Live install monitoring uses a runtime-registered InstallMonitorReceiver that ignores EXTRA_REPLACING removals and debounces rescans by 1.5s, while markExternalSettingsOpened() triggers an immediate rescan on MainActivity.onResume() and MainActivity consumes deep-link extras and incoming APK VIEW/SEND intents.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/MainActivity.kt#L65-L136",
+          "version": "repo-lines-v1:sha256:7931af35d973bffe5c553f9c72cc1d56abe823632fe522b200b82b06feaed548:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzMmVlYTdlMzkzOWYzYWRhNzEwMGMwNWU1NmY3NGJiYjgyODY2NjA4NGZlY2FiNzA0ODI0MTBjZDNlYmJjNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4ZjQ4MDJlY2Y3NmMxMDNhYjYyZmVjMjEzOTkzM2Q1OTZmYzE0ODlhOWRlN2NlZmViMzY0ZTlhZjFmYWUxNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/receiver/InstallMonitorReceiver.kt#L26-L56",
+          "version": "repo-lines-v1:sha256:d6fa694a063fc4d6ab0a4f5f1216728b99f96350a411960d7d028846f366eb61:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZTE2NDVlMmQwNzU1NzMyZWRiODQ0N2ZiNGY4MzZkYjVkMmUxZDUxNDA3NmY1MzU3MjEyMjkyYzZjODEyNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzZTc2ZTc0NTU5ZGMzZmFhZWRkOWU1NDk0ZjQ5MGViZjk3NzdmNzJkNzk3ODlmOTZiYzkxYzdmZGYwMjcwNGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwM2I0YmMxNzM2YmNmZmI0NmVhZjhhM2I1ZjQzMzNjNmFmNzM5MmZkZWMzZWFhMGRhNTNiMDdjNGUxMTE5ZmMifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/viewmodel/MainViewModel.kt#L525-L549",
+          "version": "repo-lines-v1:sha256:0c89c0f3c78445ec8aff77a82dab08b1cf2cac13a0ae35fa264fba16659fc0d1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMTI1NjFlMWJiNWViN2Y1YWM3ZjFlY2U2ODRiM2QyMmQ4N2QyZTY5YzA4Y2JmZTA1YjczY2EwNWMyMWFmYWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzN2U5YmRiY2EzOTQyM2VhYWUzYTMxN2IzZjkyYmY3MDc5ZjIxZTYxMGU0NTA4MDA3OGVhMmM5Mjk4NmJlMGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1MzI0ODE0OTA0YjVhM2Y2ODZhMWM1MjcxNjI5YWM1YTM5MzRiMDAyNzVhNWU2NGVjOWUxZWQ2ODk0MWZiY2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4fa9511d3bdb4c3e803dafd932c01413",
+      "statement": "SnapshotStore persists compact per-package version, score, granted sensitive permissions, enabled special access, and signingCertSha256 locally in SharedPreferences, and all local stores (risk_snapshot, scanner_prefs, embedding_cache, trusted_items, audit_history) are excluded from Android cloud backup and device transfer.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/data/SnapshotStore.kt#L15-L66",
+          "version": "repo-lines-v1:sha256:b8976705a695f26045b98e0f820d78a91bb7406e1a13933b9668e8b15d2fcb8d:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNjVhNGVjNDQ1NzRjZGNmYTE1NTY0MzA5M2Q2YTQ0ZDg4OTgxMjQyMjk2NzIzN2NhM2IxZjFlMWQ5ZGE3NTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhMzUxZGUyYmIwYTJiMjhkZGNiMjk3YmRiZjdjNzY2NGU2MzE4YjEyYzFjY2YyYzQ1N2NmYzAwYzEyMWIxMjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhYzA4MDcxMDg5YjhlYmYxNGYxOTM4ZTdmMzZlMWE0NjA1M2I1Y2JhMmE3YjA2YjRiMTQxMmFiNzQ4YzU1ZjIifQ"
+        },
+        {
+          "resource": "repo://app/src/main/res/xml/backup_rules.xml#L1-L8",
+          "version": "repo-lines-v1:sha256:5bb4cf8d32b0ee81dc84fb6db4ee6324bf931029b04815d1d67ddcc8f351fbc7:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDM4ZGZiMDkwZDdiMTkxODI2Njk5MDhhODkxMTg2MzY4ZDRhZjViMDE5YTllNzE2OGU0YzA4YzkyODI3YjU0ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODBmOTFlOTM1Zjg3YjgxMzRlZGNjNmNmNDM0ZGNiOTE5YzNmYmIwNWZjZmU1ZjUwMDU4YjhmY2YyYjI0OTMyNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://app/src/main/res/xml/data_extraction_rules.xml#L1-L17",
+          "version": "repo-lines-v1:sha256:bfcce002990304e245615db05a1ef6a679b1fe2cd2a3e7820bf42a7ab76fed9e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzOGRmYjA5MGQ3YjE5MTgyNjY5OTA4YTg5MTE4NjM2OGQ0YWY1YjAxOWE5ZTcxNjhlNGMwOGM5MjgyN2I1NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiMDA1NDU0MTFmMzFhNDRlOTBhYjBmNTJlNTIyNjAzODlmODU3NWJkNTYxZjA1Njg0MTIxOTIzZmU3MjYxZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ba7c3b7e779f48b5840a9aa3add81ff7",
+      "statement": "TrustStore and TrustValidator bind user-reviewed app trust to signingCertSha256, granted sensitive permissions, and enabled special access (and posture dismissals to detailFingerprint), automatically revoking trust and emitting TRUST_BROKEN events if an app escalates privileges, changes signers, or triggers impersonation.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/data/TrustStore.kt#L17-L99",
+          "version": "repo-lines-v1:sha256:a070000ee94f8c4e04a442f8deb066c66d4defc8abf91ff2f6b8fbecc90ddc81:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxNzFjNTc5OTdkMjk4ZDM1NmQ3NmM4YTEyMmRiZDVjNzU5OGVjMmJhOGIzMzI1NjkyZWE1YWViMTg4OGJiNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxMDgyNTk4NjIxMmRjZmQ0M2ExNzY3NDFjNmRhZmUxMTVjYzgxZGI3YTU5ZmRhNGUxZTM3NDQ5NjdlNGFiMzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwMDE2ODNhZDQ2ZmIxOGU1MzY5MzZkN2JjYzNhYmIxOWFjMjM4NDA2Zjk3MGNhNjI3YWM2ODJjYTA5MWQ0NGEifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/model/TrustModels.kt#L44-L89",
+          "version": "repo-lines-v1:sha256:55c1c8dc045d54d04c7b0d83a7cec9f012cbde9253af482189eff4cf8c671da5:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1NDc2YTdkZTc3Zjg0Njc3ZWQ3YzliNWUxZWVhOTg5ODY2ZTNlYjVkNTQ0ZTc5OWM5NGIxZWVhOTJkYzA5MmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdmYjY5NmYwODMyNDA2YmRlZjM4YzllNjg5Yjg3MjM3N2UwZWRiZTFhZGU1ZjIxNTNjNTUwYjhlYmQ2OWZjMWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzNjEyOTkwNmJiZDU2NGMyMTkzMTAyZjMzMmFjMDUyZDY1ZGM4N2M5OWIyYTM3YjNlODlmYjk0MWFkOGYyNzcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_45ddb20146e64fa3a325cbaf266c5baa",
+      "statement": "SecurityScheduleManager schedules BackgroundSecurityWorker via WorkManager (12h default, 24h, or Off with battery-not-low constraints) to run metadata-only user-app, trust, snapshot-diff, and posture checks without loading MediaPipe or DEX parsers, firing up to 4 deep-linked alerts per run on real security regressions.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/worker/BackgroundSecurityWorker.kt#L26-L185",
+          "version": "repo-lines-v1:sha256:f0364c9f8c8381a2a9bda7c8d6bc68c781a08c43d7612ab76540bc4e29e7c64e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0MWUwODYyNGQ3Njc5Yzg4NzQxNTc4YTI4ZjBhN2M5MmMwNzIzMzNiMWNjMmMxZTg0OWFmNDg2YzBmM2Y4NzBiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI2NzRlN2M2ZmYyYTNjMjYyNTAyMDJkY2U2MjYxY2IzMWE5NjAzYzMzNTYxM2I4MzRhMzI2NjAwZDE4NjgyMGUwIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1YjU1MjUxNjVhNTJmOTUwMDFmNTA1ZTE0ZDkyNzMxY2ExOTgwZTk2MmJkNTFlMGRhNDFmYzk5NzY2NjEzNjk1In0"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/worker/SecurityScheduleManager.kt#L17-L58",
+          "version": "repo-lines-v1:sha256:3b60d2d7b3dd3a03b7c8fcbfc5557dc7498fad9e04e39c7e1d9f5a1b2515c534:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkYTdiZjA4ZGZmNzMxNzdjOTdiYzMxMDExNjlhYzVkNDY0NTQzNzEyNjliMzg0OTJjOGE2YzkxMzQ5M2UzNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3N2FhNzgyZTQwNjNmOGY5Mjk3ZjhiMGZjZDhmOGRmOWIyYzMzZmZjODMwMjQ5NzA4ZTIxNzNiMDZhOGM1YmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-23T19:21:54.091Z"
+  }
+}

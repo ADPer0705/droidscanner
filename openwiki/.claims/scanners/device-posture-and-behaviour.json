@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:95c8fbae2857e81c0b496c457056fa96cf5d65697ce8a11285868f125c871faa",
+  "claims": [
+    {
+      "id": "claim_790fd3ea2c984a53af8041e8787bcd56",
+      "statement": "DevicePostureScanner evaluates 16 rootless device configuration checks on Dispatchers.IO via pure-JVM DevicePostureEvaluator rules, excluding PostureStatus.UNKNOWN and fingerprint-matched dismissed checks from DevicePosture.protectionScore.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/model/DevicePosture.kt#L35-L75",
+          "version": "repo-lines-v1:sha256:910c170bdabe66e815f1f63b4b5776af317ea7220548d55c80edf7d2bb45857b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NzM0YTFjYTdmYTE0ZmNkYTczOWFjYWE1NzljMGRiNTQxNmY5N2JiNzUzYmEzNmM3YmViZDAwZTNmZmNhN2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3ODgzM2UwYzVmNDFhZDVlZmNmY2MwNmUzNDZiZDAyOWNhNWI1ODgyZTQ5ZGIyMDA1NmVhY2Y3MTc1MGIyOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/DevicePostureScanner.kt#L30-L65",
+          "version": "repo-lines-v1:sha256:057ed839d033f5cb54282234d057580c593b1d14a3e3cbb79aaf1341a1225ad2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwZTExNTRlMDI3MmM5YjIzYTRkNWIzMThjN2E1YmEzNGMyYzVmYjcxNWM2MWJhNzYwZWIwNjNjYzFiODEwYzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmYmM5ZjEzNTM1YWU2ODM2NzA1NjRkMWZkMWM0ZjhlZGVhYjgxMTA4ODdhYjM5YmEwMzMxZTIyNDNlZWFkYTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4YzZlMjU4N2I3YmI1NDhiZjJjOTQ0ZDYxOWZiYjY2MjU4ZGYyZTVjM2VlYzZiYjNmY2E5Y2Y0MjdhNzhlYzcifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/DevicePostureScanner.kt#L380-L742",
+          "version": "repo-lines-v1:sha256:aa41e5cda6013543c2295a1bd88caf96e181013ab59baaa1ee14e74984f4d6c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkNGJkZGYwM2Q0MDdmZTI3ZDBhODcyYjA5YjY4ZTRhZGYwZGU2Mzc0MTA4YWVkZWY4NGFkMmU5NDljZGIxMWUyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwMWRjM2Y2MzIyNGU3NjZlOWI3ZDYxZTVlMWE3N2JjZDZjOTlkMGI0YTUzODZiM2IwYTRiNGZlYzNkMjFkMTg2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MSwiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_aa3441e0dd3d4e88898f91f2a7e13a31",
+      "statement": "BehaviourAnomalyScanner gates on DroidScanner's own Usage Access grant, aggregates 7-day UsageStats and two batched NetworkStatsManager.querySummary calls (single-app UIDs, separate rx/tx bytes), and flags z-score, unusual-upload, heavy-background, and silent-activity outliers while exempting active foreground download streaming.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/BehaviourAnomalyScanner.kt#L142-L201",
+          "version": "repo-lines-v1:sha256:a6fb782ce66a41cf8d7117163e2e21421e590ad573f0b6f34039c865683bc4c4:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmYwMjhhM2ViZTJhNTRlZGI2Yzc3ODAyNjMwY2Q1MTc5YzdlYWI2MWNlNDM4MGEyZjg1MjEzMDExMjI2NTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViZWJhMDRiZDY1ODA4OWVkN2QxNzNmNzc0NGE0OWQ4NjUzNTk0ZmIxZDA1OTE2NjBlODUzMmMxNjk4Mzg4MTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3OTI5ZTkxZTBmOTljM2U4MjVkZTY5YjQzNWZiNjQ4NGQxYjBhMWRmMmY0NjU2MWFiZjFhMjlmMDQxODhiODgifQ"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/BehaviourAnomalyScanner.kt#L207-L323",
+          "version": "repo-lines-v1:sha256:51f2ee07e9a0454a372fa2d5b8c6daf1650255df3a5c4adc15ef78214dd70fab:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI3MDU2MjgwOWVhYmE2ZmNjNTA1ODRiMGZhOTk0ZTk3ZDE5ZTNkMDM5MmQzMmYzNDg4ZmUwOGM2NTdhZDQ0YzZjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIxNDhhNjE0OTdjNTNmZDc2MGRiM2UyZjc4NGU4NDRhNmFiZGFmNmJlNjY2MzdkZmNjZGQ4NzRhNDkzOWVkZTg3IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4YmQyMmYxZTVkOTUzZGQ4Y2NkNjlhYWVkOTYxNTkzMTU0NDZlYzBhMzY5N2Q0YjI3NTU2NmVkMTk4MjY4ZjRlIn0"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/scanner/BehaviourAnomalyScanner.kt#L34-L105",
+          "version": "repo-lines-v1:sha256:a2e40d50d1d3a049f0e4953ccaa49f9bfb656141100fe786c14d36f44df1c545:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZjZhNDMxNjZhNWY5ODdmZTY1NmUzNzA2NmQ3NGRmOTA0Y2NiYzk5NjBiODBiMWU0MmQ0NDc3YTlhZDI1NDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQxNDJmNWViZTRkM2JlYjZkMTA0MjNmNGRiMDQxYThiMDY3ZjNlN2E0ZTMzMTk5NzlmMDc1MDIyMDRlOGFiMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2NGE2NWQ3ODIwMWZkYjc0MjZhZDlmYmIwZjgyYjViY2E2NzkxOWQ2NDFkOWYyZmRlZjczOTI2MmFiZGY5ZjEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-23T19:21:54.091Z"
+  }
+}

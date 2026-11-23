@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "pages": {
+    "/openwiki/architecture/overview.md": {
+      "pageVersion": "sha256:e48cd8b00a4c50258cc3885d276799158628864e0bfaedd850d2aa7394e9d967",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    },
+    "/openwiki/ml/purpose-inference.md": {
+      "pageVersion": "sha256:3bc253ae9ee2daa4249533093296604cb91538075c08573d06269bdf4da842da",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    },
+    "/openwiki/quickstart.md": {
+      "pageVersion": "sha256:c72d4115679b1387348f809e0f9c004ddc193e2e3cbda1e1fa5776b7ab20e7bd",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    },
+    "/openwiki/scanners/app-and-special-access.md": {
+      "pageVersion": "sha256:b68121661b2a0846f803b5a35c488c5e33faddc4dc44fda8825596c05cfd1c34",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    },
+    "/openwiki/scanners/device-posture-and-behaviour.md": {
+      "pageVersion": "sha256:95c8fbae2857e81c0b496c457056fa96cf5d65697ce8a11285868f125c871faa",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    },
+    "/openwiki/scanners/static-and-certificates.md": {
+      "pageVersion": "sha256:d8d3b62240b2837f6609b752ff7ae09a3c5ff4c9f3715d48575310e5c646ed49",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    },
+    "/openwiki/scoring/risk-and-recommendations.md": {
+      "pageVersion": "sha256:429a88613195e9a589ae82d69fe4d93ed1d23f24acd00595f4db6756e2664f2d",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    },
+    "/openwiki/testing/test-suite-and-testkit.md": {
+      "pageVersion": "sha256:efa135f1fcca83d5310743c39885e99449cc5de9f23923ed355506b210404a5a",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    },
+    "/openwiki/ui/navigation-and-reporting.md": {
+      "pageVersion": "sha256:49eef6cdec95cdbe3194374224c5f8c442ead4bc75086b95f02c7f76f945ff1d",
+      "completedBy": "antigravity",
+      "completedRunId": "72dc02cc-f956-4981-a0cc-720947f6efe1",
+      "gitHead": "69ca22a8226835f25857ec500f02afdbce038a4f",
+      "sourceFingerprint": "sha256:87125d426cac64d693baec72c5e598b799cd100c49fe7be4e940f857b567135e"
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:49eef6cdec95cdbe3194374224c5f8c442ead4bc75086b95f02c7f76f945ff1d",
+  "claims": [
+    {
+      "id": "claim_727b5e4295da498a8cd2be0ba7966d21",
+      "statement": "NavGraph implements 3-tab bottom navigation (Overview, Apps, Device) while hiding the bottom bar on AppDetail, Settings, History, ApkScanner, and ScoringRubric, consumes notification deep links and incoming APK URIs, and DashboardScreen summary tiles jump directly into pre-filtered Apps views.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/navigation/NavGraph.kt#L41-L225",
+          "version": "repo-lines-v1:sha256:e75b888286e4a718cdc46eb8d7af1513744d1d8d3a89087e6968a8399377882d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTg1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5MWVlNjMzOTlkYjRlODI2NGJlYTI3OTgwNmZkYzlkOGM4MGNhY2YzYzlhY2ViYTg2ODljNWRmMzhlNjljMjRlIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI4NGY2YzdiYWEwZGM3OGZiNGNmNDk5MWZhNTFkMGU2YzIxNTdmMzczZGJiM2EwMzZlNGQyMWUyYjA0ZTliY2IzIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/ui/screens/DashboardScreen.kt#L280-L330",
+          "version": "repo-lines-v1:sha256:317c6e74bcc6e6a6018c378755bb7af5e0adc656ff87d9225452fc6ba0b455a2:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1OTRmMTQ0NjE2M2U2ZmIwNTI1ZGExMmJlYWY4MTY3MDU2ZTNkZGZjZDliODlmZDRjZmY2YjI2YjMxYTI2NGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjZWI2ZGJmYzZiZGIyZTA3M2NhYTkxNDM2MDc2ODYxY2Q2MWE1ODU2MDIwNGJkYzRhNWZjNjIyZDY3ODlmM2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkYzg5N2IxOTllM2RhMTFhYzkxNmJjOWEwNmFiYTUyMDFjMjUwZWE2YTI4MWVhMTUxOGQxNjcyNjMwMDY2ZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkYmIyNjRmYWEzMzM1NjVlMmY4ZGQyYTBjNWVjODQ5MzU3YzZmNjI0MWVkM2RiNzNlMzZhMjAxMGZmOGJjZDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4923f382ad1d40dcb2307c577d32863d",
+      "statement": "SettingsIntents centralizes per-app and OEM-resilient system-wide Android Settings remediation intents (including Private DNS, VPN, Lock Screen, Display, Default Apps, Input Method, Autofill, and Device Admin) with ordered fallback chains, and AppDetailScreen intercepts active Device Admins with a 2-step guided uninstall dialog while triggering refresh on return.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/ui/components/SettingsIntents.kt#L18-L368",
+          "version": "repo-lines-v1:sha256:be600f16ae5acf68d83ac9de1b98254576127340c72e68f26ac08a68cbb9c27d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI3NTQwZjEwZTUzODlmODQxYTJkMmY5YzI3NjA5ZjUzMDMwYjkwNmYxNDBmZWRjZDMxNzViMjRjNGI4ODliMjE5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhOWI0YzU1Y2EwOTA3MGEzZjA1MzkyOWUyODc5MzUxMzVhMjMxYjA5NzAyZTgxZTY0MzMzOTg4M2QxNzQ3ZjQxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MSwiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIn0"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/ui/screens/AppDetailScreen.kt#L1471-L1604",
+          "version": "repo-lines-v1:sha256:991395c27d3c862748ee0228446f7cfafc4deadde7d5f44c2b0f94af4d4e812e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTM0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyZThkOTc5YTNiYjY1ODNmMjliYWJmZWZiZTRjOGI1MDBjMTA3MTliYzk3ODg4MDc2MjE5YWFmNzU1M2QwMzhiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIxOWU3NjM1NWNmMTE5OTQ4MGMzZjk5ODM2YjE0ODZjODQxZDg5MWZhYWQ5MDRjNjA4ZTA5MzAyMmQzNzU3YWVlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_e31a0dfdeb1944ebba353b899d46d0e5",
+      "statement": "PdfExporter and JsonReportExporter generate word-wrapped A4 PDF and structured JSON audit reports locally in cacheDir/reports and share them exclusively on user action via FileProvider without network transmission.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/report/JsonReportExporter.kt#L24-L134",
+          "version": "repo-lines-v1:sha256:a8915fe80f72dbbe9c5092d99ebf68ec85461a638b88b280f22e9d42e0fa2905:eyJzZWxlY3RlZExpbmVDb3VudCI6MTExLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJjMTI5MTgwOWZiYTIwYWRlYmFlOTQ2MWY1NDRhZDlkMWU2ZjcwNTljMDdlODgzZTY0OTI4MWQ4NjI5MTk1ZGI3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjNzM4NTA5Nzk3Y2NjNWQ1ZGU1MWQyMjg4OTFlZTlmZGNiOGJiYWJiMDQ5ZjM0ZWVmYTdiMTcxMzQxNDYyZTJhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/report/PdfExporter.kt#L27-L200",
+          "version": "repo-lines-v1:sha256:2a4dc349fa8bf35a0273a5eccf064da431868dbaeccffb7141eb6c544b96725b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTc0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJjMzI4ODU5MWVjNmVmMDk1ODJjMzcyNmExMjVhOTE5ODE5NDU4MGI0NmFjYTY0NDUwYzFjNmVmYWU1OTJlNmY2IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyMWVkNzE3NzU1NjZkN2QwMzM0Y2EyMDMzMWVlNjViYmNlNzI1MjljYzg0YWQ0ZjUyZTY5MjBlZWMyMDY3NjIyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://app/src/main/res/xml/file_paths.xml#L1-L6",
+          "version": "repo-lines-v1:sha256:fccad2561a57875ad0f7216afc9fb01181993b7720f744227795e04258b2f5c8:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDM4ZGZiMDkwZDdiMTkxODI2Njk5MDhhODkxMTg2MzY4ZDRhZjViMDE5YTllNzE2OGU0YzA4YzkyODI3YjU0ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTBjODRiYWIwZjRkZjU0YTZkZTNmNzQ3ODM0M2IzYmY4NjYwOTE2YzBlNWNjMDQwMTI5ZjY1NGExNGQ1NTIwMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f83e949ab0fe489e88557bde8d27856c",
+      "statement": "RiskAuditorTheme uses Material You dynamic colors on Android 12+ and falls back to an Obsidian, Signal Emerald, and Radar Cyan Material 3 palette on Android 8-11 aligned with DroidScanner's custom adaptive and Android 13+ monochrome launcher icons.",
+      "evidence": [
+        {
+          "resource": "repo://app/src/main/java/com/idiots3/riskscanner/ui/theme/Theme.kt#L14-L78",
+          "version": "repo-lines-v1:sha256:bf810e712c319bd1ae394d68d2ad482c2142ca7a7896b13edc9c15af759df495:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxYzI4YWM0MTM1YmQ3ZGM3MzNhZDBkNjRmMWMwOWZmMDNjMWZlNzYxYmQ2OGU5YTU0MDc0ZDdmYWJiNTRjYjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3OTQ1NmFhYzBhY2E0ZjBhMWZlMzQ2OWY4Zjc3OTlkN2FkYjY1MDE3MmY0NGYzZDk2NWUwYjkxMTVlMTZjMjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml#L1-L6",
+          "version": "repo-lines-v1:sha256:ada31da9e23f4520f3753e71ca23799a107431473daa3774b6cecac26847260c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDM4ZGZiMDkwZDdiMTkxODI2Njk5MDhhODkxMTg2MzY4ZDRhZjViMDE5YTllNzE2OGU0YzA4YzkyODI3YjU0ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDkwMDQ0YTUyNDlhMTcyN2FkMWM2NGY1MGY3NjM0YmEwNTExY2MyMDBhNDM2NTZjZDhlMGU4ZWRkNTE5ZjQzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-23T19:21:54.091Z"
+  }
+}
