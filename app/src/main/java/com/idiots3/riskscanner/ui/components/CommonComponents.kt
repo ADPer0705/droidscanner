@@ -173,6 +173,11 @@ fun InstallerTag(
                 MaterialTheme.colorScheme.surfaceVariant,
                 MaterialTheme.colorScheme.onSurfaceVariant
             )
+        InstallProvenance.DEVICE_MIGRATION ->
+            Pair(
+                MaterialTheme.colorScheme.tertiaryContainer,
+                MaterialTheme.colorScheme.onTertiaryContainer
+            )
         InstallProvenance.BROWSER_OR_APP_SIDELOAD,
         InstallProvenance.PACKAGE_INSTALLER,
         InstallProvenance.ADB_OR_SHELL,

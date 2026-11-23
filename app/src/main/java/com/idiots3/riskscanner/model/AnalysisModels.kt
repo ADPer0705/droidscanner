@@ -50,7 +50,7 @@ data class AiAssessment(
     val note: String? = null
 )
 
-/** Static APK facts gathered lazily on the detail screen. */
+/** Static APK, DEX, tracker, and container facts gathered lazily on Detail / Pre-Install scan. */
 data class StaticChecks(
     val exportedActivities: Int = 0,
     val exportedServices: Int = 0,
@@ -73,7 +73,11 @@ data class StaticChecks(
     val sha256: String? = null,
     val hashError: String? = null,
     val limitedAnalysisNote: String? = null,
-    val signerInfo: SignerInfo? = null
+    val signerInfo: SignerInfo? = null,
+    val hiddenPayloads: List<HiddenPayload> = emptyList(),
+    val packerLibs: List<String> = emptyList(),
+    val zipAnomalies: List<String> = emptyList(),
+    val dexAnalysis: DexAnalysisResult? = null
 ) {
     val exportedComponentCount: Int
         get() = exportedActivities + exportedServices + exportedReceivers + exportedProviders
@@ -86,20 +90,27 @@ data class StaticChecks(
 }
 
 enum class ChangeType(val label: String) {
-    NEW_APP("Newly installed"),
+    SIGNER_CHANGED("Signing cert changed"),
+    SPECIAL_ACCESS_GRANTED("Special access enabled"),
+    TRUST_BROKEN("Reviewed app changed"),
     PERMISSIONS_ADDED("New permissions"),
-    PERMISSIONS_REMOVED("Permissions removed"),
+    NEW_APP("Newly installed"),
     SCORE_INCREASED("Risk increased"),
-    UPDATED("Updated")
+    POSTURE_REGRESSED("Device setting changed"),
+    PERMISSIONS_REMOVED("Permissions removed"),
+    UPDATED("Updated"),
+    APP_REMOVED("Uninstalled")
 }
 
-/** A change detected between two scans (install monitoring + permission diff). */
+/** A change detected between two scans (install monitoring, permission/special-access diff, or posture regression). */
 data class PermissionChange(
     val packageName: String,
     val appName: String,
     val type: ChangeType,
     val addedPermissions: List<String> = emptyList(),
     val removedPermissions: List<String> = emptyList(),
+    val addedSpecialAccess: List<String> = emptyList(),
+    val detail: String? = null,
     val oldScore: Int = 0,
     val newScore: Int = 0,
     val timestamp: Long = 0L

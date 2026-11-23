@@ -47,6 +47,13 @@ data class SignerInfo(
     val hasExpiredCert: Boolean get() = certs.any { it.isExpired }
     val hasWeakKey: Boolean get() = certs.any { it.isWeakKey }
 
+    val isV1Only: Boolean
+        get() = signingSchemes.isNotEmpty() &&
+            signingSchemes.contains(SigningScheme.V1) &&
+            !signingSchemes.contains(SigningScheme.V2) &&
+            !signingSchemes.contains(SigningScheme.V3) &&
+            !signingSchemes.contains(SigningScheme.V3_1)
+
     val schemeSummary: String
         get() = if (signingSchemes.isEmpty()) SigningScheme.UNKNOWN.label
         else signingSchemes.sortedBy { it.ordinal }.joinToString(" + ") { it.label }
@@ -58,4 +65,68 @@ data class SignerInfo(
 data class UnprotectedComponent(
     val kind: String,
     val shortName: String
+)
+
+/**
+ * Embedded ad, analytics, profiling, or location-broker SDK detected from DEX class prefixes.
+ */
+data class DetectedTracker(
+    val name: String,
+    val category: String
+)
+
+/**
+ * Sensitive Android framework or execution API referenced in DEX method tables.
+ */
+data class HighRiskApiHit(
+    val id: String,
+    val name: String,
+    val category: String,
+    val plainExplanation: String
+)
+
+/**
+ * Executable archive or binary hidden inside APK assets/ or res/raw/ (common dropper/packer signal).
+ */
+data class HiddenPayload(
+    val entryPath: String,
+    val kind: String
+)
+
+/**
+ * Results of the lightweight, memory-mapped DEX inspection.
+ */
+data class DexAnalysisResult(
+    val dexFileCount: Int = 0,
+    val detectedTrackers: List<DetectedTracker> = emptyList(),
+    val highRiskApis: List<HighRiskApiHit> = emptyList(),
+    val financeTargetMatches: List<String> = emptyList(),
+    val cleartextHttpCount: Int = 0,
+    val rawIpEndpoints: List<String> = emptyList(),
+    val parseAnomaly: Boolean = false,
+    val skippedLargeDexCount: Int = 0
+)
+
+/**
+ * Verdict for an APK file inspected before installation via Storage Access Framework.
+ */
+enum class PreInstallVerdict(val label: String) {
+    LOOKS_SAFE("Looks standard"),
+    CAUTION("Review before installing"),
+    HIGH_RISK("High risk — proceed with caution"),
+    DO_NOT_INSTALL("Strong warning — do not install")
+}
+
+data class PreInstallScanResult(
+    val fileName: String,
+    val fileSizeBytes: Long,
+    val appInfo: AppInfo?,
+    val staticChecks: StaticChecks,
+    val verdict: PreInstallVerdict,
+    val summaryMessage: String,
+    val highlights: List<String>,
+    val installedPackageMatches: Boolean = false,
+    val signerMismatchWithInstalled: Boolean = false,
+    val installedVersionName: String? = null,
+    val error: String? = null
 )

@@ -13,7 +13,9 @@ data class DeviceSummary(
     val specialAccessApps: Int = 0,
     val hiddenApps: Int = 0,
     val aiAnalyzedApps: Int = 0,
-    val aiUnexplainedApps: Int = 0
+    val aiUnexplainedApps: Int = 0,
+    val trustedApps: Int = 0,
+    val impersonationAlerts: Int = 0
 ) {
     val highOrCritical: Int get() = criticalApps + highApps
 }

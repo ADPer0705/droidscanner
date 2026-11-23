@@ -1331,16 +1331,24 @@ fun RecentChangesCard(
                 ) {
                     Icon(
                         imageVector = when (change.type) {
+                            ChangeType.SIGNER_CHANGED, ChangeType.TRUST_BROKEN -> Icons.Default.Warning
+                            ChangeType.SPECIAL_ACCESS_GRANTED -> Icons.Default.AdminPanelSettings
                             ChangeType.NEW_APP -> Icons.Default.NewReleases
                             ChangeType.PERMISSIONS_ADDED -> Icons.Default.AddAlert
-                            ChangeType.PERMISSIONS_REMOVED -> Icons.Default.RemoveCircleOutline
+                            ChangeType.PERMISSIONS_REMOVED, ChangeType.APP_REMOVED -> Icons.Default.RemoveCircleOutline
                             ChangeType.SCORE_INCREASED -> Icons.AutoMirrored.Filled.TrendingUp
+                            ChangeType.POSTURE_REGRESSED -> Icons.Default.Security
                             ChangeType.UPDATED -> Icons.Default.SystemUpdate
                         },
                         contentDescription = null,
                         tint = when (change.type) {
-                            ChangeType.PERMISSIONS_ADDED, ChangeType.SCORE_INCREASED -> riskColor(RiskLevel.CRITICAL)
-                            ChangeType.NEW_APP -> riskColor(RiskLevel.HIGH)
+                            ChangeType.SIGNER_CHANGED,
+                            ChangeType.SPECIAL_ACCESS_GRANTED,
+                            ChangeType.TRUST_BROKEN,
+                            ChangeType.PERMISSIONS_ADDED,
+                            ChangeType.SCORE_INCREASED -> riskColor(RiskLevel.CRITICAL)
+                            ChangeType.NEW_APP,
+                            ChangeType.POSTURE_REGRESSED -> riskColor(RiskLevel.HIGH)
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
                         },
                         modifier = Modifier.size(18.dp)

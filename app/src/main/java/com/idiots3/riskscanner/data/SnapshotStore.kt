@@ -4,11 +4,13 @@ import android.content.Context
 import com.idiots3.riskscanner.engine.SnapshotEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Persists the last scan snapshot (only sensitive, granted permissions) so the next
- * scan can show a permission diff. Stored locally; never transmitted.
+ * Persists the last scan snapshot (sensitive granted permissions, enabled special access,
+ * and signing certificate SHA-256) so the next scan or background check can compute an
+ * accurate diff. Stored locally; never transmitted.
  */
 class SnapshotStore(context: Context) {
 
@@ -24,18 +26,20 @@ class SnapshotStore(context: Context) {
             while (keys.hasNext()) {
                 val packageName = keys.next()
                 val entry = root.getJSONObject(packageName)
-                val perms = entry.optJSONArray("p")?.let { array ->
-                    (0 until array.length()).map { array.getString(it) }.toSet()
-                }.orEmpty()
+                val perms = readSet(entry.optJSONArray("p"))
+                val special = readSet(entry.optJSONArray("sa"))
                 result[packageName] = SnapshotEntry(
                     versionCode = entry.optLong("v"),
                     score = entry.optInt("s"),
                     level = entry.optString("l"),
-                    sensitiveGranted = perms
+                    sensitiveGranted = perms,
+                    enabledSpecialAccess = special,
+                    signingCertSha256 = entry.optString("c", "").takeIf { it.isNotBlank() },
+                    isSystemApp = entry.optBoolean("sys", false)
                 )
             }
             result
-        } catch (t: Throwable) {
+        } catch (_: Throwable) {
             emptyMap()
         }
     }
@@ -48,7 +52,12 @@ class SnapshotStore(context: Context) {
                 json.put("v", entry.versionCode)
                 json.put("s", entry.score)
                 json.put("l", entry.level)
-                json.put("p", org.json.JSONArray(entry.sensitiveGranted.sorted()))
+                json.put("p", JSONArray(entry.sensitiveGranted.sorted()))
+                if (entry.enabledSpecialAccess.isNotEmpty()) {
+                    json.put("sa", JSONArray(entry.enabledSpecialAccess.sorted()))
+                }
+                entry.signingCertSha256?.let { json.put("c", it) }
+                if (entry.isSystemApp) json.put("sys", true)
                 root.put(packageName, json)
             }
             prefs.edit().putString(KEY_ENTRIES, root.toString()).apply()
@@ -60,6 +69,16 @@ class SnapshotStore(context: Context) {
 
     fun setLastScanTime(time: Long) {
         prefs.edit().putLong(KEY_LAST_SCAN, time).apply()
+    }
+
+    private fun readSet(array: JSONArray?): Set<String> {
+        if (array == null) return emptySet()
+        return buildSet {
+            for (i in 0 until array.length()) {
+                val value = array.optString(i)
+                if (value.isNotBlank()) add(value)
+            }
+        }
     }
 
     private companion object {

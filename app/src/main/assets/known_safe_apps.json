@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "apps": [
+    {
+      "packageName": "com.google.android.marvin.talkback",
+      "displayName": "Android Accessibility Suite (TalkBack)",
+      "role": "Screen reader & accessibility",
+      "expectedSpecialAccess": ["ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "com.samsung.android.accessibility.talkback",
+      "displayName": "Samsung TalkBack",
+      "role": "Screen reader & accessibility",
+      "expectedSpecialAccess": ["ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "com.x8bit.bitwarden",
+      "displayName": "Bitwarden Password Manager",
+      "role": "Password manager",
+      "expectedSpecialAccess": ["ACCESSIBILITY", "OVERLAY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "com.onepassword.android",
+      "displayName": "1Password",
+      "role": "Password manager",
+      "expectedSpecialAccess": ["ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "com.agilebits.onepassword",
+      "displayName": "1Password",
+      "role": "Password manager",
+      "expectedSpecialAccess": ["ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "proton.android.pass",
+      "displayName": "Proton Pass",
+      "role": "Password manager",
+      "expectedSpecialAccess": ["ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "com.kunzisoft.keepass.free",
+      "displayName": "KeePassDX",
+      "role": "Password manager",
+      "expectedSpecialAccess": ["ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "com.kunzisoft.keepass.libre",
+      "displayName": "KeePassDX Libre",
+      "role": "Password manager",
+      "expectedSpecialAccess": ["ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "keepass2android.keepass2android",
+      "displayName": "Keepass2Android",
+      "role": "Password manager",
+      "expectedSpecialAccess": ["ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "com.google.android.apps.adm",
+      "displayName": "Google Find My Device",
+      "role": "Lost-device security",
+      "expectedSpecialAccess": ["DEVICE_ADMIN"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "com.google.android.wearable.app",
+      "displayName": "Wear OS by Google",
+      "role": "Smartwatch companion",
+      "expectedSpecialAccess": ["NOTIFICATION_LISTENER"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "com.samsung.android.app.watchmanager",
+      "displayName": "Galaxy Wearable",
+      "role": "Smartwatch companion",
+      "expectedSpecialAccess": ["NOTIFICATION_LISTENER"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "com.garmin.android.apps.connectmobile",
+      "displayName": "Garmin Connect",
+      "role": "Smartwatch companion",
+      "expectedSpecialAccess": ["NOTIFICATION_LISTENER"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "com.fitbit.FitbitMobile",
+      "displayName": "Fitbit",
+      "role": "Fitness wearable companion",
+      "expectedSpecialAccess": ["NOTIFICATION_LISTENER"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "org.kde.kdeconnect_tp",
+      "displayName": "KDE Connect",
+      "role": "Desktop companion",
+      "expectedSpecialAccess": ["NOTIFICATION_LISTENER"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "com.microsoft.appmanager",
+      "displayName": "Link to Windows",
+      "role": "Desktop companion",
+      "expectedSpecialAccess": ["NOTIFICATION_LISTENER", "ACCESSIBILITY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "dev.imranr.obtainium",
+      "displayName": "Obtainium",
+      "role": "App release updater",
+      "expectedSpecialAccess": ["INSTALL_PACKAGES"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "dev.imranr.obtainium.fdroid",
+      "displayName": "Obtainium",
+      "role": "App release updater",
+      "expectedSpecialAccess": ["INSTALL_PACKAGES"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "org.fdroid.fdroid",
+      "displayName": "F-Droid",
+      "role": "Open-source app store",
+      "expectedSpecialAccess": ["INSTALL_PACKAGES"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "org.fdroid.basic",
+      "displayName": "F-Droid Basic",
+      "role": "Open-source app store",
+      "expectedSpecialAccess": ["INSTALL_PACKAGES"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "com.looker.droidify",
+      "displayName": "Droid-ify",
+      "role": "Open-source app store",
+      "expectedSpecialAccess": ["INSTALL_PACKAGES"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "com.aurora.store",
+      "displayName": "Aurora Store",
+      "role": "Alternative store client",
+      "expectedSpecialAccess": ["INSTALL_PACKAGES"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": true
+    },
+    {
+      "packageName": "net.dinglisch.android.taskerm",
+      "displayName": "Tasker",
+      "role": "Automation tool",
+      "expectedSpecialAccess": ["ACCESSIBILITY", "NOTIFICATION_LISTENER", "OVERLAY", "DEVICE_ADMIN"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    },
+    {
+      "packageName": "com.arlosoft.macrodroid",
+      "displayName": "MacroDroid",
+      "role": "Automation tool",
+      "expectedSpecialAccess": ["ACCESSIBILITY", "NOTIFICATION_LISTENER", "OVERLAY"],
+      "allowOfficialStore": true,
+      "allowAlternativeStore": false
+    }
+  ]
+}

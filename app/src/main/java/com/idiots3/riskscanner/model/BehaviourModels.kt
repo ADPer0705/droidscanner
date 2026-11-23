@@ -21,20 +21,25 @@ data class BehaviourProfile(
     val wifiBytes: Long,
     val mobileBytes: Long,
     val anomalies: List<BehaviourAnomaly>,
-    val lookbackDays: Int
+    val lookbackDays: Int,
+    val rxBytes: Long = 0L,
+    val txBytes: Long = 0L
 ) {
     val hasAnomalies: Boolean get() = anomalies.isNotEmpty()
 
-    fun formattedTotalBytes(): String = when {
-        totalNetworkBytes >= 1_000_000_000L -> "${"%.2f".format(totalNetworkBytes / 1_000_000_000.0)} GB"
-        totalNetworkBytes >= 1_000_000L -> "${"%.1f".format(totalNetworkBytes / 1_000_000.0)} MB"
-        totalNetworkBytes >= 1_000L -> "${totalNetworkBytes / 1_000} KB"
-        else -> "$totalNetworkBytes B"
-    }
+    fun formattedTotalBytes(): String = formatByteCount(totalNetworkBytes)
+    fun formattedRxBytes(): String = formatByteCount(rxBytes)
+    fun formattedTxBytes(): String = formatByteCount(txBytes)
 
     fun formattedForegroundTime(): String = formatDurationMs(foregroundMs)
-
     fun formattedForegroundServiceTime(): String = formatDurationMs(foregroundServiceMs)
+
+    private fun formatByteCount(bytes: Long): String = when {
+        bytes >= 1_000_000_000L -> "${"%.2f".format(bytes / 1_000_000_000.0)} GB"
+        bytes >= 1_000_000L -> "${"%.1f".format(bytes / 1_000_000.0)} MB"
+        bytes >= 1_000L -> "${bytes / 1_000} KB"
+        else -> "$bytes B"
+    }
 
     private fun formatDurationMs(ms: Long): String {
         val mins = ms / 60_000L

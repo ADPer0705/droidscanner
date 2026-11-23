@@ -206,6 +206,13 @@ object RecommendationEngine {
         PostureAction.CREDENTIAL_SETTINGS -> RecommendationAction.OPEN_CREDENTIAL_SETTINGS
         PostureAction.NETWORK_SETTINGS -> RecommendationAction.OPEN_NETWORK_SETTINGS
         PostureAction.USAGE_ACCESS_SETTINGS -> RecommendationAction.OPEN_USAGE_ACCESS_SETTINGS
+        PostureAction.LOCK_SCREEN_SETTINGS -> RecommendationAction.OPEN_LOCK_SCREEN_SETTINGS
+        PostureAction.DISPLAY_SETTINGS -> RecommendationAction.OPEN_DISPLAY_SETTINGS
+        PostureAction.VPN_SETTINGS -> RecommendationAction.OPEN_VPN_SETTINGS
+        PostureAction.PRIVATE_DNS_SETTINGS -> RecommendationAction.OPEN_PRIVATE_DNS_SETTINGS
+        PostureAction.DEFAULT_APPS_SETTINGS -> RecommendationAction.OPEN_DEFAULT_APPS_SETTINGS
+        PostureAction.INPUT_METHOD_SETTINGS -> RecommendationAction.OPEN_INPUT_METHOD_SETTINGS
+        PostureAction.AUTOFILL_SETTINGS -> RecommendationAction.OPEN_AUTOFILL_SETTINGS
         PostureAction.APP_REVIEW, null -> RecommendationAction.NONE
     }
 

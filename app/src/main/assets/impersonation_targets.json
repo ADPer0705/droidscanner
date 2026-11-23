@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "label": "Google Play Services",
+      "aliases": ["google play service", "play services", "google service"],
+      "officialPackages": ["com.google.android.gms"],
+      "mustBeSystem": true
+    },
+    {
+      "label": "Google Play Store",
+      "aliases": ["play store", "google play"],
+      "officialPackages": ["com.android.vending"],
+      "mustBeSystem": true
+    },
+    {
+      "label": "Google Play Protect",
+      "aliases": ["play protect", "play protect service"],
+      "officialPackages": ["com.android.vending", "com.google.android.gms"],
+      "mustBeSystem": true
+    },
+    {
+      "label": "Android System",
+      "aliases": ["android system update", "system update", "software update", "android update", "system service", "android service", "google update", "security update"],
+      "officialPackages": ["android", "com.android.systemui", "com.google.android.gms", "com.wssyncmldm", "com.sec.android.soagent", "com.android.updater", "com.oplus.ota", "com.oneplus.opbackup", "com.motorola.ccc.ota"],
+      "mustBeSystem": true
+    },
+    {
+      "label": "Settings",
+      "aliases": ["system settings", "android settings", "device settings"],
+      "officialPackages": ["com.android.settings", "com.samsung.android.app.settings.bixby"],
+      "mustBeSystem": true
+    },
+    {
+      "label": "Google Chrome",
+      "aliases": ["chrome", "chrome browser"],
+      "officialPackages": ["com.android.chrome", "com.chrome.beta", "com.chrome.dev", "com.chrome.canary"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "WhatsApp",
+      "aliases": ["whatsapp messenger", "whatsapp business", "whats app"],
+      "officialPackages": ["com.whatsapp", "com.whatsapp.w4b"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Telegram",
+      "aliases": ["telegram messenger", "telegram x"],
+      "officialPackages": ["org.telegram.messenger", "org.telegram.messenger.web", "org.thunderdog.challegram"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Signal",
+      "aliases": ["signal private messenger"],
+      "officialPackages": ["org.thoughtcrime.securesms"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Gmail",
+      "aliases": ["google mail"],
+      "officialPackages": ["com.google.android.gm"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "PayPal",
+      "aliases": ["paypal mobile"],
+      "officialPackages": ["com.paypal.android.p2pmobile", "com.paypal.merchant.client"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Google Pay",
+      "aliases": ["gpay", "google wallet"],
+      "officialPackages": ["com.google.android.apps.nbu.paisa.user", "com.google.android.apps.walletnfcrel"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "PhonePe",
+      "aliases": ["phone pe"],
+      "officialPackages": ["com.phonepe.app", "com.phonepe.app.business"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Paytm",
+      "aliases": ["paytm wallet", "paytm upi"],
+      "officialPackages": ["net.one97.paytm", "com.paytm.business"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "BHIM",
+      "aliases": ["bhim upi"],
+      "officialPackages": ["in.org.npci.upiapp"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "YONO SBI",
+      "aliases": ["sbi yono", "yono lite sbi", "sbi banking"],
+      "officialPackages": ["com.sbi.lotusintouch", "com.sbi.SBIFreedomPlus", "com.sbi.upi"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "HDFC Bank",
+      "aliases": ["hdfc mobilebanking", "hdfc bank mobilebanking"],
+      "officialPackages": ["com.snapwork.hdfc", "com.hdfcbank.payzapp"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "ICICI iMobile",
+      "aliases": ["imobile pay", "icici bank"],
+      "officialPackages": ["com.csam.icici.bank.imobile"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Axis Mobile",
+      "aliases": ["axis bank"],
+      "officialPackages": ["com.axis.mobile"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Chase Mobile",
+      "aliases": ["chase bank"],
+      "officialPackages": ["com.chase.sig.android"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Bank of America",
+      "aliases": ["bofa mobile"],
+      "officialPackages": ["com.infonow.bofa"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Wells Fargo",
+      "aliases": ["wells fargo mobile"],
+      "officialPackages": ["com.wf.wellsfargomobile"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Revolut",
+      "aliases": ["revolut bank"],
+      "officialPackages": ["com.revolut.revolut", "com.revolut.business"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Wise",
+      "aliases": ["transferwise"],
+      "officialPackages": ["com.transferwise.android"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Cash App",
+      "aliases": ["cashapp"],
+      "officialPackages": ["com.squareup.cash"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Venmo",
+      "aliases": [],
+      "officialPackages": ["com.venmo"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "MetaMask",
+      "aliases": ["metamask wallet"],
+      "officialPackages": ["io.metamask"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Trust Wallet",
+      "aliases": ["trust crypto wallet"],
+      "officialPackages": ["com.wallet.crypto.trustapp"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Coinbase",
+      "aliases": ["coinbase wallet"],
+      "officialPackages": ["com.coinbase.android", "org.toshi"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Binance",
+      "aliases": ["binance crypto"],
+      "officialPackages": ["com.binance.dev", "com.binance.us"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Google Authenticator",
+      "aliases": ["authenticator"],
+      "officialPackages": ["com.google.android.apps.authenticator2", "com.azure.authenticator", "com.authy.authy"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Instagram",
+      "aliases": ["instagram lite"],
+      "officialPackages": ["com.instagram.android", "com.instagram.lite"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Facebook",
+      "aliases": ["facebook lite"],
+      "officialPackages": ["com.facebook.katana", "com.facebook.lite"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Messenger",
+      "aliases": ["facebook messenger"],
+      "officialPackages": ["com.facebook.orca", "com.facebook.mlite"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "YouTube",
+      "aliases": ["youtube music"],
+      "officialPackages": ["com.google.android.youtube", "com.google.android.apps.youtube.music", "com.google.android.apps.youtube.kids"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "DigiLocker",
+      "aliases": ["digi locker"],
+      "officialPackages": ["com.digilocker.android"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "mAadhaar",
+      "aliases": ["aadhaar", "uidai"],
+      "officialPackages": ["in.gov.uidai.mAadhaarPlus"],
+      "mustBeSystem": false
+    },
+    {
+      "label": "Amazon Shopping",
+      "aliases": ["amazon"],
+      "officialPackages": ["com.amazon.mShop.android.shopping", "in.amazon.mShop.android.shopping"],
+      "mustBeSystem": false
+    }
+  ]
+}

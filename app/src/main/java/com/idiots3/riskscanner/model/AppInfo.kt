@@ -20,6 +20,7 @@ enum class InstallProvenance(val label: String, val isSideloaded: Boolean) {
     OFFICIAL_STORE("Official store", false),
     ALTERNATIVE_STORE("App store", false),
     PREINSTALLED_SYSTEM("Pre-installed", false),
+    DEVICE_MIGRATION("Transferred / Restored", false),
     BROWSER_OR_APP_SIDELOAD("Sideloaded via app", true),
     PACKAGE_INSTALLER("Sideloaded APK", true),
     ADB_OR_SHELL("Installed via ADB", true),
@@ -35,6 +36,8 @@ enum class ReasonKind {
     COMBO_RULE,
     PROVENANCE,
     STATIC,
+    IMPERSONATION,
+    TRUSTED_CONTEXT,
     AI
 }
 
@@ -75,7 +78,23 @@ data class AppInfo(
     val isUpdatedSystemApp: Boolean = false,
     val isDefaultSmsApp: Boolean = false,
     val isDefaultDialer: Boolean = false,
-    val isEnabledInputMethod: Boolean = false
+    val isEnabledInputMethod: Boolean = false,
+    val isSelfApp: Boolean = false,
+    val isDefaultBrowser: Boolean = false,
+    val isDefaultLauncher: Boolean = false,
+    val isActiveInputMethod: Boolean = false,
+    val isAutofillService: Boolean = false,
+    val isDefaultAssistant: Boolean = false,
+    val isDebuggable: Boolean = false,
+    val isTestOnly: Boolean = false,
+    val allowsCleartextTraffic: Boolean = false,
+    val signingCertSha256: String? = null,
+    val isDebugSigned: Boolean = false,
+    val isWeakSigningKey: Boolean = false,
+    val isCertExpired: Boolean = false,
+    val verifiedKnownSafeName: String? = null,
+    val isUserTrusted: Boolean = false,
+    val impersonationTarget: String? = null
 ) {
     /** Sensitive = dangerous or special protection level. */
     val grantedSensitive: List<PermissionDetail>
@@ -94,7 +113,7 @@ data class AppInfo(
         permissions.any { it.isGranted && names.contains(it.name) }
 
     /** The on-device context model only needs to run for apps that actually hold sensitive access. */
-    fun needsAiAnalysis(): Boolean = grantedSensitive.isNotEmpty()
+    fun needsAiAnalysis(): Boolean = grantedSensitive.isNotEmpty() && !isSelfApp
 
     companion object {
         fun inferProvenance(installerSource: String, isSystemApp: Boolean): InstallProvenance {
@@ -121,7 +140,13 @@ data class AppInfo(
                     installerSource.contains("Droid-ify", ignoreCase = true) ||
                     installerSource.contains("Neo Store", ignoreCase = true) ||
                     installerSource.contains("Aurora", ignoreCase = true) ||
-                    installerSource.contains("Obtainium", ignoreCase = true) -> InstallProvenance.ALTERNATIVE_STORE
+                    installerSource.contains("Obtainium", ignoreCase = true) ||
+                    installerSource.contains("Accrescent", ignoreCase = true) ||
+                    installerSource.contains("App Lounge", ignoreCase = true) -> InstallProvenance.ALTERNATIVE_STORE
+
+                installerSource.contains("Transferred", ignoreCase = true) ||
+                    installerSource.contains("Restored", ignoreCase = true) ||
+                    installerSource.contains("Smart Switch", ignoreCase = true) -> InstallProvenance.DEVICE_MIGRATION
 
                 installerSource.contains("ADB", ignoreCase = true) -> InstallProvenance.ADB_OR_SHELL
                 installerSource.contains("via ", ignoreCase = true) -> InstallProvenance.BROWSER_OR_APP_SIDELOAD
@@ -165,8 +190,10 @@ data class SpecialAccessInfo(
     val usageStatsDeclared: Boolean = false,
     val usageStatsState: SpecialAccessGrantState = deriveState(usageStatsEnabled, usageStatsDeclared),
     val allFilesAccessDeclared: Boolean = false,
+    val allFilesAccessState: SpecialAccessGrantState = deriveState(false, allFilesAccessDeclared),
     val vpnServiceDeclared: Boolean = false,
-    val nfcHceDeclared: Boolean = false
+    val nfcHceDeclared: Boolean = false,
+    val screenCaptureDeclared: Boolean = false
 ) {
     val enabledLabels: List<String>
         get() = buildList {
@@ -176,6 +203,7 @@ data class SpecialAccessInfo(
             if (overlayEnabled || overlayState == SpecialAccessGrantState.ENABLED) add("Screen Overlay")
             if (installPackagesEnabled || installPackagesState == SpecialAccessGrantState.ENABLED) add("Install Packages")
             if (usageStatsEnabled || usageStatsState == SpecialAccessGrantState.ENABLED) add("Usage Statistics")
+            if (allFilesAccessState == SpecialAccessGrantState.ENABLED) add("All Files Access")
         }
 
     val declaredOnlyLabels: List<String>
@@ -186,9 +214,10 @@ data class SpecialAccessInfo(
             if (overlayDeclared && !overlayEnabled && overlayState != SpecialAccessGrantState.ENABLED) add("Screen Overlay")
             if (installPackagesDeclared && !installPackagesEnabled && installPackagesState != SpecialAccessGrantState.ENABLED) add("Install Packages")
             if (usageStatsDeclared && !usageStatsEnabled && usageStatsState != SpecialAccessGrantState.ENABLED) add("Usage Statistics")
-            if (allFilesAccessDeclared) add("All Files Access")
+            if (allFilesAccessDeclared && allFilesAccessState != SpecialAccessGrantState.ENABLED) add("All Files Access")
             if (vpnServiceDeclared) add("VPN Service")
             if (nfcHceDeclared) add("NFC Card Emulation")
+            if (screenCaptureDeclared) add("Screen Capture")
         }
 
     val activeCount: Int get() = enabledLabels.size
