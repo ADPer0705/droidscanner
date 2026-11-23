@@ -12,12 +12,16 @@ import com.idiots3.riskscanner.model.RecommendationPriority
 import com.idiots3.riskscanner.model.RecommendationSummary
 import com.idiots3.riskscanner.model.RiskLevel
 import com.idiots3.riskscanner.model.SecurityRecommendation
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
  * Single source of truth for the unified Device Security Score and prioritized,
  * actionable user recommendations across App Safety, Device Hardening, Special Access,
  * and optional Behaviour Insights.
+ *
+ * Respects user-reviewed Trusted apps and dismissed posture items so intentional tools
+ * do not cause permanent alert fatigue.
  */
 object RecommendationEngine {
 
@@ -26,17 +30,19 @@ object RecommendationEngine {
         posture: DevicePosture?,
         behaviourResult: BehaviourScanResult? = null
     ): RecommendationSummary {
+        val activeApps = apps.filter { !it.isUserTrusted && !it.isSelfApp }
         val recs = mutableListOf<SecurityRecommendation>()
 
-        recs += appRiskRecommendations(apps)
-        recs += specialAccessRecommendations(apps)
+        recs += impersonationRecommendations(activeApps)
+        recs += appRiskRecommendations(activeApps)
+        recs += specialAccessRecommendations(activeApps)
         if (posture != null) {
             recs += postureRecommendations(posture)
         }
         if (behaviourResult != null && behaviourResult.permissionGranted) {
-            recs += behaviourRecommendations(behaviourResult.profiles, apps)
+            recs += behaviourRecommendations(behaviourResult.profiles, activeApps)
         }
-        recs += sideloadRecommendations(apps)
+        recs += sideloadRecommendations(activeApps)
 
         val sorted = recs
             .distinctBy { it.id }
@@ -46,7 +52,7 @@ object RecommendationEngine {
                     .thenBy { it.title }
             )
 
-        val appScore = appSafetyScore(apps)
+        val appScore = appSafetyScore(activeApps)
         val postureScore = posture?.protectionScore ?: 100
         val hasBehaviourData = behaviourResult?.permissionGranted == true && behaviourResult.profiles.isNotEmpty()
 
@@ -55,7 +61,7 @@ object RecommendationEngine {
             "Device Hardening" to postureScore
         )
         val deviceScore = if (hasBehaviourData) {
-            val behScore = behaviourScore(behaviourResult!!.profiles)
+            val behScore = behaviourScore(behaviourResult!!.profiles, activeApps)
             breakdown["Behaviour"] = behScore
             (appScore * 0.50 + postureScore * 0.35 + behScore * 0.15).roundToInt().coerceIn(0, 100)
         } else {
@@ -69,6 +75,21 @@ object RecommendationEngine {
             scoreBreakdown = breakdown,
             behaviourIncluded = hasBehaviourData
         )
+    }
+
+    private fun impersonationRecommendations(apps: List<AppInfo>): List<SecurityRecommendation> {
+        return apps.filter { !it.impersonationTarget.isNullOrBlank() }.map { app ->
+            SecurityRecommendation(
+                id = "impersonation_${app.packageName}",
+                priority = RecommendationPriority.CRITICAL,
+                title = "Possible fake app: ${app.appName}",
+                description = "Imitates \"${app.impersonationTarget}\" from unofficial package ${app.packageName}. Inspect and uninstall if you did not intentionally install it.",
+                action = RecommendationAction.OPEN_APP_DETAIL,
+                actionLabel = "Inspect now",
+                targetPackage = app.packageName,
+                category = "Impersonation"
+            )
+        }
     }
 
     private fun appRiskRecommendations(apps: List<AppInfo>): List<SecurityRecommendation> {
@@ -119,7 +140,9 @@ object RecommendationEngine {
             )
         }
 
-        val accessibilityApps = apps.filter { it.specialAccess.accessibilityEnabled && !it.isSystemApp }
+        val accessibilityApps = apps.filter {
+            it.specialAccess.accessibilityEnabled && !it.isSystemApp && it.verifiedKnownSafeName == null
+        }
         if (accessibilityApps.size > 2) {
             recs += SecurityRecommendation(
                 id = "many_accessibility",
@@ -135,7 +158,7 @@ object RecommendationEngine {
 
         val adminApps = apps.filter { it.specialAccess.deviceAdminActive }
         for (app in adminApps) {
-            if (!app.isSystemApp && !RiskScorer.isSecurityTool(app)) {
+            if (!app.isSystemApp && !RiskScorer.isSecurityTool(app) && app.verifiedKnownSafeName == null) {
                 recs += SecurityRecommendation(
                     id = "device_admin_${app.packageName}",
                     priority = RecommendationPriority.HIGH,
@@ -150,7 +173,9 @@ object RecommendationEngine {
         }
 
         val notificationApps = apps.filter {
-            it.specialAccess.notificationListenerEnabled && !isKnownLegitimateNotificationListener(it)
+            it.specialAccess.notificationListenerEnabled &&
+                !isKnownLegitimateNotificationListener(it) &&
+                it.verifiedKnownSafeName == null
         }
         for (app in notificationApps.take(3)) {
             recs += SecurityRecommendation(
@@ -169,7 +194,7 @@ object RecommendationEngine {
 
     private fun postureRecommendations(posture: DevicePosture): List<SecurityRecommendation> {
         val atRisk = posture.checks
-            .filter { it.status == PostureStatus.AT_RISK }
+            .filter { it.status == PostureStatus.AT_RISK && !it.isDismissed }
             .map { check ->
                 SecurityRecommendation(
                     id = "posture_${check.id}",
@@ -182,7 +207,7 @@ object RecommendationEngine {
                 )
             }
         val review = posture.checks
-            .filter { it.status == PostureStatus.REVIEW }
+            .filter { it.status == PostureStatus.REVIEW && !it.isDismissed }
             .map { check ->
                 SecurityRecommendation(
                     id = "posture_review_${check.id}",
@@ -202,6 +227,7 @@ object RecommendationEngine {
         PostureAction.SYSTEM_UPDATE -> RecommendationAction.OPEN_SYSTEM_UPDATE
         PostureAction.DEVELOPER_SETTINGS -> RecommendationAction.OPEN_DEVELOPER_SETTINGS
         PostureAction.ACCESSIBILITY_SETTINGS -> RecommendationAction.OPEN_ACCESSIBILITY_SETTINGS
+        PostureAction.DEVICE_ADMIN_SETTINGS -> RecommendationAction.OPEN_DEVICE_ADMIN_SETTINGS
         PostureAction.NOTIFICATION_SETTINGS -> RecommendationAction.OPEN_NOTIFICATION_SETTINGS
         PostureAction.CREDENTIAL_SETTINGS -> RecommendationAction.OPEN_CREDENTIAL_SETTINGS
         PostureAction.NETWORK_SETTINGS -> RecommendationAction.OPEN_NETWORK_SETTINGS
@@ -275,22 +301,26 @@ object RecommendationEngine {
         return recs
     }
 
+    /**
+     * Calibrated app-safety score:
+     *  - Critical apps weigh heavily (-22 each)
+     *  - High apps weigh sharply (-9 each)
+     *  - Medium apps are capped at -20 total so a typical consumer phone with 40+ normal
+     *    Play Store apps (messaging, banking, camera, maps) never collapses to 0/100.
+     */
     private fun appSafetyScore(apps: List<AppInfo>): Int {
         if (apps.isEmpty()) return 100
-        val penalty = apps.sumOf { app ->
-            when (app.riskLevel) {
-                RiskLevel.CRITICAL -> 18
-                RiskLevel.HIGH -> 7
-                RiskLevel.MEDIUM -> 2
-                RiskLevel.LOW -> 0
-            }
-        }
-        return (100 - penalty).coerceIn(0, 100)
+        val criticalPenalty = apps.count { it.riskLevel == RiskLevel.CRITICAL } * 22
+        val highPenalty = apps.count { it.riskLevel == RiskLevel.HIGH } * 9
+        val mediumCount = apps.count { it.riskLevel == RiskLevel.MEDIUM }
+        val mediumPenalty = min(20, (mediumCount * 1.5).roundToInt())
+        return (100 - criticalPenalty - highPenalty - mediumPenalty).coerceIn(0, 100)
     }
 
-    private fun behaviourScore(profiles: Map<String, BehaviourProfile>): Int {
+    private fun behaviourScore(profiles: Map<String, BehaviourProfile>, activeApps: List<AppInfo>): Int {
         if (profiles.isEmpty()) return 100
-        val anomalyApps = profiles.values.count { it.hasAnomalies }
+        val activePkgs = activeApps.map { it.packageName }.toSet()
+        val anomalyApps = profiles.values.count { it.hasAnomalies && activePkgs.contains(it.packageName) }
         return (100 - anomalyApps * 10).coerceIn(0, 100)
     }
 

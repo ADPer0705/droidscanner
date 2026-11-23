@@ -235,6 +235,7 @@ object SettingsIntents {
                 Intent(Settings.ACTION_SETTINGS)
             )
             PostureAction.ACCESSIBILITY_SETTINGS -> openAccessibilitySettings(context)
+            PostureAction.DEVICE_ADMIN_SETTINGS -> openDeviceAdminSettings(context)
             PostureAction.NOTIFICATION_SETTINGS -> openNotificationListenerSettings(context)
             PostureAction.CREDENTIAL_SETTINGS -> openCredentialSettings(context)
             PostureAction.NETWORK_SETTINGS -> openNetworkSettings(context)

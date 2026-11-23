@@ -1,5 +1,6 @@
 package com.idiots3.riskscanner.scanner
 
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.Signature
 import android.os.Build
@@ -44,11 +45,56 @@ class CertificateInspector(private val packageManager: PackageManager) {
         }
     }
 
+    /**
+     * Fast, zero-file-I/O signing metadata extraction from an already-loaded [PackageInfo]
+     * (requested with `GET_SIGNING_CERTIFICATES` on API 28+ or `GET_SIGNATURES` on API 26–27).
+     * Used during inventory scans and pre-install archive inspection.
+     */
+    fun inspectFromPackageInfo(packageInfo: PackageInfo, apkPath: String = ""): SignerInfo {
+        return try {
+            val raw = extractRawSigningData(packageInfo)
+            val certs = raw.signatures.mapNotNull(::parseCert)
+            val schemes = if (apkPath.isNotBlank()) {
+                ApkSignatureSchemeDetector.detectSchemes(File(apkPath))
+            } else {
+                emptySet()
+            }
+            SignerInfo(
+                certs = certs,
+                signingSchemes = schemes,
+                hasMultipleSigners = raw.hasMultipleSigners,
+                hasPastSigners = raw.hasPastSigners
+            )
+        } catch (_: Throwable) {
+            SignerInfo(certs = emptyList(), signingSchemes = emptySet())
+        }
+    }
+
     private data class RawSigningData(
         val signatures: List<Signature>,
         val hasMultipleSigners: Boolean,
         val hasPastSigners: Boolean
     )
+
+    private fun extractRawSigningData(info: PackageInfo): RawSigningData {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val signingInfo = info.signingInfo
+            val sigs = signingInfo?.apkContentsSigners?.toList().orEmpty()
+            RawSigningData(
+                signatures = sigs,
+                hasMultipleSigners = signingInfo?.hasMultipleSigners() == true || sigs.size > 1,
+                hasPastSigners = signingInfo?.hasPastSigningCertificates() == true
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            val sigs = info.signatures?.toList().orEmpty()
+            RawSigningData(
+                signatures = sigs,
+                hasMultipleSigners = sigs.size > 1,
+                hasPastSigners = false
+            )
+        }
+    }
 
     private fun loadSigningInfo(packageName: String): RawSigningData {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -61,27 +107,15 @@ class CertificateInspector(private val packageManager: PackageManager) {
                 @Suppress("DEPRECATION")
                 packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
             }
-            val signingInfo = info.signingInfo
-            val sigs = signingInfo?.apkContentsSigners?.toList().orEmpty()
-            RawSigningData(
-                signatures = sigs,
-                hasMultipleSigners = signingInfo?.hasMultipleSigners() == true || sigs.size > 1,
-                hasPastSigners = signingInfo?.hasPastSigningCertificates() == true
-            )
+            extractRawSigningData(info)
         } else {
             @Suppress("DEPRECATION")
             val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-            @Suppress("DEPRECATION")
-            val sigs = info.signatures?.toList().orEmpty()
-            RawSigningData(
-                signatures = sigs,
-                hasMultipleSigners = sigs.size > 1,
-                hasPastSigners = false
-            )
+            extractRawSigningData(info)
         }
     }
 
-    private fun parseCert(sig: Signature): CertInfo? {
+    fun parseCert(sig: Signature): CertInfo? {
         return try {
             val rawBytes = sig.toByteArray()
             val cf = CertificateFactory.getInstance("X.509")
@@ -115,7 +149,7 @@ class CertificateInspector(private val packageManager: PackageManager) {
         val lower = subject.lowercase()
         return lower.contains("android debug") ||
             lower.contains("debug key") ||
-            lower.contains("o=android, c=us") && lower.contains("debug")
+            (lower.contains("o=android, c=us") && lower.contains("debug"))
     }
 
     private fun fingerprint(bytes: ByteArray, algo: String): String {

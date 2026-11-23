@@ -20,6 +20,10 @@ import kotlin.math.sqrt
  * Optional runtime behavioural insights using public UsageStatsManager and NetworkStatsManager.
  * Active ONLY when the user has explicitly granted Usage Access in Android Settings;
  * silently reports `permissionGranted = false` otherwise without nagging.
+ *
+ * Uses batch `NetworkStatsManager.querySummary` (2 IPC calls total instead of 2 × N) and
+ * tracks upload (`txBytes`) separately from download (`rxBytes`) to highlight background
+ * exfiltration rather than foreground streaming or downloads.
  */
 class BehaviourAnomalyScanner(private val context: Context) {
 
@@ -68,7 +72,7 @@ class BehaviourAnomalyScanner(private val context: Context) {
                 )
             }
 
-            val networkMap = getNetworkStats(apps, start, end)
+            val networkMap = getBatchNetworkStats(apps, start, end)
             val metrics = buildMap {
                 for (app in apps) {
                     val u = usageMap[app.packageName]
@@ -80,8 +84,10 @@ class BehaviourAnomalyScanner(private val context: Context) {
                             foregroundMs = u?.foregroundMs ?: 0L,
                             foregroundServiceMs = u?.foregroundServiceMs ?: 0L,
                             lastTimeUsedMs = u?.lastTimeUsedMs ?: 0L,
-                            wifiBytes = n?.wifi ?: 0L,
-                            mobileBytes = n?.mobile ?: 0L
+                            wifiBytes = n?.wifiTotal ?: 0L,
+                            mobileBytes = n?.mobileTotal ?: 0L,
+                            rxBytes = n?.rxTotal ?: 0L,
+                            txBytes = n?.txTotal ?: 0L
                         )
                     )
                 }
@@ -126,50 +132,69 @@ class BehaviourAnomalyScanner(private val context: Context) {
         }
     }
 
-    private data class NetworkBytes(val wifi: Long, val mobile: Long)
+    private data class NetworkCounters(
+        var wifiTotal: Long = 0L,
+        var mobileTotal: Long = 0L,
+        var rxTotal: Long = 0L,
+        var txTotal: Long = 0L
+    )
 
     @Suppress("DEPRECATION")
-    private fun getNetworkStats(apps: List<AppInfo>, start: Long, end: Long): Map<String, NetworkBytes> {
+    private fun getBatchNetworkStats(apps: List<AppInfo>, start: Long, end: Long): Map<String, NetworkCounters> {
         val nsm = context.getSystemService(Context.NETWORK_STATS_SERVICE) as? NetworkStatsManager
             ?: return emptyMap()
-        val result = HashMap<String, NetworkBytes>()
+
+        val uidToPackages = HashMap<Int, MutableList<String>>(apps.size)
         for (app in apps) {
-            try {
-                val uid = context.packageManager.getApplicationInfo(app.packageName, 0).uid
-                val wifi = safeQueryNetworkBytesForUid(nsm, ConnectivityManager.TYPE_WIFI, uid, start, end)
-                val mobile = safeQueryNetworkBytesForUid(nsm, ConnectivityManager.TYPE_MOBILE, uid, start, end)
-                if (wifi > 0L || mobile > 0L) {
-                    result[app.packageName] = NetworkBytes(wifi, mobile)
-                }
-            } catch (_: Throwable) {
-                // skip inaccessible UID
+            val uid = runCatching { context.packageManager.getApplicationInfo(app.packageName, 0).uid }.getOrNull()
+                ?: continue
+            uidToPackages.getOrPut(uid) { mutableListOf() }.add(app.packageName)
+        }
+
+        val uidCounters = HashMap<Int, NetworkCounters>()
+        collectSummaryForTransport(nsm, ConnectivityManager.TYPE_WIFI, start, end, isWifi = true, uidCounters)
+        collectSummaryForTransport(nsm, ConnectivityManager.TYPE_MOBILE, start, end, isWifi = false, uidCounters)
+
+        val result = HashMap<String, NetworkCounters>(uidCounters.size)
+        for ((uid, counters) in uidCounters) {
+            val pkgs = uidToPackages[uid] ?: continue
+            // Only attribute traffic cleanly to non-shared UIDs or single-app UIDs to avoid misattribution.
+            if (pkgs.size == 1) {
+                result[pkgs.first()] = counters
             }
         }
         return result
     }
 
-    private fun safeQueryNetworkBytesForUid(
+    private fun collectSummaryForTransport(
         nsm: NetworkStatsManager,
         networkType: Int,
-        uid: Int,
         start: Long,
-        end: Long
-    ): Long {
+        end: Long,
+        isWifi: Boolean,
+        out: MutableMap<Int, NetworkCounters>
+    ) {
         var stats: NetworkStats? = null
-        return try {
-            var total = 0L
+        try {
             val bucket = NetworkStats.Bucket()
-            val opened: NetworkStats? = nsm.queryDetailsForUid(networkType, null, start, end, uid)
+            val opened: NetworkStats? = nsm.querySummary(networkType, null, start, end)
             stats = opened
             if (opened != null) {
                 while (opened.hasNextBucket()) {
                     opened.getNextBucket(bucket)
-                    total += bucket.rxBytes + bucket.txBytes
+                    val uid = bucket.uid
+                    if (uid < 0) continue
+                    val rx = bucket.rxBytes.coerceAtLeast(0L)
+                    val tx = bucket.txBytes.coerceAtLeast(0L)
+                    if (rx == 0L && tx == 0L) continue
+                    val acc = out.getOrPut(uid) { NetworkCounters() }
+                    if (isWifi) acc.wifiTotal += (rx + tx) else acc.mobileTotal += (rx + tx)
+                    acc.rxTotal += rx
+                    acc.txTotal += tx
                 }
             }
-            total
         } catch (_: Throwable) {
-            0L
+            // Some Android 8–9 builds restrict mobile subscriber queries without READ_PHONE_STATE.
         } finally {
             runCatching { stats?.close() }
         }
@@ -177,24 +202,28 @@ class BehaviourAnomalyScanner(private val context: Context) {
 }
 
 /**
- * Pure-JVM statistical z-score and background-activity analyzer.
+ * Pure-JVM statistical z-score, upload-heavy exfiltration, and background-activity analyzer.
  */
 object BehaviourAnomalyAnalyzer {
 
     const val MIN_APPS_FOR_BASELINE = 5
     const val ZSCORE_THRESHOLD = 2.0
     const val MIN_NETWORK_OUTLIER_BYTES = 5_000_000L // 5 MB
+    const val MIN_UPLOAD_OUTLIER_BYTES = 2_000_000L // 2 MB upload
     const val MIN_FG_SERVICE_OUTLIER_MS = 30L * 60_000L // 30 minutes
     const val SILENT_OPEN_THRESHOLD_MS = 5_000L // <5s foreground
     const val SILENT_BG_SERVICE_MS = 10L * 60_000L // 10 minutes
     const val SILENT_NETWORK_BYTES = 2_000_000L // 2 MB
+    const val ACTIVE_STREAMING_FG_MS = 30L * 60_000L // 30m foreground
 
     data class AppUsageMetric(
         val foregroundMs: Long,
         val foregroundServiceMs: Long,
         val lastTimeUsedMs: Long,
         val wifiBytes: Long,
-        val mobileBytes: Long
+        val mobileBytes: Long,
+        val rxBytes: Long = wifiBytes + mobileBytes,
+        val txBytes: Long = 0L
     ) {
         val totalBytes: Long get() = wifiBytes + mobileBytes
     }
@@ -209,6 +238,10 @@ object BehaviourAnomalyAnalyzer {
         val netMean = allBytes.average()
         val netStd = stdDev(allBytes, netMean)
 
+        val allTx = metrics.values.map { it.txBytes.toDouble() }
+        val txMean = allTx.average()
+        val txStd = stdDev(allTx, txMean)
+
         val allFgSvc = metrics.values.map { it.foregroundServiceMs.toDouble() }
         val fgSvcMean = allFgSvc.average()
         val fgSvcStd = stdDev(allFgSvc, fgSvcMean)
@@ -217,14 +250,29 @@ object BehaviourAnomalyAnalyzer {
         for ((pkg, m) in metrics) {
             val anomalies = mutableListOf<BehaviourAnomaly>()
             val neverOpened = m.foregroundMs < SILENT_OPEN_THRESHOLD_MS
+            val totalForRatio = (m.rxBytes + m.txBytes).coerceAtLeast(1L)
+            val isMostlyDownloadStreaming = m.foregroundMs >= ACTIVE_STREAMING_FG_MS &&
+                m.rxBytes.toDouble() / totalForRatio >= 0.85
 
             val netZ = if (netStd > 0.0) (m.totalBytes - netMean) / netStd else 0.0
-            if (netZ >= ZSCORE_THRESHOLD && m.totalBytes >= MIN_NETWORK_OUTLIER_BYTES) {
+            if (netZ >= ZSCORE_THRESHOLD && m.totalBytes >= MIN_NETWORK_OUTLIER_BYTES && !isMostlyDownloadStreaming) {
                 anomalies += BehaviourAnomaly(
                     type = "High network outlier",
                     detail = "Transferred ${formatBytes(m.totalBytes)} in ${lookbackDays}d (z=${"%.1f".format(netZ)})",
                     zScore = netZ.toFloat(),
                     recommendation = "Check whether you expect this app to move large amounts of data."
+                )
+            }
+
+            val txZ = if (txStd > 0.0) (m.txBytes - txMean) / txStd else 0.0
+            val suspiciousUpload = m.txBytes >= MIN_UPLOAD_OUTLIER_BYTES &&
+                (neverOpened || (txZ >= ZSCORE_THRESHOLD && m.txBytes >= m.rxBytes / 2))
+            if (suspiciousUpload) {
+                anomalies += BehaviourAnomaly(
+                    type = "Unusual upload activity",
+                    detail = "Uploaded ${formatBytes(m.txBytes)} out of ${formatBytes(m.totalBytes)} total in ${lookbackDays}d",
+                    zScore = maxOf(txZ, 2.2).toFloat(),
+                    recommendation = "High outbound upload (especially without opening the app) warrants reviewing its permissions."
                 )
             }
 
@@ -251,7 +299,7 @@ object BehaviourAnomalyAnalyzer {
                             append("transferred ${formatBytes(m.totalBytes)}")
                         }
                     },
-                    zScore = maxOf(netZ, fgSvcZ, 2.0).toFloat(),
+                    zScore = maxOf(netZ, txZ, fgSvcZ, 2.0).toFloat(),
                     recommendation = "Review why an app you haven't opened is active in the background."
                 )
             }
@@ -266,7 +314,9 @@ object BehaviourAnomalyAnalyzer {
                 wifiBytes = m.wifiBytes,
                 mobileBytes = m.mobileBytes,
                 anomalies = anomalies,
-                lookbackDays = lookbackDays
+                lookbackDays = lookbackDays,
+                rxBytes = m.rxBytes,
+                txBytes = m.txBytes
             )
         }
         return result

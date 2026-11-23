@@ -15,7 +15,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * Deterministic, explainable risk engine. The embedding/AI signal is only ever
+ * Deterministic, explainable risk engine (v3). The embedding/AI signal is only ever
  * applied as a small, clearly labelled addition on top of this result.
  */
 object RiskScorer {
@@ -39,7 +39,8 @@ object RiskScorer {
     private val TRACKED_SPECIAL = setOf(
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.REQUEST_INSTALL_PACKAGES",
-        "android.permission.PACKAGE_USAGE_STATS"
+        "android.permission.PACKAGE_USAGE_STATS",
+        "android.permission.MANAGE_EXTERNAL_STORAGE"
     )
     private const val INTERNET = "android.permission.INTERNET"
     private const val BOOT = "android.permission.RECEIVE_BOOT_COMPLETED"
@@ -52,14 +53,47 @@ object RiskScorer {
     )
 
     fun score(app: AppInfo, ai: AiAssessment? = null): ScoreResult {
+        if (app.isSelfApp) {
+            return ScoreResult(
+                score = 0,
+                level = RiskLevel.LOW,
+                ruleScore = 0,
+                aiDelta = 0,
+                reasons = listOf(
+                    RiskReason(
+                        title = "This security scanner (DroidScanner)",
+                        description = "DroidScanner runs offline without INTERNET permission. Optional Usage Access is only active if you grant it.",
+                        severity = RiskLevel.LOW,
+                        category = PermissionCategory.OTHER,
+                        kind = ReasonKind.TRUSTED_CONTEXT
+                    )
+                ),
+                breakdown = emptyList()
+            )
+        }
+
         val breakdown = mutableListOf<ScoreLine>()
         val reasons = mutableListOf<RiskReason>()
         var rulesScore = 0
+        val isVerifiedSafe = app.verifiedKnownSafeName != null &&
+            app.impersonationTarget == null &&
+            !app.isDebugSigned &&
+            !app.isDebuggable
 
         fun addLine(label: String, points: Int, detail: String) {
             if (points <= 0) return
             rulesScore += points
             breakdown += ScoreLine(label, points, detail, ScoreSource.RULES)
+        }
+
+        if (isVerifiedSafe) {
+            reasons += RiskReason(
+                title = "Recognized legitimate tool (${app.verifiedKnownSafeName})",
+                description = "Installed from a trusted store with clean production signing. Special privileges on this app are expected for its core function.",
+                severity = RiskLevel.LOW,
+                category = PermissionCategory.SPECIAL_ACCESS,
+                kind = ReasonKind.TRUSTED_CONTEXT
+            )
         }
 
         // ------------------------------------------------------------------
@@ -123,17 +157,25 @@ object RiskScorer {
         val overlayEnabled = sa.overlayEnabled || sa.overlayState == SpecialAccessGrantState.ENABLED
         val installEnabled = sa.installPackagesEnabled || sa.installPackagesState == SpecialAccessGrantState.ENABLED
         val usageEnabled = sa.usageStatsEnabled || sa.usageStatsState == SpecialAccessGrantState.ENABLED
+        val allFilesEnabled = sa.allFilesAccessState == SpecialAccessGrantState.ENABLED
 
         if (sa.accessibilityEnabled) {
+            val pts = if (isVerifiedSafe) ScoringConfig.Special.ACCESSIBILITY_ENABLED / 2
+            else ScoringConfig.Special.ACCESSIBILITY_ENABLED
             addLine(
                 "Accessibility service enabled",
-                ScoringConfig.Special.ACCESSIBILITY_ENABLED,
-                "Verified through Android's enabled accessibility services list"
+                pts,
+                if (isVerifiedSafe) "Active (expected for ${app.verifiedKnownSafeName})"
+                else "Verified through Android's enabled accessibility services list"
             )
             reasons += RiskReason(
                 "Accessibility service enabled",
-                "Can read everything on screen, capture passwords, and tap buttons for you. This is the single most abused special access on Android.",
-                RiskLevel.CRITICAL,
+                if (isVerifiedSafe) {
+                    "Active on a recognized tool (${app.verifiedKnownSafeName}). Accessibility can read screens and simulate taps, so keep it enabled only if you actively use this feature."
+                } else {
+                    "Can read everything on screen, capture passwords, and tap buttons for you. This is the single most abused special access on Android."
+                },
+                if (isVerifiedSafe) RiskLevel.MEDIUM else RiskLevel.CRITICAL,
                 PermissionCategory.SPECIAL_ACCESS,
                 ReasonKind.SPECIAL_ACCESS
             )
@@ -153,15 +195,18 @@ object RiskScorer {
         }
 
         if (sa.deviceAdminActive) {
+            val pts = if (isVerifiedSafe) ScoringConfig.Special.DEVICE_ADMIN_ACTIVE / 2
+            else ScoringConfig.Special.DEVICE_ADMIN_ACTIVE
             addLine(
                 "Device administrator active",
-                ScoringConfig.Special.DEVICE_ADMIN_ACTIVE,
-                "App is an active device administrator"
+                pts,
+                if (isVerifiedSafe) "Active (expected for ${app.verifiedKnownSafeName})"
+                else "App is an active device administrator"
             )
             reasons += RiskReason(
                 "Device administrator active",
                 "Can lock the screen, wipe data, and may block its own uninstall. Remove device-admin rights if you did not grant them on purpose.",
-                RiskLevel.HIGH,
+                if (isVerifiedSafe) RiskLevel.MEDIUM else RiskLevel.HIGH,
                 PermissionCategory.SPECIAL_ACCESS,
                 ReasonKind.SPECIAL_ACCESS
             )
@@ -174,15 +219,18 @@ object RiskScorer {
         }
 
         if (sa.notificationListenerEnabled) {
+            val pts = if (isVerifiedSafe) ScoringConfig.Special.NOTIFICATION_LISTENER_ENABLED / 2
+            else ScoringConfig.Special.NOTIFICATION_LISTENER_ENABLED
             addLine(
                 "Notification listener enabled",
-                ScoringConfig.Special.NOTIFICATION_LISTENER_ENABLED,
-                "Verified through the system notification access registry"
+                pts,
+                if (isVerifiedSafe) "Active (expected for ${app.verifiedKnownSafeName})"
+                else "Verified through the system notification access registry"
             )
             reasons += RiskReason(
                 "Notification access enabled",
                 "Reads every notification, including banking OTP codes and private messages.",
-                RiskLevel.HIGH,
+                if (isVerifiedSafe) RiskLevel.MEDIUM else RiskLevel.HIGH,
                 PermissionCategory.SPECIAL_ACCESS,
                 ReasonKind.SPECIAL_ACCESS
             )
@@ -211,15 +259,17 @@ object RiskScorer {
         }
 
         if (installEnabled) {
+            val pts = if (isVerifiedSafe) ScoringConfig.Special.INSTALL_PACKAGES_ENABLED / 2
+            else ScoringConfig.Special.INSTALL_PACKAGES_ENABLED
             addLine(
                 "Can install apps",
-                ScoringConfig.Special.INSTALL_PACKAGES_ENABLED,
+                pts,
                 "REQUEST_INSTALL_PACKAGES granted (AppOps verified)"
             )
             reasons += RiskReason(
                 "Can install other apps",
                 "Can push additional APK installs without the Play Store — a common second-stage malware step.",
-                RiskLevel.HIGH,
+                if (isVerifiedSafe) RiskLevel.MEDIUM else RiskLevel.HIGH,
                 PermissionCategory.SPECIAL_ACCESS,
                 ReasonKind.SPECIAL_ACCESS
             )
@@ -250,6 +300,21 @@ object RiskScorer {
             )
         }
 
+        if (allFilesEnabled) {
+            addLine(
+                "All-files access enabled",
+                ScoringConfig.Special.ALL_FILES_ENABLED,
+                "MANAGE_EXTERNAL_STORAGE granted (broad access to shared device storage)"
+            )
+            reasons += RiskReason(
+                "All-files storage access enabled",
+                "Can read and modify files across shared storage, including downloads and documents.",
+                RiskLevel.HIGH,
+                PermissionCategory.STORAGE_MEDIA,
+                ReasonKind.SPECIAL_ACCESS
+            )
+        }
+
         val untrackedSpecial = app.permissions.filter {
             it.category == PermissionCategory.SPECIAL_ACCESS && !TRACKED_SPECIAL.contains(it.name) && it.isDeclared
         }
@@ -273,7 +338,86 @@ object RiskScorer {
         }
 
         // ------------------------------------------------------------------
-        // 3. Combination rules
+        // 3. Fast static, signing, and impersonation red flags
+        // ------------------------------------------------------------------
+        if (!app.isSystemApp) {
+            if (!app.impersonationTarget.isNullOrBlank()) {
+                addLine(
+                    "Possible app impersonation",
+                    ScoringConfig.StaticSignals.IMPERSONATION,
+                    "Mimics \"${app.impersonationTarget}\" from unofficial package ${app.packageName}"
+                )
+                reasons += RiskReason(
+                    title = "Impersonates ${app.impersonationTarget}",
+                    description = "Uses the name or package shape of \"${app.impersonationTarget}\" while coming from an unofficial package (${app.packageName}). This is a primary trick used by trojans and phishing apps.",
+                    severity = RiskLevel.CRITICAL,
+                    category = PermissionCategory.SPECIAL_ACCESS,
+                    kind = ReasonKind.IMPERSONATION
+                )
+            }
+
+            if (app.isDebugSigned) {
+                addLine(
+                    "Signed with debug certificate",
+                    ScoringConfig.StaticSignals.DEBUG_CERT_SIGNED,
+                    "Signed with an Android debug key rather than a real developer release certificate"
+                )
+                reasons += RiskReason(
+                    title = "Signed with a debug certificate",
+                    description = "Legitimate consumer apps are never signed with a debug key. This indicates a test build or a repackaged/tampered APK.",
+                    severity = RiskLevel.HIGH,
+                    category = PermissionCategory.SPECIAL_ACCESS,
+                    kind = ReasonKind.STATIC
+                )
+            }
+
+            if (app.isDebuggable) {
+                addLine(
+                    "App is debuggable",
+                    ScoringConfig.StaticSignals.DEBUGGABLE_APP,
+                    "android:debuggable=true — exposes app memory and data to debugging"
+                )
+                reasons += RiskReason(
+                    title = "Debuggable build installed",
+                    description = "This app has debugging enabled, which weakens Android sandboxing and is unexpected in release apps.",
+                    severity = RiskLevel.HIGH,
+                    category = PermissionCategory.SPECIAL_ACCESS,
+                    kind = ReasonKind.STATIC
+                )
+            }
+
+            if (app.isWeakSigningKey) {
+                addLine(
+                    "Weak signing key",
+                    ScoringConfig.StaticSignals.WEAK_SIGNING_KEY,
+                    "Signing certificate uses a key shorter than modern RSA-2048 / EC-224 standards"
+                )
+            }
+
+            if (app.targetSdk in 1..22 && app.grantedSensitive.isNotEmpty()) {
+                addLine(
+                    "Bypasses runtime permission prompts",
+                    ScoringConfig.StaticSignals.RUNTIME_PERM_BYPASS_SDK,
+                    "Targets legacy Android API ${app.targetSdk} (< 23), auto-granting sensitive permissions at install"
+                )
+                reasons += RiskReason(
+                    title = "Legacy target SDK (${app.targetSdk}) bypasses prompts",
+                    description = "Apps targeting Android 5.1 or older bypass modern runtime permission prompts and auto-grant declared access at install.",
+                    severity = RiskLevel.HIGH,
+                    category = PermissionCategory.SPECIAL_ACCESS,
+                    kind = ReasonKind.STATIC
+                )
+            } else if (app.targetSdk in 23..28 && app.grantedSensitive.isNotEmpty()) {
+                addLine(
+                    "Outdated target SDK (${app.targetSdk})",
+                    ScoringConfig.StaticSignals.OLD_TARGET_SDK_WITH_SENSITIVE,
+                    "Targets older Android API ${app.targetSdk} (lacks modern scoped-storage and background restrictions)"
+                )
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // 4. Combination rules
         // ------------------------------------------------------------------
         val grantedNames = app.permissions.filter { it.isGranted }.map { it.name }.toSet()
         val smsGranted = grantedNames.any { SMS_PERMS.contains(it) }
@@ -305,7 +449,7 @@ object RiskScorer {
             )
         }
 
-        if (sa.accessibilityEnabled && overlayEnabled) {
+        if (sa.accessibilityEnabled && overlayEnabled && !isVerifiedSafe) {
             combo(
                 "banking_trojan",
                 "accessibility + overlay both enabled",
@@ -314,12 +458,31 @@ object RiskScorer {
             )
         } else if (sa.accessibilityEnabled &&
             sa.overlayDeclared &&
-            sa.overlayState == SpecialAccessGrantState.DECLARED_UNVERIFIED
+            sa.overlayState == SpecialAccessGrantState.DECLARED_UNVERIFIED &&
+            !isVerifiedSafe
         ) {
             combo(
                 "banking_trojan_potential",
                 "accessibility enabled + overlay declared (verify overlay grant in Settings)",
                 RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        }
+
+        if (sa.accessibilityEnabled && sa.deviceAdminActive && !isSecurityTool(app) && !isVerifiedSafe) {
+            combo(
+                "uninstall_blocker",
+                "accessibility enabled + active device admin",
+                RiskLevel.CRITICAL,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        }
+
+        if (sa.accessibilityEnabled && sa.screenCaptureDeclared && !isVerifiedSafe) {
+            combo(
+                "screen_capture_a11y",
+                "accessibility enabled + screen recording capability",
+                RiskLevel.CRITICAL,
                 PermissionCategory.SPECIAL_ACCESS
             )
         }
@@ -333,13 +496,20 @@ object RiskScorer {
             )
         }
 
-        if (isUtilityApp(app) && (smsGranted || contactsGranted || callLogGranted || mic || camera || location)) {
+        val strictUtil = isStrictUtilityApp(app)
+        val cameraUtil = !strictUtil && isCameraUtilityApp(app)
+        val utilityTrigger = when {
+            strictUtil -> smsGranted || contactsGranted || callLogGranted || mic || camera || location
+            cameraUtil -> smsGranted || contactsGranted || callLogGranted || mic || location
+            else -> false
+        }
+        if (utilityTrigger) {
             val matched = buildList {
                 if (smsGranted) add("SMS")
                 if (contactsGranted) add("contacts")
                 if (callLogGranted) add("call log")
                 if (mic) add("microphone")
-                if (camera) add("camera")
+                if (strictUtil && camera) add("camera")
                 if (location) add("location")
             }.joinToString(", ")
             combo(
@@ -377,7 +547,7 @@ object RiskScorer {
             )
         }
 
-        if (sa.deviceAdminActive && !isSecurityTool(app)) {
+        if (sa.deviceAdminActive && !isSecurityTool(app) && !isVerifiedSafe) {
             combo(
                 "device_admin_mismatch",
                 "device admin on a non-security app",
@@ -395,6 +565,43 @@ object RiskScorer {
             )
         }
 
+        if (app.isEnabledInputMethod && sideloaded && internet) {
+            combo(
+                "sideloaded_keyboard",
+                "sideloaded keyboard with internet permission",
+                RiskLevel.CRITICAL,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        }
+
+        if (app.isAutofillService && sideloaded) {
+            combo(
+                "sideloaded_autofill",
+                "sideloaded app active as Autofill provider",
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        }
+
+        if ((app.isDefaultBrowser || app.isDefaultLauncher) && sideloaded) {
+            val roleName = if (app.isDefaultBrowser) "default browser" else "default home launcher"
+            combo(
+                "sideloaded_core_role",
+                "sideloaded app set as $roleName",
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        }
+
+        if (sideloaded && (app.isDebuggable || app.isDebugSigned)) {
+            combo(
+                "repackaged_apk",
+                "sideloaded APK with debug build/signing flags",
+                RiskLevel.HIGH,
+                PermissionCategory.SPECIAL_ACCESS
+            )
+        }
+
         if (!app.isSystemApp &&
             app.installProvenance == InstallProvenance.BROWSER_OR_APP_SIDELOAD &&
             (sa.installPackagesDeclared || sa.accessibilityDeclared)
@@ -407,7 +614,7 @@ object RiskScorer {
             )
         }
 
-        if (sa.accessibilityEnabled && sa.nfcHceDeclared) {
+        if (sa.accessibilityEnabled && sa.nfcHceDeclared && !isVerifiedSafe) {
             combo(
                 "nfc_accessibility",
                 "accessibility enabled + NFC card emulation service",
@@ -416,7 +623,9 @@ object RiskScorer {
             )
         }
 
-        if (sa.notificationListenerEnabled && internet && (sideloaded || hidden || sa.accessibilityEnabled || smsGranted)) {
+        if (sa.notificationListenerEnabled && internet && !isVerifiedSafe &&
+            (sideloaded || hidden || sa.accessibilityEnabled || smsGranted)
+        ) {
             combo(
                 "otp_exfiltration",
                 "notification listener + internet + secondary capability",
@@ -435,7 +644,7 @@ object RiskScorer {
         }
 
         // ------------------------------------------------------------------
-        // 4. Sideloading provenance (system apps are exempt)
+        // 5. Sideloading provenance (system apps and migrated/store apps exempt)
         // ------------------------------------------------------------------
         if (sideloaded && app.grantedSensitive.isNotEmpty()) {
             addLine(
@@ -453,7 +662,7 @@ object RiskScorer {
         }
 
         // ------------------------------------------------------------------
-        // 5. Bounded on-device AI signal (never authoritative, never alone Critical)
+        // 6. Bounded on-device AI signal (never authoritative, never alone Critical)
         // ------------------------------------------------------------------
         var aiDelta = 0
         if (ai != null && ai.modelUsed) {
@@ -559,10 +768,17 @@ object RiskScorer {
         else -> RiskLevel.LOW
     }
 
-    fun isUtilityApp(app: AppInfo): Boolean {
+    fun isStrictUtilityApp(app: AppInfo): Boolean {
         val haystack = (app.appName + " " + app.packageName).lowercase()
-        return ScoringConfig.utilityKeywords.any { haystack.contains(it) }
+        return ScoringConfig.strictUtilityKeywords.any { haystack.contains(it) }
     }
+
+    fun isCameraUtilityApp(app: AppInfo): Boolean {
+        val haystack = (app.appName + " " + app.packageName).lowercase()
+        return ScoringConfig.cameraUtilityKeywords.any { haystack.contains(it) }
+    }
+
+    fun isUtilityApp(app: AppInfo): Boolean = isStrictUtilityApp(app) || isCameraUtilityApp(app)
 
     fun isSecurityTool(app: AppInfo): Boolean {
         val haystack = (app.appName + " " + app.packageName).lowercase()

@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.provider.Telephony
@@ -15,6 +16,10 @@ import android.telecom.TelecomManager
 import android.view.accessibility.AccessibilityManager
 import android.view.inputmethod.InputMethodManager
 import androidx.core.app.NotificationManagerCompat
+import com.idiots3.riskscanner.engine.ImpersonationDetector
+import com.idiots3.riskscanner.engine.ImpersonationTarget
+import com.idiots3.riskscanner.engine.KnownSafeApps
+import com.idiots3.riskscanner.engine.KnownSafeEntry
 import com.idiots3.riskscanner.engine.PermissionMapper
 import com.idiots3.riskscanner.engine.RiskScorer
 import com.idiots3.riskscanner.model.AppInfo
@@ -33,12 +38,20 @@ import kotlinx.coroutines.withContext
 class AppScanner(private val context: Context) {
 
     private val packageManager: PackageManager = context.packageManager
+    private val certificateInspector = CertificateInspector(packageManager)
 
     suspend fun scanAllApps(includeSystemApps: Boolean = false): List<AppInfo> =
         withContext(Dispatchers.IO) {
+            val sigFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                PackageManager.GET_SIGNING_CERTIFICATES
+            } else {
+                @Suppress("DEPRECATION")
+                PackageManager.GET_SIGNATURES
+            }
             val flags = PackageManager.GET_PERMISSIONS or
                 PackageManager.GET_SERVICES or
-                PackageManager.GET_RECEIVERS
+                PackageManager.GET_RECEIVERS or
+                sigFlag
 
             val packages: List<PackageInfo> =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -51,6 +64,8 @@ class AppScanner(private val context: Context) {
             val registry = SpecialAccessRegistry(context)
             val launcherPackages = loadLauncherPackages()
             val roles = DeviceRoles.resolve(context)
+            val knownSafeCatalog = KnownSafeApps.load(context)
+            val impersonationTargets = ImpersonationDetector.load(context)
             val labelCache = HashMap<String, String>()
             val result = ArrayList<AppInfo>(packages.size)
 
@@ -59,7 +74,17 @@ class AppScanner(private val context: Context) {
                 val isSystem = (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0
                 if (!includeSystemApps && isSystem) continue
                 val info = try {
-                    buildAppInfo(packageInfo, app, isSystem, registry, launcherPackages, roles, labelCache)
+                    buildAppInfo(
+                        packageInfo = packageInfo,
+                        app = app,
+                        isSystem = isSystem,
+                        registry = registry,
+                        launcherPackages = launcherPackages,
+                        roles = roles,
+                        knownSafeCatalog = knownSafeCatalog,
+                        impersonationTargets = impersonationTargets,
+                        labelCache = labelCache
+                    )
                 } catch (_: Throwable) {
                     null
                 }
@@ -77,6 +102,8 @@ class AppScanner(private val context: Context) {
         registry: SpecialAccessRegistry,
         launcherPackages: Set<String>?,
         roles: DeviceRoles,
+        knownSafeCatalog: Map<String, KnownSafeEntry>,
+        impersonationTargets: List<ImpersonationTarget>,
         labelCache: MutableMap<String, String>
     ): AppInfo {
         val packageName = packageInfo.packageName
@@ -85,6 +112,11 @@ class AppScanner(private val context: Context) {
         val provenance = resolveInstallProvenance(packageName, isSystem, labelCache)
         val isUpdatedSystem = (app.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
         val hasLauncher = launcherPackages?.contains(packageName) ?: hasLauncherFallback(packageName)
+        val isSelf = packageName == context.packageName
+
+        val signerInfo = certificateInspector.inspectFromPackageInfo(packageInfo)
+        val primaryCert = signerInfo.primaryCert
+        val appFlags = app.flags
 
         val base = AppInfo(
             appName = app.loadLabel(packageManager).toString(),
@@ -113,11 +145,32 @@ class AppScanner(private val context: Context) {
             isUpdatedSystemApp = isUpdatedSystem,
             isDefaultSmsApp = roles.defaultSms == packageName,
             isDefaultDialer = roles.defaultDialer == packageName,
-            isEnabledInputMethod = roles.enabledImes.contains(packageName)
+            isEnabledInputMethod = roles.enabledImes.contains(packageName),
+            isSelfApp = isSelf,
+            isDefaultBrowser = roles.defaultBrowser == packageName,
+            isDefaultLauncher = roles.defaultLauncher == packageName,
+            isActiveInputMethod = roles.activeIme == packageName,
+            isAutofillService = roles.autofillPackage == packageName,
+            isDefaultAssistant = roles.assistantPackage == packageName,
+            isDebuggable = (appFlags and ApplicationInfo.FLAG_DEBUGGABLE) != 0,
+            isTestOnly = (appFlags and ApplicationInfo.FLAG_TEST_ONLY) != 0,
+            allowsCleartextTraffic = (appFlags and ApplicationInfo.FLAG_USES_CLEARTEXT_TRAFFIC) != 0,
+            signingCertSha256 = primaryCert?.sha256Fingerprint,
+            isDebugSigned = signerInfo.hasDebugCert,
+            isWeakSigningKey = signerInfo.hasWeakKey,
+            isCertExpired = signerInfo.hasExpiredCert
         )
 
-        val result = RiskScorer.score(base, null)
-        return base.copy(
+        val safeMatch = KnownSafeApps.match(base, knownSafeCatalog)
+        val impersonation = ImpersonationDetector.detect(base, impersonationTargets)
+
+        val enriched = base.copy(
+            verifiedKnownSafeName = safeMatch?.displayName,
+            impersonationTarget = impersonation?.targetLabel
+        )
+
+        val result = RiskScorer.score(enriched, null)
+        return enriched.copy(
             ruleScore = result.ruleScore,
             riskScore = result.score,
             riskLevel = result.level,
@@ -158,13 +211,17 @@ class AppScanner(private val context: Context) {
         else -> null
     }
 
-    private fun extractPermissions(packageInfo: PackageInfo): List<PermissionDetail> {
+    fun extractPermissions(packageInfo: PackageInfo, assumeDeclaredAsPotential: Boolean = false): List<PermissionDetail> {
         val requested = packageInfo.requestedPermissions ?: return emptyList()
         val flags = packageInfo.requestedPermissionsFlags ?: IntArray(0)
 
         return requested.mapIndexed { index, name ->
-            val granted = index < flags.size &&
-                (flags[index] and PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0
+            val granted = if (assumeDeclaredAsPotential) {
+                true
+            } else {
+                index < flags.size &&
+                    (flags[index] and PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0
+            }
             val mapped = PermissionMapper.getPermissionInfo(name)
             PermissionDetail(
                 name = name,
@@ -220,6 +277,11 @@ class AppScanner(private val context: Context) {
             AppOpsManager.OPSTR_GET_USAGE_STATS, app.uid, packageName, usageDeclared
         )
 
+        val allFilesDeclared = requested.contains("android.permission.MANAGE_EXTERNAL_STORAGE")
+        val allFilesState = registry.appOpsState(
+            SpecialAccessRegistry.OP_MANAGE_EXTERNAL_STORAGE, app.uid, packageName, allFilesDeclared
+        )
+
         return SpecialAccessInfo(
             accessibilityEnabled = registry.accessibilityEnabled.contains(packageName),
             accessibilityDeclared = services.any {
@@ -242,13 +304,15 @@ class AppScanner(private val context: Context) {
             usageStatsEnabled = usageState == SpecialAccessGrantState.ENABLED,
             usageStatsDeclared = usageDeclared,
             usageStatsState = usageState,
-            allFilesAccessDeclared = requested.contains("android.permission.MANAGE_EXTERNAL_STORAGE"),
+            allFilesAccessDeclared = allFilesDeclared,
+            allFilesAccessState = allFilesState,
             vpnServiceDeclared = services.any {
                 it.permission == "android.permission.BIND_VPN_SERVICE"
             },
             nfcHceDeclared = services.any {
                 it.permission == "android.permission.BIND_NFC_SERVICE"
-            }
+            },
+            screenCaptureDeclared = requested.contains("android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION")
         )
     }
 
@@ -277,8 +341,10 @@ class AppScanner(private val context: Context) {
         }
 
         val knownStore = listOfNotNull(installing, initiating).firstNotNullOfOrNull { knownStoreFor(it) }
+        val migrationTool = listOfNotNull(installing, initiating).firstNotNullOfOrNull { knownMigrationToolFor(it) }
         when {
             knownStore != null -> ResolvedProvenance(knownStore.first, knownStore.second, installing, initiating)
+            migrationTool != null -> ResolvedProvenance(migrationTool, InstallProvenance.DEVICE_MIGRATION, installing, initiating)
             isSystem && installing == null && initiating == null ->
                 ResolvedProvenance("Pre-installed (System)", InstallProvenance.PREINSTALLED_SYSTEM, null, null)
             installing == SHELL_PKG || initiating == SHELL_PKG ->
@@ -321,36 +387,113 @@ class AppScanner(private val context: Context) {
             "Samsung Galaxy Store" to InstallProvenance.OFFICIAL_STORE
         "com.amazon.venezia" -> "Amazon App Store" to InstallProvenance.OFFICIAL_STORE
         "com.huawei.appmarket" -> "Huawei AppGallery" to InstallProvenance.OFFICIAL_STORE
-        "com.xiaomi.mipicks" -> "Xiaomi GetApps" to InstallProvenance.OFFICIAL_STORE
-        "com.heytap.market", "com.oppo.market" -> "App Market" to InstallProvenance.OFFICIAL_STORE
+        "com.xiaomi.mipicks", "com.xiaomi.market" -> "Xiaomi GetApps" to InstallProvenance.OFFICIAL_STORE
+        "com.heytap.market", "com.oppo.market", "com.oplus.market" ->
+            "App Market" to InstallProvenance.OFFICIAL_STORE
         "com.vivo.appstore" -> "Vivo App Store" to InstallProvenance.OFFICIAL_STORE
         "app.grapheneos.apps" -> "GrapheneOS Apps" to InstallProvenance.OFFICIAL_STORE
-        "org.fdroid.fdroid", "org.fdroid.fdroid.privileged" -> "F-Droid" to InstallProvenance.ALTERNATIVE_STORE
+        "org.fdroid.fdroid", "org.fdroid.fdroid.privileged", "org.fdroid.basic" ->
+            "F-Droid" to InstallProvenance.ALTERNATIVE_STORE
         "com.looker.droidify" -> "Droid-ify" to InstallProvenance.ALTERNATIVE_STORE
         "com.machiav3lli.fdroid" -> "Neo Store" to InstallProvenance.ALTERNATIVE_STORE
-        "com.aurora.store" -> "Aurora Store" to InstallProvenance.ALTERNATIVE_STORE
-        "dev.imranr.obtainium" -> "Obtainium" to InstallProvenance.ALTERNATIVE_STORE
+        "com.aurora.store", "com.aurora.store.nightly" -> "Aurora Store" to InstallProvenance.ALTERNATIVE_STORE
+        "dev.imranr.obtainium", "dev.imranr.obtainium.fdroid" ->
+            "Obtainium" to InstallProvenance.ALTERNATIVE_STORE
+        "app.accrescent.client" -> "Accrescent" to InstallProvenance.ALTERNATIVE_STORE
+        "foundation.e.apps" -> "App Lounge" to InstallProvenance.ALTERNATIVE_STORE
         else -> null
     }
 
-    private data class DeviceRoles(
+    /** Phone-migration & system restore utilities transfer Play Store apps without setting com.android.vending. */
+    private fun knownMigrationToolFor(installer: String?): String? = when (installer) {
+        "com.google.android.apps.restore", "com.android.backupconfirm" -> "Restored via Backup"
+        "com.sec.android.easyMover" -> "Transferred via Smart Switch"
+        "com.miui.huanji" -> "Transferred via Mi Mover"
+        "com.oneplus.backuprestore", "com.coloros.backuprestore" -> "Transferred via Clone Phone"
+        "com.vivo.easyshare" -> "Transferred via EasyShare"
+        "com.hicloud.android.clone" -> "Transferred via Phone Clone"
+        "com.motorola.migrate" -> "Transferred via Motorola Migrate"
+        else -> null
+    }
+
+    data class DeviceRoles(
         val defaultSms: String?,
         val defaultDialer: String?,
-        val enabledImes: Set<String>
+        val defaultBrowser: String?,
+        val defaultLauncher: String?,
+        val enabledImes: Set<String>,
+        val activeIme: String?,
+        val autofillPackage: String?,
+        val assistantPackage: String?
     ) {
         companion object {
             fun resolve(context: Context): DeviceRoles {
+                val pm = context.packageManager
                 val sms = runCatching { Telephony.Sms.getDefaultSmsPackage(context) }.getOrNull()
                 val dialer = runCatching {
                     (context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager)?.defaultDialerPackage
                 }.getOrNull()
+
+                val browser = runCatching {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com"))
+                    val resolved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        pm.resolveActivity(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                    }
+                    resolved?.activityInfo?.packageName?.takeIf { it != "android" && it.isNotBlank() }
+                }.getOrNull()
+
+                val launcher = runCatching {
+                    val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                    val resolved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        pm.resolveActivity(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                    }
+                    resolved?.activityInfo?.packageName?.takeIf { it != "android" && it.isNotBlank() }
+                }.getOrNull()
+
                 val imes = runCatching {
                     (context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
                         ?.enabledInputMethodList
                         ?.map { it.packageName }
                         ?.toSet()
                 }.getOrNull().orEmpty()
-                return DeviceRoles(sms, dialer, imes)
+
+                val activeIme = runCatching {
+                    Settings.Secure.getString(context.contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
+                        ?.substringBefore('/')
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                }.getOrNull()
+
+                val autofill = runCatching {
+                    Settings.Secure.getString(context.contentResolver, "autofill_service")
+                        ?.substringBefore('/')
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                }.getOrNull()
+
+                val assistant = runCatching {
+                    val raw = Settings.Secure.getString(context.contentResolver, "assistant")
+                        ?.takeIf { it.isNotBlank() }
+                        ?: Settings.Secure.getString(context.contentResolver, "voice_interaction_service")
+                    raw?.substringBefore('/')?.trim()?.takeIf { it.isNotBlank() }
+                }.getOrNull()
+
+                return DeviceRoles(
+                    defaultSms = sms,
+                    defaultDialer = dialer,
+                    defaultBrowser = browser,
+                    defaultLauncher = launcher,
+                    enabledImes = imes,
+                    activeIme = activeIme,
+                    autofillPackage = autofill,
+                    assistantPackage = assistant
+                )
             }
         }
     }
@@ -361,7 +504,12 @@ class AppScanner(private val context: Context) {
             "com.google.android.packageinstaller",
             "com.android.packageinstaller",
             "com.samsung.android.packageinstaller",
-            "com.miui.packageinstaller"
+            "com.miui.packageinstaller",
+            "com.oplus.appdetail",
+            "com.coloros.packageinstaller",
+            "com.vivo.appinstaller",
+            "com.bbk.installer",
+            "com.huawei.packageinstaller"
         )
     }
 }
@@ -373,11 +521,9 @@ class AppScanner(private val context: Context) {
 class SpecialAccessRegistry(context: Context) {
 
     companion object {
-        /**
-         * AppOps name for REQUEST_INSTALL_PACKAGES. The platform SDK does not expose a
-         * constant for it, but the op string itself is stable across Android versions.
-         */
+        /** AppOps names that are stable across Android versions even when not exposed as public constants. */
         const val OP_INSTALL_PACKAGES = "android:request_install_packages"
+        const val OP_MANAGE_EXTERNAL_STORAGE = "android:manage_external_storage"
     }
 
     private val appOps: AppOpsManager? =

@@ -9,7 +9,7 @@ import com.idiots3.riskscanner.model.PermissionDetail
  */
 object ScoringConfig {
 
-    const val VERSION = 2
+    const val VERSION = 3
 
     // ---------------------------------------------------------------------
     // Category weights (0..25). Special access is deliberately NOT scored here —
@@ -64,10 +64,23 @@ object ScoringConfig {
         const val INSTALL_PACKAGES_DECLARED = 3
         const val USAGE_STATS_ENABLED = 8
         const val USAGE_STATS_DECLARED = 2
+        const val ALL_FILES_ENABLED = 8
 
         /** Special-access permissions we do not track individually (e.g. WRITE_SECURE_SETTINGS). */
         const val UNTRACKED_DECLARED_PER_PERMISSION = 4
         const val UNTRACKED_DECLARED_CAP = 8
+    }
+
+    // ---------------------------------------------------------------------
+    // Fast static, signing, and impersonation red flags (evaluated on every scan)
+    // ---------------------------------------------------------------------
+    object StaticSignals {
+        const val IMPERSONATION = 24
+        const val DEBUG_CERT_SIGNED = 16
+        const val DEBUGGABLE_APP = 12
+        const val RUNTIME_PERM_BYPASS_SDK = 12 // targetSdk < 23 auto-grants dangerous permissions
+        const val OLD_TARGET_SDK_WITH_SENSITIVE = 4 // targetSdk 23..28 holding sensitive grants
+        const val WEAK_SIGNING_KEY = 6
     }
 
     // ---------------------------------------------------------------------
@@ -97,6 +110,20 @@ object ScoringConfig {
             "Combines live screen-reading/input control with an overlay capability; verify in Settings that \"Display over other apps\" is off."
         ),
         ComboRule(
+            "uninstall_blocker",
+            "Uninstall-Blocking Control Pattern",
+            20,
+            "Accessibility service enabled + Device Administrator active (non-security app)",
+            "Trojans combine Accessibility and Device Admin to block users from opening Settings to revoke admin rights and uninstall."
+        ),
+        ComboRule(
+            "screen_capture_a11y",
+            "Screen Capture + Accessibility Pattern",
+            16,
+            "Accessibility service enabled + screen recording (MediaProjection) capability",
+            "Can capture PINs, banking screens, or recovery phrases while simulating touches."
+        ),
+        ComboRule(
             "sms_stealer",
             "SMS Data Stealer Pattern",
             20,
@@ -107,7 +134,7 @@ object ScoringConfig {
             "utility_mismatch",
             "Context Mismatch (utility app)",
             18,
-            "Torch/calculator/wallpaper-class app holding SMS, contacts, call log, camera, microphone or location",
+            "Torch/calculator/wallpaper-class app holding intrusive personal data access",
             "A low-complexity utility has no functional reason to hold intrusive data access."
         ),
         ComboRule(
@@ -143,7 +170,35 @@ object ScoringConfig {
             "Sideloaded SMS Access",
             12,
             "Sideloaded app holding SMS access",
-            "Bypasses Google Play SMS policy; the classic delivery vehicle for OTP-stealing droppers."
+            "Bypasses Play SMS policy; the classic delivery vehicle for OTP-stealing droppers."
+        ),
+        ComboRule(
+            "sideloaded_keyboard",
+            "Sideloaded Networked Keyboard",
+            18,
+            "Enabled third-party keyboard installed outside stores with INTERNET access",
+            "Keyboards observe every password and message you type; sideloaded keyboards with internet pose keylogger risk."
+        ),
+        ComboRule(
+            "sideloaded_autofill",
+            "Sideloaded Autofill Service",
+            15,
+            "Active Autofill service installed outside recognized stores",
+            "Autofill services can read and inject login credentials across every app on your phone."
+        ),
+        ComboRule(
+            "sideloaded_core_role",
+            "Sideloaded Default Browser or Launcher",
+            14,
+            "Sideloaded app set as the default web browser or home launcher",
+            "Controls every web link you open or your home screen outside normal store screening."
+        ),
+        ComboRule(
+            "repackaged_apk",
+            "Repackaged / Tampered APK Signal",
+            14,
+            "Sideloaded app that is debuggable or signed with a debug certificate",
+            "Production apps are never debug-signed or debuggable; this strongly suggests a modified or repackaged APK."
         ),
         ComboRule(
             "dropper_chain",
@@ -196,20 +251,26 @@ object ScoringConfig {
     val highSensitivityCategories: Set<PermissionCategory> =
         setOf(PermissionCategory.SMS, PermissionCategory.CONTACTS_CALL_LOGS)
 
-    /** App-name keywords for low-complexity utilities that never need intrusive data access. */
-    val utilityKeywords: List<String> = listOf(
+    /** App-name keywords for low-complexity utilities that never need camera or intrusive data access. */
+    val strictUtilityKeywords: List<String> = listOf(
         "torch", "flashlight", "calculator", "wallpaper", "compass", "spirit level",
         "bubble level", "unit converter", "converter", "stopwatch", "timer",
-        "ringtone", "emoji", "qr code", "barcode", "cleaner", "booster",
-        "battery saver", "ram booster", "mirror"
+        "ringtone", "emoji", "cleaner", "booster", "battery saver", "ram booster"
     )
+
+    /** Utilities that legitimately require CAMERA (e.g. QR scanners, mirrors), but NOT SMS/contacts/location/mic. */
+    val cameraUtilityKeywords: List<String> = listOf(
+        "qr code", "qr scanner", "barcode", "mirror"
+    )
+
+    val utilityKeywords: List<String> = strictUtilityKeywords + cameraUtilityKeywords
 
     /** Keywords that mark an app as a legitimate security / device-management tool. */
     val securityKeywords: List<String> = listOf(
         "security", "antivirus", "anti-virus", "malware", "mdm", "mobile iron",
         "mobileiron", "intune", "workspace one", "airwatch", "enterprise",
         "device policy", "sophos", "kaspersky", "bitdefender", "avast", "norton",
-        "malwarebytes", "eset", "trend micro", "360 security"
+        "malwarebytes", "eset", "trend micro", "360 security", "find my device"
     )
 
     // ---------------------------------------------------------------------
