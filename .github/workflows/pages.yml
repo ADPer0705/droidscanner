@@ -9,9 +9,6 @@ on:
       - "openwiki/**"
       - "scripts/build-site.mjs"
       - ".github/workflows/pages.yml"
-  release:
-    types:
-      - published
   workflow_dispatch:
 
 permissions:
