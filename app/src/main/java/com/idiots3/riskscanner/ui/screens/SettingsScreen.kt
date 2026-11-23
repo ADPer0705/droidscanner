@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -58,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import com.idiots3.riskscanner.data.BackgroundScanSchedule
 import com.idiots3.riskscanner.report.JsonReportExporter
 import com.idiots3.riskscanner.report.PdfExporter
+import com.idiots3.riskscanner.ui.components.AppUpdateHelper
 import com.idiots3.riskscanner.ui.components.SettingsIntents
 import com.idiots3.riskscanner.ui.components.formatDate
 import com.idiots3.riskscanner.viewmodel.MainViewModel
@@ -76,6 +78,8 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     var exportStatus by remember { mutableStateOf<String?>(null) }
     var bgTriggerStatus by remember { mutableStateOf<String?>(null) }
+    val updateInfo = remember(context) { AppUpdateHelper.inspectLocal(context) }
+    var updateStatus by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -351,7 +355,100 @@ fun SettingsScreen(
                 }
             }
 
-            // 7. Privacy & Honest Rootless Boundaries
+            // 7. App Updates (Obtainium & GitHub Releases)
+            item {
+                SettingsSectionCard(
+                    icon = Icons.Default.SystemUpdate,
+                    title = "App updates",
+                    subtitle = when {
+                        updateInfo.installedViaObtainium ->
+                            "Automatic updates managed via Obtainium. You can trigger a manual update check anytime below."
+                        updateInfo.obtainiumInstalled ->
+                            "Obtainium is installed on this device. Open DroidScanner in Obtainium to enable automatic updates or check now."
+                        else ->
+                            "DroidScanner has zero INTERNET permission, so update checks hand off cleanly to Obtainium (recommended for automatic updates) or GitHub Releases in your browser."
+                    }
+                ) {
+                    Text(
+                        text = "Installed: v${updateInfo.versionName} (build ${updateInfo.versionCode}) · Recommended APK: ${updateInfo.recommendedAbi}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Button(
+                        onClick = {
+                            viewModel.markExternalSettingsOpened()
+                            if (updateInfo.obtainiumInstalled) {
+                                val opened = AppUpdateHelper.launchObtainiumUpdate(context, updateInfo.obtainiumPackage)
+                                if (opened) {
+                                    updateStatus = "Opened DroidScanner in Obtainium."
+                                } else {
+                                    AppUpdateHelper.openGitHubReleases(context)
+                                    updateStatus = "Opened GitHub Releases in your browser."
+                                }
+                            } else {
+                                AppUpdateHelper.openGitHubReleases(context)
+                                updateStatus = "Opened latest GitHub Release (pick ${updateInfo.recommendedAbi})."
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            if (updateInfo.obtainiumInstalled) "Check for updates in Obtainium"
+                            else "Check for updates on GitHub"
+                        )
+                    }
+                    if (updateInfo.obtainiumInstalled) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    viewModel.markExternalSettingsOpened()
+                                    AppUpdateHelper.openGitHubReleases(context)
+                                    updateStatus = "Opened latest GitHub Release (pick ${updateInfo.recommendedAbi})."
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("GitHub Releases")
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    viewModel.markExternalSettingsOpened()
+                                    AppUpdateHelper.openProjectSite(context)
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("Download page")
+                            }
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.markExternalSettingsOpened()
+                                AppUpdateHelper.openObtainiumSetup(context)
+                                updateStatus = "Opened Obtainium 1-tap setup."
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Set up Obtainium (auto-updates)")
+                        }
+                    }
+                    updateStatus?.let {
+                        Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+
+            // 8. Privacy & Honest Rootless Boundaries
             item {
                 SettingsSectionCard(
                     icon = Icons.Default.PrivacyTip,

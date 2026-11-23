@@ -76,5 +76,6 @@ Release outputs under `app/build/outputs/apk/release/`:
 - `app-armeabi-v7a-release.apk` — 32-bit budget/older consumer Android devices (Obtainium auto-matches)
 - `app-x86_64-release.apk` — emulators / x86_64 devices
 - `app-universal-release.apk` — manual fallback APK
+- In-app manual update checks are available anytime under **Settings → App updates** (opens DroidScanner in Obtainium when installed, or GitHub Releases in your browser while preserving zero `INTERNET` permission), with 1-tap Obtainium setup on [`droidscanner.dearanayji.rocks`](https://droidscanner.dearanayji.rocks/#install).
 
 Scoring methodology: see [`SCORING_RUBRIC.md`](SCORING_RUBRIC.md) — also rendered directly in-app (*Settings → How scoring works*).
