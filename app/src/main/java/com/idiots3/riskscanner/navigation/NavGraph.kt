@@ -16,6 +16,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,11 +27,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.idiots3.riskscanner.receiver.InstallAlertNotifier
+import com.idiots3.riskscanner.ui.screens.ApkScannerScreen
 import com.idiots3.riskscanner.ui.screens.AppDetailScreen
 import com.idiots3.riskscanner.ui.screens.AppListScreen
 import com.idiots3.riskscanner.ui.screens.DashboardScreen
 import com.idiots3.riskscanner.ui.screens.DeviceHubScreen
+import com.idiots3.riskscanner.ui.screens.HistoryScreen
 import com.idiots3.riskscanner.ui.screens.ScoringRubricScreen
+import com.idiots3.riskscanner.ui.screens.SettingsScreen
 import com.idiots3.riskscanner.viewmodel.MainViewModel
 
 sealed class Screen(val route: String) {
@@ -38,6 +43,9 @@ sealed class Screen(val route: String) {
     object Apps : Screen("apps")
     object Device : Screen("device")
     object ScoringRubric : Screen("scoring_rubric")
+    object Settings : Screen("settings")
+    object History : Screen("history")
+    object ApkScanner : Screen("apk_scanner")
     object AppDetail : Screen("app_detail/{packageName}") {
         fun createRoute(packageName: String) = "app_detail/${Uri.encode(packageName)}"
     }
@@ -59,7 +67,11 @@ private val TOP_LEVEL_TABS = listOf(
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    pendingDeepLinkPackage: String? = null,
+    pendingDeepLinkTab: String? = null,
+    pendingApkUri: Uri? = null,
+    onDeepLinkConsumed: () -> Unit = {}
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -72,6 +84,30 @@ fun NavGraph(
             }
             launchSingleTop = true
             restoreState = true
+        }
+    }
+
+    LaunchedEffect(pendingDeepLinkPackage, pendingDeepLinkTab, pendingApkUri) {
+        when {
+            pendingApkUri != null -> {
+                viewModel.scanApkUri(pendingApkUri)
+                navController.navigate(Screen.ApkScanner.route) { launchSingleTop = true }
+                onDeepLinkConsumed()
+            }
+            !pendingDeepLinkPackage.isNullOrBlank() -> {
+                navController.navigate(Screen.AppDetail.createRoute(pendingDeepLinkPackage)) {
+                    launchSingleTop = true
+                }
+                onDeepLinkConsumed()
+            }
+            pendingDeepLinkTab == InstallAlertNotifier.TAB_DEVICE -> {
+                switchToTab(Screen.Device.route)
+                onDeepLinkConsumed()
+            }
+            pendingDeepLinkTab == InstallAlertNotifier.TAB_HISTORY -> {
+                navController.navigate(Screen.History.route) { launchSingleTop = true }
+                onDeepLinkConsumed()
+            }
         }
     }
 
@@ -111,7 +147,10 @@ fun NavGraph(
                     onNavigateToAppDetail = { packageName ->
                         navController.navigate(Screen.AppDetail.createRoute(packageName))
                     },
-                    onNavigateToRubric = { navController.navigate(Screen.ScoringRubric.route) }
+                    onNavigateToRubric = { navController.navigate(Screen.ScoringRubric.route) },
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                    onNavigateToHistory = { navController.navigate(Screen.History.route) },
+                    onNavigateToApkScanner = { navController.navigate(Screen.ApkScanner.route) }
                 )
             }
 
@@ -120,7 +159,8 @@ fun NavGraph(
                     viewModel = viewModel,
                     onNavigateToAppDetail = { packageName ->
                         navController.navigate(Screen.AppDetail.createRoute(packageName))
-                    }
+                    },
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
                 )
             }
 
@@ -130,12 +170,40 @@ fun NavGraph(
                     onNavigateToAppsWithSpecialAccess = { switchToTab(Screen.Apps.route) },
                     onNavigateToAppDetail = { packageName ->
                         navController.navigate(Screen.AppDetail.createRoute(packageName))
-                    }
+                    },
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
                 )
             }
 
             composable(Screen.ScoringRubric.route) {
                 ScoringRubricScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.Settings.route) {
+                SettingsScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToRubric = { navController.navigate(Screen.ScoringRubric.route) },
+                    onNavigateToApkScanner = { navController.navigate(Screen.ApkScanner.route) }
+                )
+            }
+
+            composable(Screen.History.route) {
+                HistoryScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToAppDetail = { packageName ->
+                        navController.navigate(Screen.AppDetail.createRoute(packageName))
+                    },
+                    onNavigateToDeviceHub = { switchToTab(Screen.Device.route) }
+                )
+            }
+
+            composable(Screen.ApkScanner.route) {
+                ApkScannerScreen(
+                    viewModel = viewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

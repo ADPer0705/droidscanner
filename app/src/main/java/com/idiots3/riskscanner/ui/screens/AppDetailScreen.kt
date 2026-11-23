@@ -38,8 +38,10 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -151,7 +153,7 @@ fun AppDetailScreen(
                     color = MaterialTheme.colorScheme.surface
                 ) {
                     ActionButtons(
-                        packageName = packageName,
+                        app = app,
                         onExternalLaunched = { viewModel.markExternalSettingsOpened() },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -214,6 +216,16 @@ fun AppDetailScreen(
             ) {
                 item { AppHeader(app = app) }
 
+                if (!app.isSelfApp) {
+                    item {
+                        TrustControlCard(
+                            app = app,
+                            onTrust = { viewModel.trustApp(app) },
+                            onUntrust = { viewModel.untrustApp(app.packageName) }
+                        )
+                    }
+                }
+
                 item { RiskScoreSection(app = app) }
 
                 item { ScoreBreakdownCard(app = app) }
@@ -221,11 +233,12 @@ fun AppDetailScreen(
                 item {
                     PurposeFitCard(
                         assessment = app.aiAssessment,
-                        aiActive = uiState.aiActive
+                        aiActive = uiState.aiActive,
+                        plainLanguageMode = uiState.plainLanguageMode
                     )
                 }
 
-                val comboReasons = app.riskReasons.filter { it.kind == ReasonKind.COMBO_RULE }
+                val comboReasons = app.riskReasons.filter { it.kind == ReasonKind.COMBO_RULE || it.kind == ReasonKind.IMPERSONATION }
                 if (comboReasons.isNotEmpty()) {
                     item { CombinationAlertsCard(reasons = comboReasons) }
                 }
@@ -254,7 +267,8 @@ fun AppDetailScreen(
                 item {
                     StaticChecksCard(
                         checks = staticChecks,
-                        loading = staticChecksLoading
+                        loading = staticChecksLoading,
+                        plainLanguageMode = uiState.plainLanguageMode
                     )
                 }
 
@@ -383,10 +397,18 @@ fun AppHeader(
                 }
 
                 val badges = buildList {
+                    if (app.isSelfApp) add("This app")
+                    if (app.isUserTrusted) add("Reviewed & Trusted")
+                    if (app.verifiedKnownSafeName != null) add("Recognized Tool")
                     if (app.isSystemApp) add(if (app.isUpdatedSystemApp) "System (Updated)" else "System App")
                     if (app.isDefaultSmsApp) add("Default SMS")
                     if (app.isDefaultDialer) add("Default Phone")
-                    if (app.isEnabledInputMethod) add("Enabled Keyboard")
+                    if (app.isDefaultBrowser) add("Default Browser")
+                    if (app.isDefaultLauncher) add("Default Home")
+                    if (app.isAutofillService) add("Autofill")
+                    if (app.isEnabledInputMethod) add("Keyboard")
+                    if (app.isDebugSigned) add("Debug Cert")
+                    if (app.isDebuggable) add("Debuggable")
                 }
                 if (badges.isNotEmpty()) {
                     Row(
@@ -1380,12 +1402,139 @@ fun ProtectionLevelBadge(
 }
 
 @Composable
+private fun TrustControlCard(
+    app: AppInfo,
+    onTrust: () -> Unit,
+    onUntrust: () -> Unit
+) {
+    val lowColor = riskColor(RiskLevel.LOW)
+    val lowBg = riskBgColor(RiskLevel.LOW)
+
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (app.isUserTrusted) lowBg else MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (app.isUserTrusted) lowColor.copy(alpha = 0.45f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.VerifiedUser,
+                contentDescription = null,
+                tint = if (app.isUserTrusted) lowColor else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp)
+            )
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = if (app.isUserTrusted) "Reviewed & Trusted" else "Recognize and trust this app?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (app.isUserTrusted) lowColor else MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = if (app.isUserTrusted) {
+                        "Silenced from urgent alerts. Automatically re-alerts if permissions, special access, or the developer certificate changes."
+                    } else {
+                        "Marks this app as reviewed so it stops triggering alerts unless its privileges or signer change."
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (app.isUserTrusted) {
+                TextButton(onClick = onUntrust) {
+                    Text("Revoke")
+                }
+            } else {
+                OutlinedButton(
+                    onClick = onTrust,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Trust", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ActionButtons(
-    packageName: String,
+    app: AppInfo,
     onExternalLaunched: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var showDeviceAdminDialog by remember { mutableStateOf(false) }
+
+    if (showDeviceAdminDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeviceAdminDialog = false },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = riskColor(RiskLevel.CRITICAL)) },
+            title = { Text("Device Admin blocks uninstall") },
+            text = {
+                Text(
+                    "${app.appName} is currently an active Device Administrator. Android will block uninstalling it until you deactivate it first.\n\n" +
+                        "Step 1: Open Device Admin settings and switch off ${app.appName}.\n" +
+                        "Step 2: Come back here and tap Uninstall."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeviceAdminDialog = false
+                        onExternalLaunched()
+                        SettingsIntents.openDeviceAdminSettings(context)
+                    }
+                ) {
+                    Text("Step 1: Device Admin Settings")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeviceAdminDialog = false
+                        onExternalLaunched()
+                        SettingsIntents.requestUninstall(context, app.packageName)
+                    }
+                ) {
+                    Text("Try Uninstall Anyway")
+                }
+            }
+        )
+    }
+
+    if (app.isSelfApp) {
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.VerifiedUser,
+                contentDescription = null,
+                tint = riskColor(RiskLevel.LOW),
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "DroidScanner — 100% offline security guardian",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
 
     Row(
         modifier = modifier,
@@ -1394,7 +1543,7 @@ fun ActionButtons(
         OutlinedButton(
             onClick = {
                 onExternalLaunched()
-                SettingsIntents.openAppDetails(context, packageName)
+                SettingsIntents.openAppDetails(context, app.packageName)
             },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(10.dp)
@@ -1408,25 +1557,48 @@ fun ActionButtons(
             Text("App Settings")
         }
 
-        Button(
-            onClick = {
-                onExternalLaunched()
-                SettingsIntents.requestUninstall(context, packageName)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError
-            ),
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Uninstall")
+        if (app.isSystemApp) {
+            Button(
+                onClick = {
+                    onExternalLaunched()
+                    SettingsIntents.openAppDetails(context, app.packageName)
+                },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Disable / Info")
+            }
+        } else {
+            Button(
+                onClick = {
+                    if (app.specialAccess.deviceAdminActive) {
+                        showDeviceAdminDialog = true
+                    } else {
+                        onExternalLaunched()
+                        SettingsIntents.requestUninstall(context, app.packageName)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Uninstall")
+            }
         }
     }
 }

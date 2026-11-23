@@ -108,8 +108,8 @@ object PdfExporter {
                 drawWrapped("Overall Device Security Score: ${recommendations.deviceScore}/100 ($parts)")
             }
             drawWrapped("Apps audited: ${summary.totalApps}    High or Critical: ${summary.highOrCritical} (Critical ${summary.criticalApps}, High ${summary.highApps})")
-            drawWrapped("Medium: ${summary.mediumApps}    Low: ${summary.lowApps}    Sideloaded apps: ${summary.sideloadedApps}")
-            drawWrapped("Apps with verified special access: ${summary.specialAccessApps}    Apps with no launcher icon: ${summary.hiddenApps}")
+            drawWrapped("Medium: ${summary.mediumApps}    Low: ${summary.lowApps}    Sideloaded apps: ${summary.sideloadedApps}    Trusted: ${summary.trustedApps}")
+            drawWrapped("Apps with verified special access: ${summary.specialAccessApps}    Impersonation alerts: ${summary.impersonationAlerts}")
             drawWrapped("Sensitive permissions granted in total: ${summary.totalPermissionsGranted}")
             drawWrapped("On-device purpose check: ${summary.aiAnalyzedApps} apps analysed, ${summary.aiUnexplainedApps} with unexplained access")
             gap(4f)

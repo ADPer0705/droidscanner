@@ -26,10 +26,13 @@ import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.GppBad
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Button
@@ -41,10 +44,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -84,7 +88,10 @@ fun DashboardScreen(
     onNavigateToApps: () -> Unit,
     onNavigateToDeviceHub: () -> Unit,
     onNavigateToAppDetail: (String) -> Unit,
-    onNavigateToRubric: () -> Unit
+    onNavigateToRubric: () -> Unit,
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
+    onNavigateToApkScanner: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -113,28 +120,18 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(end = 4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { viewModel.toggleSystemApps(!uiState.includeSystemApps) }
-                            .padding(horizontal = 6.dp, vertical = 4.dp)
-                    ) {
+                    IconButton(onClick = onNavigateToHistory) {
                         Icon(
-                            imageVector = Icons.Filled.Android,
-                            contentDescription = "Toggle system apps",
-                            tint = if (uiState.includeSystemApps) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Switch(
-                            checked = uiState.includeSystemApps,
-                            onCheckedChange = { viewModel.toggleSystemApps(it) }
+                            imageVector = Icons.Filled.History,
+                            contentDescription = "Security timeline"
                         )
                     }
-
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Settings and tools"
+                        )
+                    }
                     IconButton(onClick = { viewModel.scanApps() }) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
@@ -233,6 +230,22 @@ fun DashboardScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        if (!uiState.onboardingCompleted) {
+                            item {
+                                QuickStartCheckupCard(
+                                    onDismiss = { viewModel.completeOnboarding() },
+                                    onOpenDeviceHub = {
+                                        viewModel.completeOnboarding()
+                                        onNavigateToDeviceHub()
+                                    },
+                                    onOpenSettings = {
+                                        viewModel.completeOnboarding()
+                                        onNavigateToSettings()
+                                    }
+                                )
+                            }
+                        }
+
                         item {
                             SecurityOverviewCard(
                                 summary = summary,
@@ -245,7 +258,8 @@ fun DashboardScreen(
                                 RecommendationsCard(
                                     recommendations = recs,
                                     onNavigateToAppDetail = onNavigateToAppDetail,
-                                    onExternalSettingsOpened = { viewModel.markExternalSettingsOpened() }
+                                    onExternalSettingsOpened = { viewModel.markExternalSettingsOpened() },
+                                    onOpenApkScanner = onNavigateToApkScanner
                                 )
                             }
                         }
@@ -257,6 +271,10 @@ fun DashboardScreen(
                                     onOpenDeviceTab = onNavigateToDeviceHub
                                 )
                             }
+                        }
+
+                        item {
+                            PreInstallScannerBannerCard(onClick = onNavigateToApkScanner)
                         }
 
                         item {
@@ -272,7 +290,8 @@ fun DashboardScreen(
                         item {
                             RecentChangesCard(
                                 changes = uiState.recentChanges,
-                                onAppClick = onNavigateToAppDetail
+                                onAppClick = onNavigateToAppDetail,
+                                onViewTimeline = onNavigateToHistory
                             )
                         }
 
@@ -982,6 +1001,100 @@ fun SideloadedWarningCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuickStartCheckupCard(
+    onDismiss: () -> Unit,
+    onOpenDeviceHub: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Welcome to DroidScanner — 3-step checkup",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "1. Fix any red device settings (Private DNS, lock-screen OTP privacy, CA certs).\n" +
+                    "2. Inspect High/Critical apps — mark legitimate tools you trust so alerts stay focused.\n" +
+                    "3. Keep Background Guard enabled in Settings to catch silent permission changes.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(onClick = onOpenDeviceHub, shape = RoundedCornerShape(8.dp)) {
+                    Text("Check device", fontSize = 12.sp)
+                }
+                OutlinedButton(onClick = onOpenSettings, shape = RoundedCornerShape(8.dp)) {
+                    Text("Settings", fontSize = 12.sp)
+                }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = onDismiss) {
+                    Text("Got it", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreInstallScannerBannerCard(onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.FileOpen,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "Scan an APK before installing",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "Check downloaded APKs for fake updates, trackers, or hidden payloads offline.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }

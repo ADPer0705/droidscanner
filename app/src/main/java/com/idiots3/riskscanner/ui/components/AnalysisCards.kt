@@ -78,6 +78,7 @@ import com.idiots3.riskscanner.model.FitStatus
 import com.idiots3.riskscanner.model.PermissionChange
 import com.idiots3.riskscanner.model.PermissionFit
 import com.idiots3.riskscanner.model.PostureAction
+import com.idiots3.riskscanner.model.PostureCheck
 import com.idiots3.riskscanner.model.PostureStatus
 import com.idiots3.riskscanner.model.RecommendationAction
 import com.idiots3.riskscanner.model.RecommendationPriority
@@ -164,6 +165,8 @@ fun DevicePostureCard(
     posture: DevicePosture,
     onReviewApps: () -> Unit,
     onExternalSettingsOpened: () -> Unit,
+    onDismissCheck: ((PostureCheck) -> Unit)? = null,
+    onRestoreCheck: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -262,35 +265,82 @@ fun DevicePostureCard(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        if (check.status != PostureStatus.PROTECTED) {
+                        if (check.details.isNotEmpty()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                check.details.forEach { line ->
+                                    Text(
+                                        text = "• $line",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                        if (check.isDismissed) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Acknowledged",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                                if (onRestoreCheck != null) {
+                                    TextButton(onClick = { onRestoreCheck(check.id) }) {
+                                        Text("Restore", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                            }
+                        } else if (check.status != PostureStatus.PROTECTED) {
                             Text(
                                 check.recommendation,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            if (check.action != null) {
-                                TextButton(
-                                    onClick = {
-                                        if (check.action == PostureAction.APP_REVIEW) {
-                                            onReviewApps()
-                                        } else {
-                                            onExternalSettingsOpened()
-                                            SettingsIntents.openPostureAction(context, check.action)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                if (check.action != null) {
+                                    TextButton(
+                                        onClick = {
+                                            if (check.action == PostureAction.APP_REVIEW) {
+                                                onReviewApps()
+                                            } else {
+                                                onExternalSettingsOpened()
+                                                SettingsIntents.openPostureAction(context, check.action)
+                                            }
                                         }
+                                    ) {
+                                        Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            when (check.action) {
+                                                PostureAction.APP_REVIEW -> "Review apps"
+                                                PostureAction.SYSTEM_UPDATE -> "System updates"
+                                                PostureAction.DEVELOPER_SETTINGS -> "Developer options"
+                                                PostureAction.CREDENTIAL_SETTINGS -> "Trusted credentials"
+                                                PostureAction.NETWORK_SETTINGS -> "Network settings"
+                                                PostureAction.PRIVATE_DNS_SETTINGS -> "Private DNS"
+                                                PostureAction.VPN_SETTINGS -> "VPN settings"
+                                                PostureAction.LOCK_SCREEN_SETTINGS -> "Lock screen"
+                                                PostureAction.DISPLAY_SETTINGS -> "Display timeout"
+                                                PostureAction.DEFAULT_APPS_SETTINGS -> "Default apps"
+                                                PostureAction.INPUT_METHOD_SETTINGS -> "Keyboards"
+                                                PostureAction.AUTOFILL_SETTINGS -> "Autofill"
+                                                PostureAction.DEVICE_ADMIN_SETTINGS -> "Device admins"
+                                                else -> "Open settings"
+                                            }
+                                        )
                                     }
+                                }
+                                if (onDismissCheck != null &&
+                                    (check.status == PostureStatus.REVIEW || check.status == PostureStatus.AT_RISK)
                                 ) {
-                                    Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        when (check.action) {
-                                            PostureAction.APP_REVIEW -> "Review apps"
-                                            PostureAction.SYSTEM_UPDATE -> "System updates"
-                                            PostureAction.DEVELOPER_SETTINGS -> "Developer options"
-                                            PostureAction.CREDENTIAL_SETTINGS -> "Trusted credentials"
-                                            PostureAction.NETWORK_SETTINGS -> "Network settings"
-                                            else -> "Open settings"
-                                        }
-                                    )
+                                    TextButton(onClick = { onDismissCheck(check) }) {
+                                        Text("Acknowledge", style = MaterialTheme.typography.labelSmall)
+                                    }
                                 }
                             }
                         }
@@ -319,6 +369,7 @@ fun RecommendationsCard(
     recommendations: RecommendationSummary,
     onNavigateToAppDetail: (String) -> Unit,
     onExternalSettingsOpened: () -> Unit,
+    onOpenApkScanner: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val actionable = recommendations.recommendations.filter { it.action != RecommendationAction.NONE }
@@ -414,7 +465,8 @@ fun RecommendationsCard(
                             context = context,
                             rec = rec,
                             onNavigateToAppDetail = onNavigateToAppDetail,
-                            onExternalLaunched = onExternalSettingsOpened
+                            onExternalLaunched = onExternalSettingsOpened,
+                            onOpenApkScanner = onOpenApkScanner
                         )
                     }
                 )
@@ -593,6 +645,7 @@ fun AiProgressCard(
 fun PurposeFitCard(
     assessment: AiAssessment?,
     aiActive: Boolean,
+    plainLanguageMode: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -654,16 +707,18 @@ fun PurposeFitCard(
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(1f)
                         )
-                        Surface(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(
-                                text = "similarity ${formatSimilarity(assessment.purposeSimilarity)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
+                        if (!plainLanguageMode) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text(
+                                    text = "similarity ${formatSimilarity(assessment.purposeSimilarity)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
                         }
                     }
 
@@ -688,15 +743,21 @@ fun PurposeFitCard(
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.Medium
                                             )
-                                            Text(
-                                                text = fit.evidence,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.outline,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                            if (!plainLanguageMode) {
+                                                Text(
+                                                    text = fit.evidence,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.outline,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
                                         }
-                                        FitStatusChip(status = fit.status, similarity = fit.similarity)
+                                        FitStatusChip(
+                                            status = fit.status,
+                                            similarity = fit.similarity,
+                                            showNumeric = !plainLanguageMode
+                                        )
                                     }
                                 }
                         }
@@ -742,6 +803,7 @@ private fun fitOrder(status: FitStatus): Int = when (status) {
 fun FitStatusChip(
     status: FitStatus,
     similarity: Float,
+    showNumeric: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val (background, foreground) = when (status) {
@@ -755,7 +817,7 @@ fun FitStatusChip(
     }
     Surface(color = background, shape = RoundedCornerShape(6.dp), modifier = modifier) {
         Text(
-            text = if (status == FitStatus.UNKNOWN) status.label else "${status.label} ${formatSimilarity(similarity)}",
+            text = if (status == FitStatus.UNKNOWN || !showNumeric) status.label else "${status.label} ${formatSimilarity(similarity)}",
             color = foreground,
             fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
@@ -927,7 +989,16 @@ fun BehaviourProfileCard(
             ) {
                 MetricPill("Foreground", profile.formattedForegroundTime(), Modifier.weight(1f))
                 MetricPill("Bg Service", profile.formattedForegroundServiceTime(), Modifier.weight(1f))
-                MetricPill("Network", profile.formattedTotalBytes(), Modifier.weight(1f))
+                MetricPill("Total Data", profile.formattedTotalBytes(), Modifier.weight(1f))
+            }
+            if (profile.rxBytes > 0L || profile.txBytes > 0L) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MetricPill("Downloaded", profile.formattedRxBytes(), Modifier.weight(1f))
+                    MetricPill("Uploaded", profile.formattedTxBytes(), Modifier.weight(1f))
+                }
             }
 
             if (profile.anomalies.isNotEmpty()) {
@@ -989,9 +1060,11 @@ private fun MetricPill(label: String, value: String, modifier: Modifier = Modifi
 fun StaticChecksCard(
     checks: StaticChecks?,
     loading: Boolean,
+    plainLanguageMode: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var showTechnical by remember(plainLanguageMode) { mutableStateOf(!plainLanguageMode) }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -1016,7 +1089,7 @@ fun StaticChecksCard(
                     modifier = Modifier.size(22.dp)
                 )
                 Text(
-                    text = "Static APK & signing checks",
+                    text = "Deep APK, trackers & signing",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -1029,7 +1102,7 @@ fun StaticChecksCard(
                 ) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     Text(
-                        text = "Inspecting the installed APK and signing certificate…",
+                        text = "Inspecting APK package, trackers, hidden payloads & signing certificate…",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1059,47 +1132,121 @@ fun StaticChecksCard(
                 }
             }
 
-            // Signing certificate subsection
-            checks.signerInfo?.let { signer ->
-                val primary = signer.primaryCert
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(
-                        Icons.Default.VerifiedUser,
-                        contentDescription = null,
-                        tint = if (signer.hasDebugCert || signer.hasWeakKey || signer.hasExpiredCert) {
-                            riskColor(RiskLevel.HIGH)
-                        } else {
-                            riskColor(RiskLevel.LOW)
-                        },
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = "Signing certificate",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold
+            // Plain-language highlights: hidden payloads, packers, trackers, sensitive code APIs, signing
+            if (checks.hiddenPayloads.isNotEmpty()) {
+                CheckRow(
+                    label = "Hidden executable payloads",
+                    value = checks.hiddenPayloads.joinToString(", ") { "${it.kind} (${it.entryPath})" },
+                    warn = true
+                )
+            } else if (checks.limitedAnalysisNote == null) {
+                CheckRow(
+                    label = "Hidden payload check",
+                    value = "No disguised APK, DEX, or ELF binaries found in assets/res",
+                    warn = false
+                )
+            }
+
+            if (checks.packerLibs.isNotEmpty()) {
+                CheckRow(
+                    label = "Packer / obfuscator detected",
+                    value = checks.packerLibs.joinToString(", "),
+                    warn = true
+                )
+            }
+
+            if (checks.zipAnomalies.isNotEmpty()) {
+                CheckRow(
+                    label = "APK archive anomalies",
+                    value = checks.zipAnomalies.joinToString("; "),
+                    warn = true
+                )
+            }
+
+            checks.dexAnalysis?.let { dex ->
+                if (dex.financeTargetMatches.size >= 5) {
+                    CheckRow(
+                        label = "Banking / crypto target list in code",
+                        value = "References ${dex.financeTargetMatches.size} banking/crypto apps (common overlay-trojan signal)",
+                        warn = true
                     )
                 }
-
-                if (primary == null) {
-                    Text(
-                        text = "Signing certificate could not be read.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                CheckRow(
+                    label = "Embedded ad & analytics trackers",
+                    value = if (dex.detectedTrackers.isEmpty()) {
+                        "None matched in offline tracker list (${dex.dexFileCount} DEX scanned)"
+                    } else {
+                        val cats = dex.detectedTrackers.map { it.category }.distinct().joinToString(", ")
+                        "${dex.detectedTrackers.size} SDK(s) found ($cats): " +
+                            dex.detectedTrackers.take(5).joinToString(", ") { it.name } +
+                            if (dex.detectedTrackers.size > 5) " +${dex.detectedTrackers.size - 5} more" else ""
+                    },
+                    warn = dex.detectedTrackers.any { it.category == "Location Broker" || it.category == "Session Replay" }
+                )
+                if (dex.highRiskApis.isNotEmpty()) {
+                    CheckRow(
+                        label = "Sensitive code capabilities",
+                        value = dex.highRiskApis.take(4).joinToString(", ") { it.name },
+                        warn = dex.highRiskApis.any {
+                            it.id in setOf("dynamic_dex_load", "in_memory_dex_load", "device_wipe_lock", "sms_send")
+                        }
                     )
-                } else {
+                }
+                if (dex.rawIpEndpoints.isNotEmpty()) {
+                    CheckRow(
+                        label = "Hardcoded public IP endpoints",
+                        value = dex.rawIpEndpoints.joinToString(", "),
+                        warn = true
+                    )
+                }
+                if (dex.parseAnomaly) {
+                    CheckRow(
+                        label = "Code structure note",
+                        value = "Partial DEX parse anomaly encountered (could indicate obfuscation or non-standard packaging)",
+                        warn = true
+                    )
+                }
+            }
+
+            checks.signerInfo?.let { signer ->
+                val primary = signer.primaryCert
+                val signerWarn = signer.hasDebugCert || signer.hasWeakKey || signer.hasExpiredCert || signer.isV1Only
+                val signerSummary = when {
+                    primary == null -> "Signing certificate could not be read"
+                    signer.hasDebugCert -> "WARNING: Signed with an Android debug certificate"
+                    signer.isV1Only -> "Legacy v1-only JAR signature (no v2/v3 signing block)"
+                    signer.hasExpiredCert -> "Signing certificate is expired"
+                    signer.hasWeakKey -> "Weak signing key (${primary.keyAlgorithm} ${primary.keySize}-bit)"
+                    else -> "Production signed (${signer.schemeSummary})"
+                }
+                CheckRow(
+                    label = "Developer signature",
+                    value = signerSummary,
+                    warn = signerWarn
+                )
+            }
+
+            TextButton(
+                onClick = { showTechnical = !showTechnical },
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text(if (showTechnical) "Hide technical details" else "Show technical details")
+            }
+
+            if (showTechnical) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                checks.signerInfo?.primaryCert?.let { primary ->
                     CheckRow(
                         label = "Scheme & key",
-                        value = "${signer.schemeSummary} · ${primary.keyAlgorithm} ${primary.keySize}-bit" +
-                            if (signer.hasPastSigners) " · key rotation present" else "",
-                        warn = signer.hasWeakKey || signer.hasDebugCert
+                        value = "${checks.signerInfo.schemeSummary} · ${primary.keyAlgorithm} ${primary.keySize}-bit" +
+                            if (checks.signerInfo.hasPastSigners) " · key rotation present" else "",
+                        warn = checks.signerInfo.hasWeakKey || checks.signerInfo.hasDebugCert
                     )
                     CheckRow(
                         label = "Signer subject",
                         value = primary.subject,
-                        warn = signer.hasDebugCert
+                        warn = checks.signerInfo.hasDebugCert
                     )
                     CheckRow(
                         label = "Certificate validity",
@@ -1107,14 +1254,6 @@ fun StaticChecksCard(
                             if (primary.isExpired) " (EXPIRED)" else "",
                         warn = primary.isExpired
                     )
-                    if (signer.hasDebugCert) {
-                        Text(
-                            text = "Warning: Signed with a debug certificate — never expected on production apps.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = riskColor(RiskLevel.CRITICAL),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -1138,101 +1277,100 @@ fun StaticChecksCard(
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-            }
-
-            CheckRow(
-                label = "Unprotected exported components",
-                value = if (checks.unprotectedExportedCount > 0) {
-                    "${checks.unprotectedExportedCount} unprotected (${checks.exportedComponentCount} total exported)"
-                } else {
-                    "0 unprotected (${checks.exportedComponentCount} exported)"
-                },
-                warn = checks.unprotectedExportedCount > 0
-            )
-            if (checks.unprotectedComponents.isNotEmpty()) {
-                Text(
-                    text = checks.unprotectedComponents.take(5).joinToString(", ") { "${it.kind}:${it.shortName}" },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            CheckRow(
-                label = "Cleartext traffic",
-                value = when (checks.cleartextTraffic) {
-                    true -> "Allowed (HTTP permitted)"
-                    false -> "Blocked"
-                    null -> "Not specified"
-                },
-                warn = checks.cleartextTraffic == true
-            )
-            CheckRow(
-                label = "Debuggable / Test-only",
-                value = buildList {
-                    add(if (checks.debuggable) "Debuggable" else "Release build")
-                    if (checks.testOnly) add("Test-only")
-                }.joinToString(" · "),
-                warn = checks.debuggable || checks.testOnly
-            )
-            CheckRow(
-                label = "Backup allowance (allowBackup)",
-                value = if (checks.allowBackup) "Enabled (app data included in backups)" else "Disabled",
-                warn = false
-            )
-            CheckRow(
-                label = "SDK range",
-                value = "target ${checks.targetSdk} · min ${checks.minSdk}" +
-                    if (checks.targetSdk in 1..29) " (older target SDK)" else "",
-                warn = checks.targetSdk in 1..29
-            )
-            if (checks.apkSizeBytes > 0L || checks.nativeLibraries.isNotEmpty()) {
-                val libsInfo = if (checks.nativeLibraries.isNotEmpty()) {
-                    " · ${checks.nativeLibraries.size} native lib(s)"
-                } else ""
-                val splitInfo = if (checks.splitApkCount > 0) " · ${checks.splitApkCount} split(s)" else ""
                 CheckRow(
-                    label = "APK footprint",
-                    value = "${formatBytes(checks.apkSizeBytes)}$splitInfo$libsInfo",
-                    warn = false
+                    label = "Unprotected exported components",
+                    value = if (checks.unprotectedExportedCount > 0) {
+                        "${checks.unprotectedExportedCount} unprotected (${checks.exportedComponentCount} total exported)"
+                    } else {
+                        "0 unprotected (${checks.exportedComponentCount} exported)"
+                    },
+                    warn = checks.unprotectedExportedCount > 0
                 )
-            }
-
-            if (checks.sha256 != null) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Base APK SHA-256",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium
-                        )
-                        IconButton(
-                            onClick = { copyToClipboard(context, "APK SHA-256", checks.sha256) },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.ContentCopy,
-                                contentDescription = "Copy hash",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
+                if (checks.unprotectedComponents.isNotEmpty()) {
                     Text(
-                        text = checks.sha256,
+                        text = checks.unprotectedComponents.take(5).joinToString(", ") { "${it.kind}:${it.shortName}" },
                         style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+                CheckRow(
+                    label = "Cleartext traffic",
+                    value = when (checks.cleartextTraffic) {
+                        true -> "Allowed (HTTP permitted)"
+                        false -> "Blocked"
+                        null -> "Not specified"
+                    },
+                    warn = checks.cleartextTraffic == true
+                )
+                CheckRow(
+                    label = "Debuggable / Test-only",
+                    value = buildList {
+                        add(if (checks.debuggable) "Debuggable" else "Release build")
+                        if (checks.testOnly) add("Test-only")
+                    }.joinToString(" · "),
+                    warn = checks.debuggable || checks.testOnly
+                )
+                CheckRow(
+                    label = "Backup allowance (allowBackup)",
+                    value = if (checks.allowBackup) "Enabled (app data included in backups)" else "Disabled",
+                    warn = false
+                )
+                CheckRow(
+                    label = "SDK range",
+                    value = "target ${checks.targetSdk} · min ${checks.minSdk}" +
+                        if (checks.targetSdk in 1..28) " (older target SDK)" else "",
+                    warn = checks.targetSdk in 1..28
+                )
+                if (checks.apkSizeBytes > 0L || checks.nativeLibraries.isNotEmpty()) {
+                    val libsInfo = if (checks.nativeLibraries.isNotEmpty()) {
+                        " · ${checks.nativeLibraries.size} native lib(s)"
+                    } else ""
+                    val splitInfo = if (checks.splitApkCount > 0) " · ${checks.splitApkCount} split(s)" else ""
+                    CheckRow(
+                        label = "APK footprint",
+                        value = "${formatBytes(checks.apkSizeBytes)}$splitInfo$libsInfo",
+                        warn = false
+                    )
+                }
+
+                if (checks.sha256 != null) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Base APK SHA-256",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                            IconButton(
+                                onClick = { copyToClipboard(context, "APK SHA-256", checks.sha256) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.ContentCopy,
+                                    contentDescription = "Copy hash",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = checks.sha256,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
             Text(
-                text = "All hashes and certificate checks run locally and never leave this device.",
+                text = "All APK, DEX, tracker, and certificate checks run locally and never leave this device.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline
             )
@@ -1282,6 +1420,7 @@ private fun copyToClipboard(context: Context, label: String, value: String) {
 fun RecentChangesCard(
     changes: List<PermissionChange>,
     onAppClick: (String) -> Unit,
+    onViewTimeline: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     if (changes.isEmpty()) return
@@ -1299,18 +1438,29 @@ fun RecentChangesCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(
-                    Icons.Default.History,
-                    contentDescription = null,
-                    tint = riskColor(RiskLevel.HIGH),
-                    modifier = Modifier.size(22.dp)
-                )
-                Text(
-                    text = "Changed since last scan",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(
+                        Icons.Default.History,
+                        contentDescription = null,
+                        tint = riskColor(RiskLevel.HIGH),
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Text(
+                        text = "Changed since last scan",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (onViewTimeline != null) {
+                    TextButton(onClick = onViewTimeline) {
+                        Text("Timeline", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
             }
             Text(
                 text = "${changes.size} app(s) were installed, updated or changed permissions.",
@@ -1361,6 +1511,20 @@ fun RecentChangesCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                        change.detail?.let { detail ->
+                            Text(
+                                text = detail,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (change.addedSpecialAccess.isNotEmpty()) {
+                            Text(
+                                text = "Special access: ${change.addedSpecialAccess.joinToString(", ")}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = riskColor(RiskLevel.CRITICAL)
+                            )
+                        }
                         if (change.addedPermissions.isNotEmpty()) {
                             Text(
                                 text = "Added: ${change.addedPermissions.joinToString(", ")}",

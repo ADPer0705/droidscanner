@@ -176,6 +176,17 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
             }
 
             item {
+                RubricSection("Static, signing & impersonation signals (v${ScoringConfig.VERSION})") {
+                    ScoreRow("Possible app impersonation (fake system/popular app)", ScoringConfig.StaticSignals.IMPERSONATION)
+                    ScoreRow("Signed with an Android debug certificate", ScoringConfig.StaticSignals.DEBUG_CERT_SIGNED)
+                    ScoreRow("Debuggable app build (android:debuggable=true)", ScoringConfig.StaticSignals.DEBUGGABLE_APP)
+                    ScoreRow("Legacy target SDK (< 23, bypasses runtime prompts)", ScoringConfig.StaticSignals.RUNTIME_PERM_BYPASS_SDK)
+                    ScoreRow("Weak signing key (RSA < 2048 / EC < 224)", ScoringConfig.StaticSignals.WEAK_SIGNING_KEY)
+                    ScoreRow("Older target SDK (23–28) with sensitive grants", ScoringConfig.StaticSignals.OLD_TARGET_SDK_WITH_SENSITIVE)
+                }
+            }
+
+            item {
                 RubricSection("Combination rules (added on top of categories)") {
                     ScoringConfig.comboRules.forEach { rule ->
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -237,9 +248,9 @@ fun ScoringRubricScreen(onNavigateBack: () -> Unit) {
             item {
                 RubricSection("Privacy") {
                     Text(
-                        text = "This app declares no internet permission. The inventory, the scoring, the ML model, " +
-                            "the SHA-256 hashes and the PDF report all run completely offline. " +
-                            "Nothing is uploaded, ever.",
+                        text = "This app declares no INTERNET permission (stripped in the manifest). Inventory, scoring, " +
+                            "the ML model, DEX inspection, SHA-256 hashes, and PDF/JSON exports all run offline on-device. " +
+                            "Read-only ACCESS_NETWORK_STATE is used solely to detect active VPNs and captive Wi-Fi locally.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

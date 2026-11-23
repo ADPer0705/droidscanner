@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -70,7 +71,8 @@ import com.idiots3.riskscanner.viewmodel.QuickAppFilter
 fun DeviceHubScreen(
     viewModel: MainViewModel,
     onNavigateToAppsWithSpecialAccess: () -> Unit,
-    onNavigateToAppDetail: (String) -> Unit
+    onNavigateToAppDetail: (String) -> Unit,
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -86,6 +88,9 @@ fun DeviceHubScreen(
                     )
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
                     IconButton(onClick = { viewModel.scanApps() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh checks")
                     }
@@ -111,7 +116,9 @@ fun DeviceHubScreen(
                             viewModel.applyDashboardJumpFilter(quickFilter = QuickAppFilter.SPECIAL_ACCESS)
                             onNavigateToAppsWithSpecialAccess()
                         },
-                        onExternalSettingsOpened = { viewModel.markExternalSettingsOpened() }
+                        onExternalSettingsOpened = { viewModel.markExternalSettingsOpened() },
+                        onDismissCheck = { viewModel.dismissPostureCheck(it) },
+                        onRestoreCheck = { viewModel.restorePostureCheck(it) }
                     )
                 }
             }

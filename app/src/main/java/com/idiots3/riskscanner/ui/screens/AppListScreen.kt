@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -85,7 +86,8 @@ import com.idiots3.riskscanner.viewmodel.QuickAppFilter
 @Composable
 fun AppListScreen(
     viewModel: MainViewModel,
-    onNavigateToAppDetail: (String) -> Unit
+    onNavigateToAppDetail: (String) -> Unit,
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var sortMenuExpanded by remember { mutableStateOf(false) }
@@ -101,27 +103,6 @@ fun AppListScreen(
                     )
                 },
                 actions = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { viewModel.toggleSystemApps(!uiState.includeSystemApps) }
-                            .padding(horizontal = 6.dp, vertical = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Android,
-                            contentDescription = "Include system apps",
-                            tint = if (uiState.includeSystemApps) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Switch(
-                            checked = uiState.includeSystemApps,
-                            onCheckedChange = { viewModel.toggleSystemApps(it) }
-                        )
-                    }
-
                     Box {
                         IconButton(onClick = { sortMenuExpanded = true }) {
                             Icon(
@@ -148,6 +129,13 @@ fun AppListScreen(
                                 )
                             }
                         }
+                    }
+
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
                     }
 
                     IconButton(onClick = { viewModel.scanApps() }) {
@@ -596,13 +584,19 @@ fun AppCard(
                         source = appInfo.installerSource,
                         provenance = appInfo.installProvenance
                     )
-                    if (appInfo.isSystemApp) {
+                    if (appInfo.isUserTrusted) {
+                        SmallChip("Trusted")
+                    } else if (appInfo.isSelfApp) {
+                        SmallChip("This app")
+                    } else if (appInfo.isSystemApp) {
                         SmallChip("System")
                     }
                     if (appInfo.isDefaultSmsApp) {
                         SmallChip("Default SMS")
                     } else if (appInfo.isDefaultDialer) {
                         SmallChip("Default Phone")
+                    } else if (appInfo.isDefaultBrowser) {
+                        SmallChip("Browser")
                     }
                 }
 
