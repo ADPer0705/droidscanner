@@ -371,4 +371,75 @@ class RiskScorerTest {
         assertEquals(FitStatus.UNEXPLAINED, fit.status)
         assertTrue(fit.similarity < ScoringConfig.AI_UNCLEAR_THRESHOLD)
     }
+
+    @Test
+    fun `qr scanner with camera does not trigger utility mismatch, but sms still does`() {
+        val qrWithCam = RiskScorer.score(
+            app(
+                name = "QR Code Scanner",
+                pkg = "com.example.qrscanner",
+                permissions = listOf(permission("CAMERA", PermissionCategory.CAMERA_MICROPHONE))
+            )
+        )
+        assertFalse(qrWithCam.reasons.any { it.title.contains("Context Mismatch") })
+
+        val qrWithSms = RiskScorer.score(
+            app(
+                name = "QR Code Scanner",
+                pkg = "com.example.qrscanner",
+                permissions = listOf(permission("READ_SMS", PermissionCategory.SMS))
+            )
+        )
+        assertTrue(qrWithSms.reasons.any { it.title.contains("Context Mismatch") })
+    }
+
+    @Test
+    fun `device migration provenance is never penalized as sideloaded`() {
+        val migrated = RiskScorer.score(
+            app(
+                name = "ChatApp",
+                installerSource = "Transferred via Smart Switch",
+                installProvenance = InstallProvenance.DEVICE_MIGRATION,
+                permissions = listOf(permission("CAMERA", PermissionCategory.CAMERA_MICROPHONE))
+            )
+        )
+        assertFalse(migrated.reasons.any { it.kind == ReasonKind.PROVENANCE })
+    }
+
+    @Test
+    fun `impersonation, debug cert, sideloaded keyboard, and uninstall blocker are scored`() {
+        val imp = RiskScorer.score(
+            app(name = "Google Play Services", pkg = "com.evil.gms", installerSource = "Sideloaded")
+                .copy(impersonationTarget = "Google Play Services", isDebugSigned = true, isDebuggable = true)
+        )
+        assertTrue(imp.reasons.any { it.kind == ReasonKind.IMPERSONATION })
+        assertTrue(imp.reasons.any { it.title.contains("Repackaged") })
+        assertTrue("impersonation score=${imp.score}", imp.score >= 51)
+
+        val keylogger = RiskScorer.score(
+            app(
+                name = "FastBoard",
+                installerSource = "Sideloaded",
+                isEnabledInputMethod = true,
+                permissions = listOf(permission("INTERNET", PermissionCategory.NETWORK, ProtectionLevel.NORMAL))
+            )
+        )
+        assertTrue(keylogger.reasons.any { it.title.contains("Sideloaded Networked Keyboard") })
+
+        val blocker = RiskScorer.score(
+            app(
+                name = "Cleaner",
+                specialAccess = SpecialAccessInfo(accessibilityEnabled = true, deviceAdminActive = true)
+            )
+        )
+        assertTrue(blocker.reasons.any { it.title.contains("Uninstall-Blocking") })
+        assertTrue(blocker.score >= 51)
+    }
+
+    @Test
+    fun `self app always scores zero low`() {
+        val self = RiskScorer.score(app(name = "DroidScanner").copy(isSelfApp = true))
+        assertEquals(0, self.score)
+        assertEquals(RiskLevel.LOW, self.level)
+    }
 }

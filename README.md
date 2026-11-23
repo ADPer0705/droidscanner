@@ -1,8 +1,8 @@
-# DroidScanner — Rootless Android Security Scanner (PS-01)
+# DroidScanner — Standalone Rootless Android Security Guardian
 
-**Find risky Android apps and device-protection gaps through public, rootless Android APIs and an explainable risk score.**
+**Find risky apps, dangerous device configurations, fake/impersonated APKs, and silent privilege changes through public, rootless Android APIs — 100% on-device.**
 
-Android 8.0+ (API 26+) · Kotlin + Jetpack Compose · 100% on-device · **no `INTERNET` permission**
+Android 8.0+ (API 26+) · Kotlin + Jetpack Compose · 100% on-device · **no `INTERNET` permission** · Distributed via GitHub Releases / Obtainium (`arm64-v8a`, `armeabi-v7a`, `x86_64`, and universal APKs)
 
 ---
 
@@ -10,116 +10,71 @@ Android 8.0+ (API 26+) · Kotlin + Jetpack Compose · 100% on-device · **no `IN
 
 | Question | Where |
 |---|---|
-| **Q1 — Which of my apps can do the most harm?** | Dashboard: device health score, risk distribution, top-5 consumers, full ranked list with search + filters |
-| **Q2 — Why is each one flagged?** | App detail: "Why flagged" list (≥3 plain-language reasons for every High/Critical app), full point-by-point score breakdown, special access panel, per-permission "does it fit?" tags |
-| **Q3 — What can I do right now?** | One-tap **App Settings** (revoke permissions) and **Uninstall** buttons, plus a PDF report with a "what to do now" checklist |
+| **Q1 — Which apps or device settings can cause harm?** | Overview: unified Device Security Score, prioritized "Recommended actions", Device Posture summary, top risky apps, and full ranked app list |
+| **Q2 — Why is each app or setting flagged?** | App Detail: plain-language "Why flagged" panel (≥3 reasons for High/Critical), traceable score breakdown, special access panel, deep APK/DEX/tracker inspection, and bounded on-device AI purpose check |
+| **Q3 — What can I do right now — and how do I stay safe over time?** | One-tap **App Settings**, **Uninstall** (with guided 2-step removal for active Device Admins), direct OEM-resilient Settings shortcuts, **Pre-Install APK Scanner**, auto-invalidating **Reviewed & Trusted** workflow, **WorkManager Background Guard**, and shareable PDF/JSON reports |
 
-## Features
+---
 
-**Must-haves**
+## Capabilities
 
-- **App inventory:** label, lazy-loaded icon, package, version, install/update date, installer source, target/min SDK, system-app toggle
-- **Permissions:** declared vs. granted, protection level (normal / dangerous / signature / special), plain-language description for ~380 permissions (curated table for everything that matters + bulk AOSP database for coverage, `PermissionMapper` is generated and test-guarded)
-- **Nine categories:** Special access, SMS, Contacts & call logs, Camera & microphone, Location, Phone & identity, Storage & media, Background & persistence, Network (+ "Other" for the rest) — per app and as a device-wide summary
-- **Special access detection:** enabled accessibility services, active device admins, enabled notification listeners, plus AppOps-verified overlay / install-packages / usage-stats grants (enabled vs merely declared)
-- **Device protection posture:** secure screen lock, Android patch recency, encryption status where Android exposes it, USB debugging / developer options, and enabled high-impact app access. Each gap has a plain-language recommendation and, where Android permits, a shortcut to the relevant system settings.
-- **Risk score 0–100** in four bands with a transparent breakdown of every point
+### App Security & Threat Detection (Scoring Engine v3)
+- **Full consumer-Android app inventory:** label, lazy-loaded icon, package, version, install/update date, installer & initiating provenance (Play Store, Galaxy Store, Xiaomi GetApps, Oppo/Realme/OnePlus App Market, Vivo, Huawei, F-Droid, Obtainium, Aurora, Accrescent, plus **device-migration tools** like Smart Switch / Google Restore / Mi Mover so migrated apps aren't falsely flagged as sideloaded).
+- **Permissions & Special Access:** declared vs. granted across 9 security domains (~380 mapped permissions), plus live-verified Accessibility Services, active Device Administrators, Notification Listeners, and AppOps-checked Overlay, Install Unknown Apps, Usage Stats, All-Files Access, VPN, NFC HCE, and MediaProjection screen capture.
+- **Fast static, signing & impersonation checks on every scan:** detects debug-signed APKs, `FLAG_DEBUGGABLE`, weak signing keys, legacy `targetSdk < 23` bypassing runtime permission prompts, and **impersonation / Unicode homoglyph spoofing** of Android system components, messengers, wallets, and banking apps.
+- **19 Combination Rules:** Banking Trojan (Accessibility + Overlay), Uninstall-Blocking Control (Accessibility + Device Admin), Screen Capture + Accessibility, SMS Data Stealer, Utility Context Mismatch (camera-aware for QR/mirror utilities), Hidden Surveillance, Social Graph Harvester, Sideloaded Networked Keyboard, Sideloaded Autofill, Sideloaded Default Browser/Launcher, Repackaged APK, Browser-Sideloaded Dropper Chain, NFC Relay + Accessibility, Notification OTP Exfiltration, and Stealth Background Tracker.
+- **Streaming low-RAM Deep APK & DEX Inspection:** scans base + split APKs (`splitSourceDirs`) without loading APKs into RAM — detects disguised/hidden APK, DEX, or ELF payloads in `assets/`/`res/raw/`, commercial packers, ZIP anomalies, embedded ad/analytics/location-broker tracker SDKs, sensitive DEX APIs (`DexClassLoader`, `Runtime.exec`, `SmsManager`, `DevicePolicyManager.wipeData`, `MediaProjection`, `PackageInstaller`, `addJavascriptInterface`), banking overlay target lists, and hardcoded public IP endpoints.
+- **Pre-Install APK Scanner (zero storage permissions):** inspect any downloaded `.apk` via Android's system file picker or "Open with / Share" **before** installing — including **developer signing-certificate mismatch warnings** if that package is already installed on your phone.
+- **Bounded On-Device AI Purpose Check:** bundled MediaPipe Universal Sentence Encoder (~6 MB, offline) adds at most `+8` points on Medium+ apps and can never produce a Critical verdict alone.
 
-**Should-haves**
+### Device Configuration & Environment Posture (16 Rootless Checks)
+- **Physical & Lock-Screen Protection:** secure screen lock, lock-screen sensitive notification exposure (SMS OTP privacy), screen auto-lock timeout, and "Stay awake while charging".
+- **OS & Build Hygiene:** Android security patch recency, OS support lifecycle, storage encryption status, unofficial `test-keys` / `userdebug` builds, and package verifier status where exposed.
+- **Network & Interception Risks:** user-installed CA certificates (showing actual certificate subjects & expiry), **Private DNS** (DNS-over-TLS off vs reputable provider vs unknown custom host), global HTTP proxy, and **active VPN / captive-portal** detection (via read-only local `ACCESS_NETWORK_STATE`).
+- **Default Roles, Input Surfaces & MDM:** Default SMS, Phone, Browser, and Home Launcher provenance; enabled third-party **Keyboards (IMEs)**, **Autofill**, and **Assistant** services; active **Device Owner / Profile Owner / Work Profile** detection; and USB / Wireless Debugging.
 
-- **Combination rules** (9): banking trojan, SMS stealer, utility context mismatch, hidden surveillance, social-graph harvester, device admin on non-security app, sideloaded SMS, OTP exfiltration, background tracker
-- **Context mismatch via on-device ML:** bundled Universal Sentence Encoder (MediaPipe Tasks Text, ~6 MB) compares the app's own metadata against 40 app-function archetypes and permission-use descriptions
-- **Install monitoring:** runtime package-change receiver + snapshot diff on resume → "Changed since last scan" card and High/Critical notifications
-- **Permission diff:** updates that add sensitive permissions are called out explicitly
+### Standalone Daily Protection
+- **Periodic Background Security Guard (`WorkManager`):** configurable schedule (`Every 12 hours`, `Daily`, or `Off`) running lightweight metadata-only checks while closed. Deep-linked alerts fire ONLY on real events: new High/Critical installs, silent permission or **special-access grants**, **developer signing-certificate changes**, invalidated trusted apps, or device-posture regressions.
+- **Auto-Invalidating "Reviewed & Trusted" Workflow:** silence alerts for legitimate high-privilege apps (e.g., password managers, automation tools) or acknowledged settings (e.g., Developer Options). Trust is cryptographically bound to the app's certificate, granted permissions, and special access — if any of them change later, trust automatically clears and re-alerts you.
+- **Persistent Security Timeline & Trend History:** rolling local history of installs, escalations, posture regressions, and Device Security Score trend.
+- **Optional Behavioural Insights:** user-consented Usage Access using fast batch `NetworkStatsManager.querySummary`, separating **uploads (`tx`)** from **downloads (`rx`)** to spot silent background uploads without falsely flagging foreground video streaming.
+- **Shareable PDF & JSON Audit Reports** generated completely on-device.
 
-**Stretch**
+---
 
-- **Static APK checks:** exported components, cleartext traffic, debuggable flag, SDK range, SHA-256 (computed lazily on the detail screen)
-- **Shareable PDF report** generated with `PdfDocument` inside the app
-- Hash lookup against external threat intelligence is deliberately **not** implemented — see Privacy
+## Rootless Boundaries
 
-## Rootless boundaries
+DroidScanner audits installed packages and device configurations Android exposes to ordinary apps via public APIs. It cannot reliably prove bootloader lock, root/kernel compromise, or Play Protect status — those require hardware attestation or privileged access. Unavailable signals are marked `Not available` rather than treated as safe.
 
-DroidScanner can audit installed packages and the device signals Android deliberately exposes to ordinary apps. It cannot reliably prove that a device is rooted, its bootloader is unlocked, Play Protect is enabled, or the OS is compromised—those claims need privileged hardware attestation, device-owner access, or a trusted remote verifier. The UI labels these limits rather than treating absence of evidence as a clean bill of health.
+---
 
-## ML design and roadmap
-
-The current APK uses a bundled Universal Sentence Encoder through MediaPipe. It runs offline and compares an app's label/package/category against permission-use descriptions and curated app-purpose archetypes. It provides only a bounded, explainable context signal; it never declares malware and cannot by itself make an app Critical.
-
-The next useful models are deliberately staged, so the project does not become a black box:
-
-1. **Signed feature-model for APK metadata:** a compact, calibrated gradient-boosted-tree or linear model using permissions, exported-component counts, SDK age, installer provenance, special-access state, and update deltas. Keep feature contributions visible (for example with per-feature attribution) and require a curated, versioned benign/malicious dataset.
-2. **Local anomaly detector:** Isolation Forest or a small autoencoder trained on each device's historical app feature vectors. It should flag unusual *changes* for review, not label malware. This is particularly useful after an update adds accessibility, overlay, SMS, or notification access.
-3. **Optional cloud reputation, only with affirmative consent:** signed APK-certificate/hash reputation and verified threat-feed matches. A hash is still identifying data; this must be opt-in, transparent, and never block app use on its own.
-4. **Runtime behavioural features only where Android permits:** battery/network usage, notification access, and recent install/update signals can enrich a future model, but Android sandboxing prevents a rootless scanner from inspecting another app's private traffic, process memory, or code execution.
-
-Models should remain secondary to deterministic checks until they have measurable false-positive/false-negative performance on representative Android versions and OEMs.
-
-## Architecture
-
-```
-app/src/main/java/com/idiots3/riskscanner/
-├── scanner/      AppScanner (inventory + permissions + special access), StaticInspector (lazy APK checks)
-├── engine/       ScoringConfig (single source of truth), RiskScorer (deterministic rules),
-│                 PermissionMapper (permission → category), PermissionDiff
-├── ml/           TextEmbedderEngine (MediaPipe USE), PurposeInferenceEngine, EmbeddingStore (vector cache)
-├── data/         SnapshotStore (last scan, for diffs)
-├── model/        AppInfo, AnalysisModels, DeviceSummary
-├── viewmodel/    MainViewModel — rules scan first, AI refinement streams in afterwards
-├── receiver/     InstallMonitorReceiver + notification helper
-├── report/       PdfExporter
-└── ui/           Dashboard, App List, App Detail, Scoring Rules; components/
-app/src/main/assets/
-├── universal_sentence_encoder.tflite   6.1 MB, runs offline
-└── purpose_archetypes.json             40 app-function archetypes + permission-use descriptions
-```
-
-**Scoring:** see [`SCORING_RUBRIC.md`](SCORING_RUBRIC.md) — also rendered in-app (Dashboard → *Scoring rules*).
-
-**Permission database:** `engine/PermissionMapper.kt` is generated — the curated table (categories,
-protection levels, user-facing wording tuned for scoring) wins on conflicts, bulk AOSP entries are
-added for coverage, and anything outside the nine categories maps to `Other` (visible, zero weight).
-`PermissionMapperTest` pins the scoring-critical mappings. Test apps for on-device verification live
-in the optional `:testkit` module (benign, hostile permission profile, never part of this APK):
-`./gradlew :testkit:assembleDebug`.
-
-**Two-phase scan:** the deterministic pass renders instantly (rules-only scores, reasons), then the
-on-device AI pass refines visible apps in the background with a progress bar; embeddings are cached
-on disk so re-scans are instant and the native model is released when idle to keep memory flat.
-
-## Build
-
-**Android Studio:** open the project, let Gradle sync, run the `app` module. `local.properties`
-must point at your SDK (`sdk.dir=...`); Android Studio writes it automatically.
-
-**Command line:**
-
-```bash
-export JAVA_HOME=/path/to/jdk17-or-21     # AGP 8.13 requires JDK 17–21
-export ANDROID_HOME=/path/to/android-sdk  # needs platform 36 + build-tools 36.0.0
-./gradlew :app:assembleDebug              # → app/build/outputs/apk/debug/app-debug.apk
-./gradlew :app:testDebugUnitTest          # deterministic engine tests
-```
-
-The resulting APK is a **single universal APK** containing `arm64-v8a` + `x86_64` native libraries
-(physical devices + emulators). Java 21 is recommended; Gradle 8.13 + AGP 8.13.2 + Kotlin 2.0.21.
-
-## Permissions this app itself asks for
+## Permissions DroidScanner Declares
 
 | Permission | Why |
 |---|---|
-| `QUERY_ALL_PACKAGES` | Required to enumerate installed apps for the audit (allowed for this hackathon) |
-| `POST_NOTIFICATIONS` | Alerts when an installed/updated app scores High or Critical (optional) |
+| `QUERY_ALL_PACKAGES` | Enumerate installed apps for auditing |
+| `REQUEST_DELETE_PACKAGES` | Invoke Android's system uninstall dialog on Android 9+ |
+| `ACCESS_NETWORK_STATE` | Read-only local transport state (detects active VPN & captive portals; cannot open sockets or send data) |
+| `POST_NOTIFICATIONS` | Local security alerts (optional) |
+| `PACKAGE_USAGE_STATS` | Optional 7-day background behaviour insights (only active if user grants Usage Access) |
+| `RECEIVE_BOOT_COMPLETED` / `WAKE_LOCK` | Merged by AndroidX WorkManager to reschedule periodic background checks after reboot |
 
-It declares **no `INTERNET` permission**, so the audit cannot send anything anywhere even in theory.
+`android.permission.INTERNET` is **explicitly stripped** (`tools:node="remove"`), enforcing 100% offline operation at the Android OS sandbox level.
 
-## Privacy & limits (stated honestly)
+---
 
-- Inventory, permission analysis, scoring, embeddings, hashing and the PDF report all run on-device.
-- The AI purpose check sees only an app's label, package-name words and Android category — never
-  file contents, messages or accounts. It is a **weak signal**: "the app's description doesn't explain
-  this permission", never "this app is malware". Similarity values are not probabilities.
-- The deterministic rule engine remains authoritative; the AI can add at most 8 points, only to apps
-  already scoring Medium+, and can never create a Critical verdict by itself.
-- No real malware is used anywhere; test apps used during development are benign APKs that merely
-  request risky permission sets.
+## Build & Release (GitHub Releases / Obtainium)
+
+```bash
+./gradlew :app:testDebugUnitTest          # Pure-JVM unit tests
+./gradlew :app:assembleDebug              # Debug ABI-split + universal APKs
+./gradlew :app:assembleRelease -PuseDebugSigningForRelease=true  # R8-shrunk ABI-split + universal APKs
+```
+
+Release outputs under `app/build/outputs/apk/release/`:
+- `app-arm64-v8a-release.apk` — modern 64-bit consumer Android devices (Obtainium auto-matches)
+- `app-armeabi-v7a-release.apk` — 32-bit budget/older consumer Android devices (Obtainium auto-matches)
+- `app-x86_64-release.apk` — emulators / x86_64 devices
+- `app-universal-release.apk` — manual fallback APK
+
+Scoring methodology: see [`SCORING_RUBRIC.md`](SCORING_RUBRIC.md) — also rendered directly in-app (*Settings → How scoring works*).

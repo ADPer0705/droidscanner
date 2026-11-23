@@ -68,4 +68,46 @@ class DevicePostureEvaluatorTest {
         // Only PROTECTED (100) + REVIEW (60) count -> 160 / 2 = 80
         assertEquals(80, posture.protectionScore)
     }
+
+    @Test
+    fun `private dns, lock screen privacy, timeout, vpn, keyboards, and build hygiene classify cleanly`() {
+        assertEquals(PostureStatus.REVIEW, DevicePostureEvaluator.evaluatePrivateDns("off", null).status)
+        assertEquals(PostureStatus.PROTECTED, DevicePostureEvaluator.evaluatePrivateDns("opportunistic", null).status)
+        assertEquals(PostureStatus.PROTECTED, DevicePostureEvaluator.evaluatePrivateDns("hostname", "dns.quad9.net").status)
+        assertEquals(PostureStatus.REVIEW, DevicePostureEvaluator.evaluatePrivateDns("hostname", "dns.unfamiliar.example").status)
+
+        assertEquals(PostureStatus.PROTECTED, DevicePostureEvaluator.evaluateLockScreenPrivacy(true, 1, 0).status)
+        assertEquals(PostureStatus.REVIEW, DevicePostureEvaluator.evaluateLockScreenPrivacy(true, 1, 1).status)
+
+        assertEquals(PostureStatus.PROTECTED, DevicePostureEvaluator.evaluateScreenTimeoutAndAwake(60_000, 0).status)
+        assertEquals(PostureStatus.REVIEW, DevicePostureEvaluator.evaluateScreenTimeoutAndAwake(60_000, 1).status)
+        assertEquals(PostureStatus.AT_RISK, DevicePostureEvaluator.evaluateScreenTimeoutAndAwake(30 * 60_000, 0).status)
+
+        assertEquals(PostureStatus.REVIEW, DevicePostureEvaluator.evaluateNetworkTransport(vpnActive = true, captivePortal = false, vpnAppNames = listOf("MyVPN")).status)
+        assertEquals(PostureStatus.REVIEW, DevicePostureEvaluator.evaluateNetworkTransport(vpnActive = false, captivePortal = true, vpnAppNames = emptyList()).status)
+        assertEquals(PostureStatus.PROTECTED, DevicePostureEvaluator.evaluateNetworkTransport(vpnActive = false, captivePortal = false, vpnAppNames = emptyList()).status)
+
+        assertEquals(
+            PostureStatus.AT_RISK,
+            DevicePostureEvaluator.evaluateInputAndAutofill(
+                sideloadedNetworkKeyboards = listOf("ShadyKey"),
+                storeNetworkKeyboards = emptyList(),
+                sideloadedAutofillApps = emptyList(),
+                sideloadedAssistantApps = emptyList()
+            ).status
+        )
+        assertEquals(
+            PostureStatus.PROTECTED,
+            DevicePostureEvaluator.evaluateInputAndAutofill(emptyList(), emptyList(), emptyList(), emptyList()).status
+        )
+
+        assertEquals(
+            PostureStatus.AT_RISK,
+            DevicePostureEvaluator.evaluateOsBuildHygiene("test-keys", "user", 1, 1, null).status
+        )
+        assertEquals(
+            PostureStatus.PROTECTED,
+            DevicePostureEvaluator.evaluateOsBuildHygiene("release-keys", "user", 1, 1, null).status
+        )
+    }
 }

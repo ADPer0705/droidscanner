@@ -85,4 +85,27 @@ class PermissionDiffTest {
         assertEquals(listOf("READ_SMS"), changes[4 - 1].removedPermissions)
         assertEquals(ChangeType.UPDATED, changes[4].type)
     }
+
+    @Test
+    fun `detects signer change, special access grant, uninstall, and ignores system apps when userAppsOnly`() {
+        val previous = mapOf(
+            "com.example.signer" to SnapshotEntry(1L, 10, "Low", emptySet(), emptySet(), "AA:BB"),
+            "com.example.a11y" to SnapshotEntry(1L, 10, "Low", emptySet(), emptySet(), "CC:DD"),
+            "com.example.removed" to SnapshotEntry(1L, 20, "Low", emptySet(), emptySet(), "EE:FF")
+        )
+        val current = listOf(
+            app("com.example.signer", "Signer App").copy(signingCertSha256 = "99:88"),
+            app("com.example.a11y", "Helper App").copy(
+                signingCertSha256 = "CC:DD",
+                specialAccess = SpecialAccessInfo(accessibilityEnabled = true)
+            ),
+            app("com.android.systempkg", "System Pkg").copy(isSystemApp = true)
+        )
+
+        val changes = PermissionDiff.compute(previous, current, now = 5000L, userAppsOnly = true)
+        assertEquals(3, changes.size)
+        assertEquals(ChangeType.SIGNER_CHANGED, changes[0].type)
+        assertEquals(ChangeType.SPECIAL_ACCESS_GRANTED, changes[1].type)
+        assertEquals(ChangeType.APP_REMOVED, changes[2].type)
+    }
 }

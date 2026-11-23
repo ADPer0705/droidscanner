@@ -119,4 +119,39 @@ class RecommendationEngineTest {
         assertFalse(summary.recommendations.any { it.id == "device_admin_com.trusted.antivirus" })
         assertTrue(summary.recommendations.any { it.id == "posture_user_ca_certs" && it.action == RecommendationAction.OPEN_CREDENTIAL_SETTINGS })
     }
+
+    @Test
+    fun `fifty normal medium play store apps do not collapse app safety score to zero`() {
+        val apps = (1..50).map { i ->
+            app("App $i", "com.normal.app$i", score = 35, level = RiskLevel.MEDIUM)
+        }
+        val posture = DevicePosture(
+            listOf(PostureCheck("lock", "Screen lock", PostureStatus.PROTECTED, "ok", "ok"))
+        )
+        val summary = RecommendationEngine.generate(apps, posture)
+        // Medium penalty is capped at 20 -> App Safety = 80
+        assertEquals(80, summary.scoreBreakdown["App Safety"])
+        assertTrue("deviceScore=${summary.deviceScore}", summary.deviceScore >= 85)
+    }
+
+    @Test
+    fun `trusted apps and dismissed posture checks are excluded from penalties and pending recommendations`() {
+        val trustedCritical = app("Bitwarden", "com.x8bit.bitwarden", score = 80, level = RiskLevel.CRITICAL)
+            .copy(isUserTrusted = true)
+        val dismissedCheck = PostureCheck(
+            id = "developer_options",
+            title = "Developer options",
+            status = PostureStatus.REVIEW,
+            detail = "Developer options enabled",
+            recommendation = "Disable",
+            action = PostureAction.DEVELOPER_SETTINGS,
+            isDismissed = true
+        )
+        val summary = RecommendationEngine.generate(
+            apps = listOf(trustedCritical),
+            posture = DevicePosture(listOf(dismissedCheck))
+        )
+        assertEquals(100, summary.deviceScore)
+        assertTrue(summary.recommendations.isEmpty())
+    }
 }
