@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DroidScanner — Standalone Offline Android Security Guardian</title>
+  <meta name="description" content="Rootless, 100% on-device Android security scanner. Audit risky apps, special access, impersonation, DEX trackers, pre-install APKs, and 16 device configurations with zero INTERNET permission." />
+  <meta property="og:title" content="DroidScanner — Standalone Offline Android Security Guardian" />
+  <meta property="og:description" content="Identify harmful apps, silent permission escalations, fake APKs, and weak device settings — 100% offline on consumer Android 8.0–16." />
+  <meta property="og:image" content="https://droidscanner.dearanayji.rocks/assets/droidscanner-icon.png" />
+  <meta property="og:url" content="https://droidscanner.dearanayji.rocks/" />
+  <meta name="theme-color" content="#060A0D" />
+  <link rel="icon" type="image/png" href="./assets/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body id="top">
+  <div class="radar-backdrop" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#top" aria-label="DroidScanner Home">
+        <img class="brand-icon" src="./assets/droidscanner-icon.png" alt="DroidScanner icon" width="30" height="30" />
+        <span class="brand-name">DROIDSCANNER</span>
+        <span class="brand-pill" title="INTERNET permission removed in AndroidManifest.xml">
+          <span class="pulse-dot" aria-hidden="true"></span>OFFLINE
+        </span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#engine">Threat Engine</a>
+        <a href="#posture">Device Audit</a>
+        <a href="#privacy">Privacy Proof</a>
+        <a href="#wiki">Wiki</a>
+        <a href="#install">Install</a>
+      </nav>
+
+      <div class="topbar-actions">
+        <a id="release-pill" class="meta-chip" href="https://github.com/ADPer0705/droidscanner/releases/latest" target="_blank" rel="noopener">
+          <span class="chip-dot" aria-hidden="true"></span>
+          <span id="release-tag">v1.1.1</span>
+        </a>
+        <a id="stars-pill" class="meta-chip" href="https://github.com/ADPer0705/droidscanner" target="_blank" rel="noopener" aria-label="GitHub repository">
+          <span aria-hidden="true">★</span>
+          <span id="stars-count">GitHub</span>
+        </a>
+        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle light and dark theme" title="Switch theme">
+          ◐
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            ANDROID 8.0+ · ROOTLESS · ZERO INTERNET PERMISSION
+          </p>
+          <h1>
+            See what your apps can really do.
+            <span class="gradient-text">Harden your phone offline.</span>
+          </h1>
+          <p class="hero-sub">
+            DroidScanner is a standalone on-device security guardian built for everyday consumer Android phones.
+            It audits installed apps, special access, fake/impersonated APKs, embedded DEX trackers, and
+            <strong>16 device security configurations</strong> — without ever sending a single byte off your phone.
+          </p>
+
+          <div class="hero-ctas">
+            <a id="hero-download-btn" class="btn btn-primary" href="https://github.com/ADPer0705/droidscanner/releases/latest">
+              Download APK (<span id="hero-apk-label">arm64-v8a · ~19 MB</span>)
+            </a>
+            <a class="btn btn-secondary" href="./wiki/">
+              Explore Architecture Wiki →
+            </a>
+          </div>
+
+          <dl class="hero-metrics">
+            <div class="metric-item">
+              <dt>Network Access</dt>
+              <dd class="mono ok-text">0 bytes · No INTERNET</dd>
+            </div>
+            <div class="metric-item">
+              <dt>Consumer ABIs</dt>
+              <dd class="mono">arm64-v8a · armeabi-v7a</dd>
+            </div>
+            <div class="metric-item">
+              <dt>Engine Coverage</dt>
+              <dd class="mono">19 Combos · 16 Configs</dd>
+            </div>
+            <div class="metric-item">
+              <dt>Verification</dt>
+              <dd class="mono" id="downloads-stat">69 JVM Tests</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- INTERACTIVE SECURITY AUDIT SIMULATOR -->
+        <div class="simulator-shell" role="region" aria-label="Interactive DroidScanner security audit simulator">
+          <div class="sim-header">
+            <div class="sim-status">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              <span>On-Device Engine v3 · Rootless Public APIs</span>
+            </div>
+            <span class="sim-badge mono">NO INTERNET</span>
+          </div>
+
+          <div class="sim-tabs" role="tablist" aria-label="Sample security audit scenarios">
+            <button class="sim-tab is-active" role="tab" aria-selected="true" data-scenario="torch">
+              Torch Pro
+            </button>
+            <button class="sim-tab" role="tab" aria-selected="false" data-scenario="impersonator">
+              Fake GMS
+            </button>
+            <button class="sim-tab" role="tab" aria-selected="false" data-scenario="posture">
+              Device Posture
+            </button>
+            <button class="sim-tab" role="tab" aria-selected="false" data-scenario="preinstall">
+              Pre-Install APK
+            </button>
+          </div>
+
+          <div id="sim-body" class="sim-body">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- THREAT ENGINE PILLARS -->
+    <section id="engine" class="section">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">APP THREAT ENGINE V3 &amp; STANDALONE GUARD</p>
+          <h2>Deterministic security checks you can actually verify.</h2>
+          <p class="section-desc">
+            Every risk point traces directly to a documented rule in <code>ScoringConfig.kt</code>.
+            On-device AI purpose inference stays strictly bounded (+8 max) and never creates a Critical alert alone.
+          </p>
+        </div>
+
+        <div class="bento-grid">
+          <article class="bento-card bento-wide">
+            <div class="card-top">
+              <span class="card-index mono">01</span>
+              <span class="tag tag-emerald">19 Combination Rules</span>
+            </div>
+            <h3>Real-World Threat Patterns, Not Just Raw Permissions</h3>
+            <p>
+              Combines 9 weighted permission domains with live-verified Accessibility Services, Device Administrators,
+              Notification Listeners, and AppOps special access to detect banking trojans, uninstall-blocking controls,
+              screen-capture trojans, OTP stealers, sideloaded networked keyboards, and repackaged debug APKs.
+            </p>
+            <div class="chip-row mono">
+              <span>Banking Trojan +22</span>
+              <span>Uninstall Blocker +20</span>
+              <span>Sideloaded Keyboard +18</span>
+              <span>NFC Relay +18</span>
+            </div>
+          </article>
+
+          <article class="bento-card">
+            <div class="card-top">
+              <span class="card-index mono">02</span>
+              <span class="tag tag-cyan">Memory-Mapped DEX</span>
+            </div>
+            <h3>Streaming DEX, Trackers &amp; Hidden Payloads</h3>
+            <p>
+              Inspects base + split APKs via <code>FileChannel.map</code> without loading APKs into RAM — catching
+              disguised APK/DEX/ELF payloads in <code>assets/</code>, commercial packers, 65+ ad/analytics/location-broker
+              SDKs, and sensitive code APIs like <code>DexClassLoader</code> and <code>SmsManager</code>.
+            </p>
+            <div class="chip-row mono">
+              <span>DexParser</span>
+              <span>Split APKs</span>
+              <span>2 GB RAM Safe</span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-half">
+            <div class="card-top">
+              <span class="card-index mono">03</span>
+              <span class="tag tag-danger">Anti-Spoofing</span>
+            </div>
+            <h3>Impersonation &amp; Signer Integrity</h3>
+            <p>
+              Normalizes zero-width characters and Cyrillic/Greek homoglyphs to catch sideloaded apps masquerading
+              as <em>Google Play Services</em>, <em>System Update</em>, or banking apps — and tracks developer signing
+              certificate SHA-256 across scans to flag silent re-signing.
+            </p>
+            <div class="chip-row mono">
+              <span>Unicode NFKC</span>
+              <span>Typosquatting</span>
+              <span>Cert Diff</span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-half">
+            <div class="card-top">
+              <span class="card-index mono">04</span>
+              <span class="tag tag-amber">Before You Install</span>
+            </div>
+            <h3>Zero-Permission Pre-Install APK Scanner</h3>
+            <p>
+              Pick any downloaded <code>.apk</code> from Chrome, WhatsApp, or Files via Android's Storage Access
+              Framework — or tap <em>Open with DroidScanner</em> — to inspect permissions, trackers, hidden payloads,
+              and <strong>signing mismatches against installed apps</strong> before tapping Install.
+            </p>
+            <div class="chip-row mono">
+              <span>SAF OpenDocument</span>
+              <span>No Storage Perm</span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-full">
+            <div class="card-top">
+              <span class="card-index mono">05</span>
+              <span class="tag tag-emerald">Continuous Guardian</span>
+            </div>
+            <h3>Background Guard, Auto-Invalidating Trust &amp; OEM Calibration</h3>
+            <p>
+              A battery-friendly <code>WorkManager</code> check (12h / daily) monitors for silent special-access grants,
+              new high-risk installs, signer changes, and posture regressions while closed. Mark trusted power-user tools
+              (like Bitwarden or Tasker) as <strong>Reviewed &amp; Trusted</strong> — trust automatically breaks and
+              re-alerts if an update escalates access. Recognizes Samsung Smart Switch, Google Restore, Mi Mover, and
+              Obtainium so migrated apps aren't falsely flagged.
+            </p>
+            <div class="chip-row mono">
+              <span>WorkManager</span>
+              <span>TrustValidator</span>
+              <span>Audit Timeline</span>
+              <span>PDF &amp; JSON Export</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 DEVICE POSTURE CHECKS -->
+    <section id="posture" class="section section-alt">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">16 ROOTLESS DEVICE CONFIGURATION CHECKS</p>
+          <h2>Beyond apps: audit the settings attackers exploit first.</h2>
+          <p class="section-desc">
+            Every check maps directly to the relevant Android Settings screen with OEM-resilient fallbacks across
+            Pixel, Samsung One UI, Xiaomi HyperOS/MIUI, Oppo/OnePlus ColorOS, and Vivo.
+          </p>
+        </div>
+
+        <div class="posture-grid">
+          <div class="posture-group">
+            <h3>Lock &amp; Physical Safety</h3>
+            <ul>
+              <li><strong>Secure Screen Lock</strong><span>Verifies PIN, password, or biometric lock via <code>KeyguardManager</code>.</span></li>
+              <li><strong>Lock-Screen OTP Privacy</strong><span>Flags sensitive notifications visible before unlocking.</span></li>
+              <li><strong>Auto-Lock &amp; Stay Awake</strong><span>Catches excessive screen timeouts and USB stay-awake mode.</span></li>
+              <li><strong>Storage Encryption</strong><span>Reports exposed Android file-based encryption posture.</span></li>
+            </ul>
+          </div>
+
+          <div class="posture-group">
+            <h3>Network &amp; Traffic Interception</h3>
+            <ul>
+              <li><strong>User CA Certificates</strong><span>Lists exact Subject/Expiry of custom CAs that can inspect HTTPS.</span></li>
+              <li><strong>Encrypted DNS (Private DNS)</strong><span>Flags plaintext DNS (<code>off</code>) or unfamiliar custom DoT hostnames.</span></li>
+              <li><strong>System HTTP Proxy</strong><span>Detects global or JVM-level HTTP proxy endpoints.</span></li>
+              <li><strong>Active VPN &amp; Captive Wi-Fi</strong><span>Uses read-only local transport state to flag VPNs &amp; sign-in Wi-Fi.</span></li>
+            </ul>
+          </div>
+
+          <div class="posture-group">
+            <h3>Roles, Keyboards &amp; Control</h3>
+            <ul>
+              <li><strong>Default Core Roles</strong><span>Audits provenance of Default SMS, Phone, Browser, and Launcher.</span></li>
+              <li><strong>Keyboards, Autofill &amp; Assistant</strong><span>Flags sideloaded networked keyboards (keylogger surface) &amp; autofill.</span></li>
+              <li><strong>Special Access Hub</strong><span>Lists active Accessibility, Device Admin, Notification, Overlay &amp; Installers.</span></li>
+              <li><strong>MDM / Work Profiles</strong><span>Detects unexpected Device Owner or Profile Owner controllers.</span></li>
+            </ul>
+          </div>
+
+          <div class="posture-group">
+            <h3>OS Lifecycle &amp; Build Hygiene</h3>
+            <ul>
+              <li><strong>Security Patch Recency</strong><span>Flags patches older than 120 days (Review) or 365 days (At Risk).</span></li>
+              <li><strong>Android OS Support</strong><span>Flags end-of-life Android versions no longer receiving AOSP patches.</span></li>
+              <li><strong>USB &amp; Wireless Debugging</strong><span>Flags enabled Developer Options, ADB over USB, and Wireless ADB.</span></li>
+              <li><strong>OS Build &amp; Verifier Hygiene</strong><span>Flags <code>test-keys</code>, <code>userdebug</code>/<code>eng</code>, and disabled verifier where readable.</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MANIFEST PRIVACY PROOF & HONEST ROOTLESS LIMITS -->
+    <section id="privacy" class="section">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">VERIFIABLE PRIVACY &amp; HONEST ENGINEERING</p>
+          <h2>Offline enforced by the Android OS — not a toggle.</h2>
+        </div>
+
+        <div class="privacy-grid">
+          <div class="code-card">
+            <div class="code-card-header">
+              <span class="mono">app/src/main/AndroidManifest.xml</span>
+              <span class="tag tag-emerald">Sandbox Enforced</span>
+            </div>
+            <pre class="code-block"><code><span class="cm">&lt;!-- Enforces zero network sockets even if SDKs request it --&gt;</span>
+&lt;uses-permission
+    android:name=<span class="str">"android.permission.INTERNET"</span>
+    <span class="kw">tools:node="remove"</span> /&gt;
+
+<span class="cm">&lt;!-- Read-only local transport state (VPN &amp; captive Wi-Fi) --&gt;</span>
+&lt;uses-permission
+    android:name=<span class="str">"android.permission.ACCESS_NETWORK_STATE"</span> /&gt;
+
+<span class="cm">&lt;!-- App inventory &amp; Android 9+ system uninstall dialog --&gt;</span>
+&lt;uses-permission
+    android:name=<span class="str">"android.permission.QUERY_ALL_PACKAGES"</span> /&gt;
+&lt;uses-permission
+    android:name=<span class="str">"android.permission.REQUEST_DELETE_PACKAGES"</span> /&gt;</code></pre>
+            <p class="code-footnote">
+              Cloud backup &amp; device transfer are disabled (<code>allowBackup="false"</code>) and local snapshots,
+              trusted records, embeddings, and audit timelines are explicitly excluded.
+            </p>
+          </div>
+
+          <div class="limits-card">
+            <h3>Honest Rootless Boundaries</h3>
+            <p class="limits-intro">
+              Security tools lose trust when they fake checks Android doesn't allow. DroidScanner distinguishes
+              <strong>Protected</strong>, <strong>Needs attention</strong>, and <strong>Not available</strong>.
+            </p>
+            <div class="limits-list">
+              <div class="limit-row limit-yes">
+                <span class="limit-badge">VERIFIED</span>
+                <div>
+                  <strong>Public Android APIs</strong>
+                  <p>Permissions, live Accessibility / Notification / Device Admin registries, signing certs &amp; v1–v3.1 blocks, DEX bytecode, Private DNS, CA store, lock screen, and optional Usage Stats.</p>
+                </div>
+              </div>
+              <div class="limit-row limit-no">
+                <span class="limit-badge">HONEST LIMIT</span>
+                <div>
+                  <strong>Privileged / Hardware Claims</strong>
+                  <p>Without root or remote hardware attestation, no standard app can reliably prove bootloader lock state, kernel integrity, or Google Play Protect status. DroidScanner labels these limits instead of guessing.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OPENWIKI ATLAS -->
+    <section id="wiki" class="section section-alt">
+      <div class="container">
+        <div class="wiki-header">
+          <div>
+            <p class="eyebrow">OPENWIKI · INTERACTIVE ARCHITECTURE ATLAS</p>
+            <h2>Inspect every scanner, rule, and invariant in code.</h2>
+            <p class="section-desc">
+              Every core subsystem in DroidScanner is verified against exact repository line ranges and compiled into
+              an interactive knowledge graph and Markdown reader.
+            </p>
+          </div>
+          <a class="btn btn-primary" href="./wiki/">
+            Open Interactive Wiki Graph ↗
+          </a>
+        </div>
+
+        <div class="wiki-grid">
+          <a class="wiki-card" href="./wiki/#page=quickstart">
+            <span class="wiki-tag mono">quickstart</span>
+            <h3>Quickstart &amp; System Map</h3>
+            <p>Offline-by-manifest guarantees, ABI-split Gradle/Obtainium commands, and task-routing map.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+
+          <a class="wiki-card" href="./wiki/#page=architecture/overview">
+            <span class="wiki-tag mono">architecture</span>
+            <h3>Architecture, Trust &amp; Background Guard</h3>
+            <p>Two-phase scan lifecycle, <code>MainViewModel</code>, <code>TrustStore</code>, <code>AuditHistoryStore</code>, and <code>BackgroundSecurityWorker</code>.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+
+          <a class="wiki-card" href="./wiki/#page=scanners/app-and-special-access">
+            <span class="wiki-tag mono">scanners</span>
+            <h3>App Inventory, Provenance &amp; Special Access</h3>
+            <p>OEM store &amp; migration recognition, full default-role resolution, and AppOps grant-state verification.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+
+          <a class="wiki-card" href="./wiki/#page=scanners/static-and-certificates">
+            <span class="wiki-tag mono">static &amp; dex</span>
+            <h3>DEX Parser, Trackers, Certs &amp; Pre-Install APK</h3>
+            <p>Memory-mapped <code>DexParser</code>, hidden payloads, v1–v3.1 signature schemes, and SAF <code>ApkFileScanner</code>.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+
+          <a class="wiki-card" href="./wiki/#page=scanners/device-posture-and-behaviour">
+            <span class="wiki-tag mono">posture</span>
+            <h3>16 Device Configs &amp; Behaviour Insights</h3>
+            <p>Private DNS, CA cert subjects, lock-screen privacy, VPN/captive checks, and batch upload-vs-download stats.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+
+          <a class="wiki-card" href="./wiki/#page=scoring/risk-and-recommendations">
+            <span class="wiki-tag mono">scoring v3</span>
+            <h3>Risk Scoring v3, Impersonation &amp; Diffing</h3>
+            <p>Category saturation, 19 combo rules, Unicode homoglyph spoofing, capped Device Score, and signer diffing.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+
+          <a class="wiki-card" href="./wiki/#page=ml/purpose-inference">
+            <span class="wiki-tag mono">on-device ml</span>
+            <h3>Bounded ML Purpose Inference</h3>
+            <p>Bundled 6 MB Universal Sentence Encoder via MediaPipe, vector disk cache, and strict +8 safety cap.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+
+          <a class="wiki-card" href="./wiki/#page=ui/navigation-and-reporting">
+            <span class="wiki-tag mono">ui &amp; reports</span>
+            <h3>UI Navigation, Remediation &amp; Exports</h3>
+            <p>Overview/Apps/Device/Settings/Timeline/APK Scanner screens, OEM <code>SettingsIntents</code>, PDF &amp; JSON export.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+
+          <a class="wiki-card" href="./wiki/#page=testing/test-suite-and-testkit">
+            <span class="wiki-tag mono">testing</span>
+            <h3>69 JVM Unit Tests &amp; Benign TestKit</h3>
+            <p>Pure-JVM scoring calibration, synthetic DEX fixtures, trust invalidation tests, and the <code>:testkit</code> decoy.</p>
+            <span class="wiki-link">Read chapter →</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL & OBTAINIUM -->
+    <section id="install" class="section">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">INSTALL ON ANY CONSUMER ANDROID (8.0–16)</p>
+          <h2>Compact ABI builds, automatic updates via Obtainium.</h2>
+          <p class="section-desc">
+            Every GitHub Release ships R8-shrunk APKs per CPU architecture so downloads stay ~16–19 MB on both
+            modern 64-bit phones and 32-bit budget devices.
+          </p>
+        </div>
+
+        <div class="install-layout">
+          <div class="abi-selector-card">
+            <div class="abi-header">
+              <h3>Choose your APK build</h3>
+              <span id="install-version-badge" class="tag tag-emerald mono">v1.1.1</span>
+            </div>
+
+            <div class="abi-grid" id="abi-options">
+              <a class="abi-option is-recommended" data-abi="arm64-v8a" href="https://github.com/ADPer0705/droidscanner/releases/latest">
+                <div class="abi-title-row">
+                  <strong class="mono">arm64-v8a</strong>
+                  <span class="tag tag-emerald">Recommended</span>
+                </div>
+                <p>Modern 64-bit Android phones (most phones from 2019+)</p>
+                <span class="abi-size mono" data-abi-size="arm64-v8a">~19 MB</span>
+              </a>
+
+              <a class="abi-option" data-abi="armeabi-v7a" href="https://github.com/ADPer0705/droidscanner/releases/latest">
+                <div class="abi-title-row">
+                  <strong class="mono">armeabi-v7a</strong>
+                  <span class="tag tag-cyan">32-bit Phones</span>
+                </div>
+                <p>Older &amp; budget 32-bit consumer Android / Android Go devices</p>
+                <span class="abi-size mono" data-abi-size="armeabi-v7a">~16 MB</span>
+              </a>
+
+              <a class="abi-option" data-abi="universal" href="https://github.com/ADPer0705/droidscanner/releases/latest">
+                <div class="abi-title-row">
+                  <strong class="mono">universal</strong>
+                  <span class="tag">All ABIs</span>
+                </div>
+                <p>Single fallback APK if you aren't sure which CPU your phone uses</p>
+                <span class="abi-size mono" data-abi-size="universal">~52 MB</span>
+              </a>
+
+              <a class="abi-option" data-abi="x86_64" href="https://github.com/ADPer0705/droidscanner/releases/latest">
+                <div class="abi-title-row">
+                  <strong class="mono">x86_64</strong>
+                  <span class="tag">Emulators</span>
+                </div>
+                <p>Android Studio emulators, Chromebooks, and x86_64 tablets</p>
+                <span class="abi-size mono" data-abi-size="x86_64">~21 MB</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="obtainium-card">
+            <h3>Track releases with Obtainium</h3>
+            <p>
+              Paste the GitHub repository URL into <strong>Obtainium</strong> to receive automatic updates and
+              ABI-matched APK selection straight from GitHub Releases — no app store required.
+            </p>
+            <div class="copy-box">
+              <code id="obtainium-url">https://github.com/ADPer0705/droidscanner</code>
+              <button id="copy-repo-btn" class="btn btn-secondary btn-sm" type="button">Copy URL</button>
+            </div>
+            <ol class="install-steps">
+              <li>Open Obtainium → <strong>Add App</strong> → paste the repo URL above.</li>
+              <li>Enable <strong>Filter APKs by ABI</strong> (matches <code>arm64-v8a</code> or <code>armeabi-v7a</code> automatically).</li>
+              <li>Open DroidScanner → complete the 3-step checkup &amp; keep <strong>Background Guard</strong> on.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="./assets/droidscanner-icon.png" alt="DroidScanner icon" width="32" height="32" />
+        <div>
+          <strong>DroidScanner</strong>
+          <p>Rootless, offline-first Android security guardian</p>
+        </div>
+      </div>
+      <nav class="footer-links" aria-label="Footer links">
+        <a href="https://github.com/ADPer0705/droidscanner" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/ADPer0705/droidscanner/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="./wiki/">OpenWiki</a>
+        <a href="https://github.com/ADPer0705/droidscanner/blob/main/SCORING_RUBRIC.md" target="_blank" rel="noopener">Scoring Rubric</a>
+        <a href="https://dearanayji.rocks" target="_blank" rel="noopener">dearanayji.rocks</a>
+      </nav>
+    </div>
+    <div class="container footer-bottom">
+      <p>100% on-device analysis · Zero telemetry · No analytics scripts on this site · Built for everyday Android security.</p>
+    </div>
+  </footer>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="35%" r="72%">
+      <stop offset="0%" stop-color="#112A33"/>
+      <stop offset="52%" stop-color="#0B1920"/>
+      <stop offset="100%" stop-color="#060C10"/>
+    </radialGradient>
+    <linearGradient id="shieldFill" x1="25%" y1="15%" x2="78%" y2="88%">
+      <stop offset="0%" stop-color="#163844"/>
+      <stop offset="60%" stop-color="#0C1E26"/>
+      <stop offset="100%" stop-color="#081318"/>
+    </linearGradient>
+    <linearGradient id="shieldStroke" x1="15%" y1="10%" x2="88%" y2="90%">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="48%" stop-color="#2DD4BF"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="radarSweep" x1="10%" y1="5%" x2="95%" y2="95%">
+      <stop offset="0%" stop-color="#34D399" stop-opacity="0.34"/>
+      <stop offset="55%" stop-color="#06B6D4" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0.02"/>
+    </linearGradient>
+    <clipPath id="roundedClip">
+      <rect x="0" y="0" width="108" height="108" rx="24" ry="24"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#roundedClip)">
+    <rect width="108" height="108" fill="url(#bgGlow)"/>
+
+    <!-- Precision radar rings & axis hairlines -->
+    <circle cx="54" cy="54" r="27" fill="none" stroke="#2DD4BF" stroke-opacity="0.13" stroke-width="0.75"/>
+    <circle cx="54" cy="54" r="40" fill="none" stroke="#2DD4BF" stroke-opacity="0.10" stroke-width="0.75"/>
+    <circle cx="54" cy="54" r="52" fill="none" stroke="#2DD4BF" stroke-opacity="0.07" stroke-width="0.75"/>
+    <line x1="54" y1="0" x2="54" y2="108" stroke="#2DD4BF" stroke-opacity="0.08" stroke-width="0.65"/>
+    <line x1="0" y1="54" x2="108" y2="54" stroke="#2DD4BF" stroke-opacity="0.08" stroke-width="0.65"/>
+
+    <!-- Soft shadow beneath shield -->
+    <path d="M54,23.5 L81,33.4 C82.2,33.8 83,35 83,36.2 L83,54.8 C83,71.4 71.1,83.2 55.4,89.4 C54.5,89.8 53.5,89.8 52.6,89.4 C36.9,83.2 25,71.4 25,54.8 L25,36.2 C25,35 25.8,33.8 27,33.4 Z" fill="#020608" fill-opacity="0.38"/>
+
+    <!-- Faceted shield interior -->
+    <path d="M54,21 L80.2,30.8 C81.4,31.2 82.2,32.4 82.2,33.6 L82.2,52.8 C82.2,69.1 70.5,80.7 55.4,86.8 C54.5,87.2 53.5,87.2 52.6,86.8 C37.5,80.7 25.8,69.1 25.8,52.8 L25.8,33.6 C25.8,32.4 26.6,31.2 27.8,30.8 Z" fill="url(#shieldFill)"/>
+
+    <!-- Radar sweep quadrant inside shield -->
+    <path d="M54,53 L54,25.5 L77.5,34.3 C78.2,34.6 78.6,35.2 78.6,36 L78.6,53 Z" fill="url(#radarSweep)"/>
+
+    <!-- Shield perimeter stroke -->
+    <path d="M54,21 L80.2,30.8 C81.4,31.2 82.2,32.4 82.2,33.6 L82.2,52.8 C82.2,69.1 70.5,80.7 55.4,86.8 C54.5,87.2 53.5,87.2 52.6,86.8 C37.5,80.7 25.8,69.1 25.8,52.8 L25.8,33.6 C25.8,32.4 26.6,31.2 27.8,30.8 Z" fill="none" stroke="url(#shieldStroke)" stroke-width="3.6" stroke-linejoin="round"/>
+
+    <!-- Radar sweep leading beam (cleanly above top reticle tick) -->
+    <line x1="54" y1="32.6" x2="54" y2="25.5" stroke="#6EE7B7" stroke-opacity="0.78" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- Beacon pulse halo & dot in open upper-right radar sector -->
+    <circle cx="70.2" cy="38.8" r="5.0" fill="#34D399" fill-opacity="0.22"/>
+    <circle cx="70.2" cy="38.8" r="2.3" fill="#6EE7B7"/>
+
+    <!-- Center inspection reticle lens (opaque slate backing + emerald glow ring) -->
+    <circle cx="54" cy="53" r="14.2" fill="#0A1B22"/>
+    <circle cx="54" cy="53" r="14.2" fill="#10B981" fill-opacity="0.14" stroke="#6EE7B7" stroke-width="2.2"/>
+    <path d="M54,34.8 L54,38.8 M54,67.2 L54,71.2 M35.8,53 L39.8,53 M68.2,53 L72.2,53" fill="none" stroke="#22D3EE" stroke-width="2.2" stroke-linecap="round"/>
+
+    <!-- Verified security checkmark -->
+    <path d="M47.2,53.2 L52.0,58.0 L61.5,47.8" fill="none" stroke="#F0FDF9" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
